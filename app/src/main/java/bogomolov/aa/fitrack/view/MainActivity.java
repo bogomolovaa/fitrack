@@ -1,7 +1,10 @@
 package bogomolov.aa.fitrack.view;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
@@ -15,17 +18,22 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.model.TrackerService;
 
 public class MainActivity extends AppCompatActivity
         implements GoogleApiClient.ConnectionCallbacks,
@@ -36,6 +44,7 @@ public class MainActivity extends AppCompatActivity
     private GoogleApiClient googleApiClient;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private LocationRequest locationRequest;
+    private LocationCallback locationCallback;
     private static final long UPDATE_INTERVAL = 5000, FASTEST_INTERVAL = 5000; // = 5 seconds
     // lists for permissions
     private ArrayList<String> permissionsToRequest;
@@ -68,6 +77,19 @@ public class MainActivity extends AppCompatActivity
                 addApi(LocationServices.API).
                 addConnectionCallbacks(this).
                 addOnConnectionFailedListener(this).build();
+
+        //Notification notification = new Notification(R.drawable.cast_ic_expanded_controller_play, getText(R.string.app_name), System.currentTimeMillis());
+        Intent notificationIntent = new Intent(this, TrackerService.class);
+        //PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        //notification.setLatestEventInfo(this, getText(R.string.app_name),getText(R.string.notification_message), pendingIntent);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(notificationIntent);
+        }else {
+            ContextCompat.startForegroundService(this, notificationIntent);
+        }
+
+
     }
 
     private ArrayList<String> permissionsToRequest(ArrayList<String> wantedPermissions) {
@@ -113,8 +135,8 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
 
         // stop location updates
-        if (googleApiClient != null  &&  googleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+        if (googleApiClient != null && googleApiClient.isConnected()) {
+            LocationServices.getFusedLocationProviderClient(this).removeLocationUpdates(locationCallback);
             googleApiClient.disconnect();
         }
     }
@@ -140,17 +162,22 @@ public class MainActivity extends AppCompatActivity
     public void onConnected(@Nullable Bundle bundle) {
         if (ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                &&  ActivityCompat.checkSelfPermission(this,
+                && ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
 
         // Permissions ok, we get last location
-        location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        LocationServices.getFusedLocationProviderClient(this).getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location theLocation) {
+                location = theLocation;
+                if (location != null) {
+                    locationTv.setText("Latitude : " + location.getLatitude() + "\nLongitude : " + location.getLongitude());
+                }
+            }
+        });
 
-        if (location != null) {
-            locationTv.setText("Latitude : " + location.getLatitude() + "\nLongitude : " + location.getLongitude());
-        }
 
         startLocationUpdates();
     }
@@ -163,12 +190,21 @@ public class MainActivity extends AppCompatActivity
 
         if (ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                &&  ActivityCompat.checkSelfPermission(this,
+                && ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "You need to enable permissions to display location !", Toast.LENGTH_SHORT).show();
         }
 
-        LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+        //LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                location = locationResult.getLastLocation();
+                //locationResult.getLocations()
+            }
+        };
+        LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(locationRequest, locationCallback, null);
+
     }
 
     @Override
@@ -188,7 +224,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch(requestCode) {
+        switch (requestCode) {
             case ALL_PERMISSIONS_RESULT:
                 for (String perm : permissionsToRequest) {
                     if (!hasPermission(perm)) {
