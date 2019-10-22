@@ -23,6 +23,8 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import io.realm.Realm;
+
 
 public class TrackerService extends Service
         implements GoogleApiClient.ConnectionCallbacks,
@@ -31,6 +33,8 @@ public class TrackerService extends Service
     private Location location;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
+    private DbProvider dbProvider;
+
 
     private static final long UPDATE_INTERVAL = 5000, FASTEST_INTERVAL = 5000; // = 5 seconds
     private static final String TRACKER_SERVICE = "TrackerService";
@@ -43,6 +47,8 @@ public class TrackerService extends Service
                 addApi(LocationServices.API).
                 addConnectionCallbacks(this).
                 addOnConnectionFailedListener(this).build();
+
+        dbProvider = new DbProvider();
 
         Log.i(TRACKER_SERVICE, "onCreate");
     }
@@ -95,6 +101,7 @@ public class TrackerService extends Service
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 location = locationResult.getLastLocation();
+                dbProvider.addPoint(new Point(location.getTime(), location.getLatitude(), location.getLongitude()));
             }
         };
         LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(locationRequest, locationCallback, null);
@@ -119,6 +126,7 @@ public class TrackerService extends Service
     public void onDestroy() {
         super.onDestroy();
         stopLocationUpdates();
+        dbProvider.close();
     }
 
     public void stopLocationUpdates() {
@@ -132,4 +140,6 @@ public class TrackerService extends Service
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+
 }

@@ -4,9 +4,11 @@ import android.Manifest;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -23,28 +25,31 @@ import com.google.android.gms.common.GoogleApiAvailability;
 
 
 import java.util.ArrayList;
+import java.util.List;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.TrackerService;
+import io.realm.Realm;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TRACKER_SERVICE = "TrackerService";
-
-    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-
+    private TextView locationTw;
     private ArrayList<String> permissionsToRequest;
     private ArrayList<String> permissionsRejected = new ArrayList<>();
     private ArrayList<String> permissions = new ArrayList<>();
+
     private static final int ALL_PERMISSIONS_RESULT = 1011;
+    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    private static final String TRACKER_SERVICE = "TrackerService";
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        locationTw = (TextView) findViewById(R.id.location);
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
         permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-
         permissionsToRequest = permissionsToRequest(permissions);
 
         if (!checkPlayServices()) finish();
@@ -61,18 +66,38 @@ public class MainActivity extends AppCompatActivity {
 
     private void startTrackerService() {
         Log.i(TRACKER_SERVICE, "startTrackerService");
-          /*
+
         //Notification notification = new Notification(R.drawable.cast_ic_expanded_controller_play, getText(R.string.app_name), System.currentTimeMillis());
         Intent notificationIntent = new Intent(this, TrackerService.class);
         //PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
         //notification.setLatestEventInfo(this, getText(R.string.app_name),getText(R.string.notification_message), pendingIntent);
 
+        startService(notificationIntent);
+
+        /*
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(notificationIntent);
         }else {
             ContextCompat.startForegroundService(this, notificationIntent);
         }
         */
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        final Handler handler = new Handler();
+        final Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                Realm realm = Realm.getDefaultInstance();
+                Point point = realm.where(Point.class).findAll().last();
+                locationTw.setText("Latitude : " + point.getLat() + "\nLongitude : " + point.getLng());
+                handler.postDelayed(this, 5000);
+            }
+        };
+        runnable.run();
     }
 
     private ArrayList<String> permissionsToRequest(ArrayList<String> wantedPermissions) {
@@ -84,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return result;
     }
+
 
     private boolean hasPermission(String permission) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
