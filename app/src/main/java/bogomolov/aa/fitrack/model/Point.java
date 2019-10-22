@@ -1,6 +1,6 @@
 package bogomolov.aa.fitrack.model;
 
-public class Point {
+public class Point extends RealmObject {
     private long time;
     private double x;
     private double y;
