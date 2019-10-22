@@ -1,8 +1,6 @@
 package bogomolov.aa.fitrack.view;
 
 import android.Manifest;
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -14,10 +12,8 @@ import android.widget.TextView;
 
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -31,6 +27,8 @@ import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.TrackerService;
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity {
     private TextView locationTw;
@@ -40,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int ALL_PERMISSIONS_RESULT = 1011;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-    private static final String TRACKER_SERVICE = "TrackerService";
+    private static final String MAIN_ACTIVITY = "TrackerService";
 
 
     @Override
@@ -52,35 +50,41 @@ public class MainActivity extends AppCompatActivity {
         permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         permissionsToRequest = permissionsToRequest(permissions);
 
+        Log.i(MAIN_ACTIVITY, "permissionsToRequest.size() " + permissionsToRequest.size());
+
         if (!checkPlayServices()) finish();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (permissionsToRequest.size() > 0) {
                 requestPermissions(permissionsToRequest.toArray(
                         new String[permissionsToRequest.size()]), ALL_PERMISSIONS_RESULT);
+            } else {
+                startTrackerService();
             }
+        } else {
+            startTrackerService();
         }
 
 
     }
 
     private void startTrackerService() {
-        Log.i(TRACKER_SERVICE, "startTrackerService");
+        Log.i(MAIN_ACTIVITY, "startTrackerService");
 
         //Notification notification = new Notification(R.drawable.cast_ic_expanded_controller_play, getText(R.string.app_name), System.currentTimeMillis());
         Intent notificationIntent = new Intent(this, TrackerService.class);
         //PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
         //notification.setLatestEventInfo(this, getText(R.string.app_name),getText(R.string.notification_message), pendingIntent);
 
-        startService(notificationIntent);
+        //startService(notificationIntent);
 
-        /*
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(notificationIntent);
-        }else {
+        } else {
             ContextCompat.startForegroundService(this, notificationIntent);
         }
-        */
+
     }
 
     @Override
@@ -91,9 +95,12 @@ public class MainActivity extends AppCompatActivity {
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                Realm realm = Realm.getDefaultInstance();
-                Point point = realm.where(Point.class).findAll().last();
-                locationTw.setText("Latitude : " + point.getLat() + "\nLongitude : " + point.getLng());
+                Realm realm = Realm.getInstance(new RealmConfiguration.Builder().deleteRealmIfMigrationNeeded().build());
+                List<Point> points = realm.where(Point.class).findAll();
+                if (points.size() > 0) {
+                    Point point = ((RealmResults<Point>) points).last();
+                    locationTw.setText("Latitude : " + point.getLat() + "\nLongitude : " + point.getLng());
+                }
                 handler.postDelayed(this, 5000);
             }
         };

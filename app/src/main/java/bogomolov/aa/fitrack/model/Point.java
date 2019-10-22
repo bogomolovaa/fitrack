@@ -10,10 +10,17 @@ public class Point extends RealmObject {
     private double lat;
     private double lng;
 
+    public Point() {
+    }
+
     public Point(long time, double lat, double lng) {
         this.time = time;
         this.lat = lat;
         this.lng = lng;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public long getId() {
