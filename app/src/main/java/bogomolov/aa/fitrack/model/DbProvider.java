@@ -3,6 +3,8 @@ package bogomolov.aa.fitrack.model;
 import android.content.Context;
 import android.util.Log;
 
+import java.util.List;
+
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 
@@ -32,6 +34,44 @@ public class DbProvider {
         realm.copyToRealm(point);
         realm.commitTransaction();
         Log.i(DB_PROVIDER, "added point lat : " + point.getLat() + " lng : " + point.getLng());
+    }
+
+    public void addTrack(Track track) {
+        Number maxId = realm.where(Track.class).max("id");
+        long id = maxId != null ? maxId.longValue() : 0 + 1;
+        track.setId(id);
+        realm.beginTransaction();
+        realm.copyToRealm(track);
+        realm.commitTransaction();
+        Log.i(DB_PROVIDER, "added track " + id);
+    }
+
+
+    public List<Point> getTrackPoints(Track track) {
+        if (track.isOpened()) {
+            return realm.where(Point.class).greaterThanOrEqualTo("id", track.getStartPoint().getId()).findAll();
+        } else {
+            return realm.where(Point.class).between("id", track.getStartPoint().getId(), track.getEndPoint().getId()).findAll();
+        }
+    }
+
+    public Track getLastTrack() {
+        return realm.where(Track.class).findAll().last();
+    }
+
+    public Track getOpenedTrack() {
+        return realm.where(Track.class).equalTo("endTime", 0).findFirst();
+    }
+
+    public List<Point> getLastPoints() {
+        Track lastTrack = getLastTrack();
+        if (lastTrack == null) {
+            return realm.where(Point.class).findAll();
+        } else {
+            if (lastTrack.getEndPoint() == null)
+                throw new IllegalStateException("getLastPoints with opened track");
+            return realm.where(Point.class).greaterThan("id", lastTrack.getEndPoint().getId()).findAll();
+        }
     }
 
     public void close() {

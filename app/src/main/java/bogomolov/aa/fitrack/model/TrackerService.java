@@ -31,6 +31,8 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.util.List;
+
 import bogomolov.aa.fitrack.R;
 import io.realm.Realm;
 
@@ -134,11 +136,44 @@ public class TrackerService extends Service
             public void onLocationResult(LocationResult locationResult) {
                 if (!(locationResult.getLastLocation().getLongitude() == location.getLongitude() && locationResult.getLastLocation().getLatitude() == location.getLatitude())) {
                     location = locationResult.getLastLocation();
-                    dbProvider.addPoint(new Point(location.getTime(), location.getLatitude(), location.getLongitude()));
+
+                    Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
+                    dbProvider.addPoint(point);
+                    checkTrack();
                 }
             }
         };
         LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(locationRequest, locationCallback, null);
+    }
+
+    private void checkTrack() {
+        Track openedTrack = dbProvider.getOpenedTrack();
+        if (openedTrack == null) {
+            List<Point> points = dbProvider.getLastPoints();
+            if (points.size() > 1) {
+                Point firstPoint = points.get(0);
+                Point lastPoint = points.get(points.size() - 1);
+                double distance = GeoUtils.distance(firstPoint, lastPoint);
+                if (distance > 50) {
+                    Track track = new Track();
+                    track.setStartPoint(lastPoint);
+                    track.setStartTime(System.currentTimeMillis());
+                    dbProvider.addTrack(track);
+                }
+            }
+        } else {
+            List<Point> points = dbProvider.getTrackPoints(openedTrack);
+            Point lastPoint = points.get(points.size() - 1);
+            for (int i = points.size() - 1; i >= 0; i--) {
+                Point point = points.get(i);
+                if (GeoUtils.distance(lastPoint, point) <= 50) {
+                    if (lastPoint.getTime() - point.getTime() > 60 * 1000) {
+                        openedTrack.setEndPoint(point);
+                        openedTrack.setEndTime(point.getTime());
+                    }
+                }
+            }
+        }
     }
 
     @Override

@@ -71,14 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private void startTrackerService() {
         Log.i(MAIN_ACTIVITY, "startTrackerService");
 
-        //Notification notification = new Notification(R.drawable.cast_ic_expanded_controller_play, getText(R.string.app_name), System.currentTimeMillis());
         Intent notificationIntent = new Intent(this, TrackerService.class);
-        //PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-        //notification.setLatestEventInfo(this, getText(R.string.app_name),getText(R.string.notification_message), pendingIntent);
-
-        //startService(notificationIntent);
-
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(notificationIntent);
         } else {
