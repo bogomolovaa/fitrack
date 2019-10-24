@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView textDistance;
     private TextView textTime;
     private TextView textSpeed;
+    private TextView textAvgSpeed;
     private TextView textDebug;
     private ArrayList<String> permissionsToRequest;
     private ArrayList<String> permissionsRejected = new ArrayList<>();
@@ -54,12 +55,12 @@ public class MainActivity extends AppCompatActivity {
         textDistance = findViewById(R.id.text_distance);
         textTime = findViewById(R.id.text_time);
         textSpeed = findViewById(R.id.text_speed);
+        textAvgSpeed = findViewById(R.id.text_avg_speed);
         textDebug = findViewById(R.id.text_debug);
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
         permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         permissionsToRequest = permissionsToRequest(permissions);
 
-        Log.i(MAIN_ACTIVITY, "permissionsToRequest.size() " + permissionsToRequest.size());
 
         if (!checkPlayServices()) finish();
 
@@ -93,30 +94,29 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        dbProvider = new DbProvider();
+        dbProvider = new DbProvider(false);
 
         final Handler handler = new Handler();
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 Track track = dbProvider.getLastTrack();
-                String debugString = "";
                 if (track != null) {
-                    textDistance.setText(track.getDistance()+" m");
-                    textTime.setText(track.getTimeString(System.currentTimeMillis()));
-                    textSpeed.setText(track.getCurrentSpeed()+" m/s");
+                    textDistance.setText((int) track.getDistance() + " m");
+                    long time = track.isOpened() ? System.currentTimeMillis() : track.getEndTime();
+                    textTime.setText(track.getTimeString(time));
+                    textSpeed.setText(String.format("%.1f", 3.6 * track.getCurrentSpeed()) + " km/h");
+                    textAvgSpeed.setText(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
                 } else {
                     textDistance.setText("");
                     textTime.setText("");
                     textSpeed.setText("");
-                    debugString = debugString + "null track";
+                    textAvgSpeed.setText("");
                 }
-                List<Point> points = dbProvider.getLastPoints();
-                if (points.size() > 0) {
-                    Point point = points.get(points.size() - 1);
-                    debugString = debugString + "\nlat " + point.getLat() + " lng " + point.getLng();
-                }
-                textDebug.setText(debugString);
+                String[] lines = TrackerService.stringBuffer.toString().split("\n");
+                StringBuilder sb = new StringBuilder();
+                for (int i = lines.length - 1; i >= 0; i--) sb.append(lines[i] + "\n");
+                textDebug.setText(sb.toString());
 
                 handler.postDelayed(this, 5000);
             }

@@ -13,11 +13,12 @@ public class DbProvider {
 
     private static final String DB_PROVIDER = "DbProvider";
 
-    public DbProvider() {
+    public DbProvider(boolean delete) {
         RealmConfiguration config = new RealmConfiguration.Builder()
                 .deleteRealmIfMigrationNeeded()
                 .build();
         realm = Realm.getInstance(config);
+        if(delete)
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -26,14 +27,18 @@ public class DbProvider {
         });
     }
 
-    public void addPoint(Point point) {
-        Number maxId = realm.where(Point.class).max("id");
-        long id = maxId != null ? maxId.longValue() : 0 + 1;
-        point.setId(id);
+    public Realm getRealm(){
+        return realm;
+    }
+
+    public Point addPoint(Point point) {
         realm.beginTransaction();
-        realm.copyToRealm(point);
+        Number maxId = realm.where(Point.class).max("id");
+        long id = (maxId != null ? maxId.longValue() : 0) + 1;
+        point.setId(id);
+        point = realm.copyToRealm(point);
         realm.commitTransaction();
-        Log.i(DB_PROVIDER, "added point lat : " + point.getLat() + " lng : " + point.getLng());
+        return point;
     }
 
 
@@ -47,11 +52,6 @@ public class DbProvider {
         Log.i(DB_PROVIDER, "added track " + id);
     }
 
-    public void saveTrack(Track track) {
-        realm.beginTransaction();
-        realm.copyToRealm(track);
-        realm.commitTransaction();
-    }
 
 
     public List<Point> getTrackPoints(Track track, int smoothed) {
@@ -63,12 +63,15 @@ public class DbProvider {
     }
 
     public Track getLastTrack() {
-        return realm.where(Track.class).findAll().last();
+        List<Track> tracks = realm.where(Track.class).findAll();
+        return tracks.size() > 0 ? tracks.get(tracks.size() - 1) : null;
     }
 
     public Track getOpenedTrack() {
-        return realm.where(Track.class).equalTo("endTime", 0).findFirst();
+        List<Track> tracks = realm.where(Track.class).equalTo("endTime", 0).findAll();
+        return tracks.size() > 0 ? tracks.get(0) : null;
     }
+
 
     public List<Point> getLastPoints() {
         Track lastTrack = getLastTrack();

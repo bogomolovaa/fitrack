@@ -52,6 +52,8 @@ public class TrackerService extends Service
     private long lastTime;
     private double[] lastLatLng;
 
+    public static StringBuffer stringBuffer = new StringBuffer();
+
 
     private static final long UPDATE_INTERVAL = 5000, FASTEST_INTERVAL = 5000; // = 5 seconds
     private static final String TRACKER_SERVICE = "TrackerService";
@@ -69,7 +71,7 @@ public class TrackerService extends Service
             notificationChannel.enableLights(true);
             notificationChannel.setLightColor(Color.RED);
             notificationChannel.setVibrationPattern(new long[]{0, 1000, 500, 1000});
-            notificationChannel.enableVibration(true);
+            notificationChannel.enableVibration(false);
             notificationManager.createNotificationChannel(notificationChannel);
         }
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
@@ -88,7 +90,7 @@ public class TrackerService extends Service
                 addConnectionCallbacks(this).
                 addOnConnectionFailedListener(this).build();
 
-        dbProvider = new DbProvider();
+        dbProvider = new DbProvider(true);
 
         Log.i(TRACKER_SERVICE, "onCreate");
     }
@@ -116,9 +118,15 @@ public class TrackerService extends Service
             @Override
             public void onSuccess(Location theLocation) {
                 location = theLocation;
+                   /*
                 if (location != null) {
-                    dbProvider.addPoint(new Point(location.getTime(), location.getLatitude(), location.getLongitude()));
+                    Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
+                    dbProvider.addPoint(point);
+                    stringBuffer.append("point lat "+point.getLat()+" lng "+point.getLng()+"\n");
+                    checkTrack();
+                    lastTime = location.getTime();
                 }
+                */
             }
         });
         startLocationUpdates();
@@ -144,8 +152,11 @@ public class TrackerService extends Service
                     location = locationResult.getLastLocation();
                     Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
                     dbProvider.addPoint(point);
+                    stringBuffer.append("point lat " + point.getLat() + " lng " + point.getLng() + " id " + point.getId() + "\n");
                     checkTrack();
                     lastTime = location.getTime();
+                } else {
+                    stringBuffer.append("same location\n");
                 }
             }
         };
@@ -153,35 +164,43 @@ public class TrackerService extends Service
     }
 
     private void checkTrack() {
+        stringBuffer.append("checkTrack\n");
         List<Point> trackPoints = null;
         Track openedTrack = dbProvider.getOpenedTrack();
         if (openedTrack == null) {
+            stringBuffer.append("openedTrack is null\n");
             List<Point> points = dbProvider.getLastPoints();
             if (points.size() > 1) {
                 Point firstPoint = points.get(0);
                 Point lastPoint = points.get(points.size() - 1);
                 double distance = GeoUtils.distance(firstPoint, lastPoint);
+                stringBuffer.append("distance " + distance + "\n");
                 if (distance > 50) {
+                    stringBuffer.append("track created\n");
                     Track track = new Track();
                     track.setMode(Track.STARTED_MODE);
                     track.setStartPoint(lastPoint);
-                    track.setStartTime(System.currentTimeMillis());
+                    track.setStartTime(lastPoint.getTime());
                     dbProvider.addTrack(track);
                     openedTrack = track;
                 }
             }
             trackPoints = points;
         } else {
+            stringBuffer.append("openedTrack is NOT null\n");
             List<Point> points = dbProvider.getTrackPoints(openedTrack, Point.RAW);
             trackPoints = points;
             Point lastPoint = points.get(points.size() - 1);
             for (int i = points.size() - 1; i >= 0; i--) {
+                stringBuffer.append(i + " distance " + GeoUtils.distance(lastPoint, points.get(i)) + " time " + (lastPoint.getTime() - points.get(i).getTime()) / 1000 + "\n");
                 if (GeoUtils.distance(lastPoint, points.get(i)) <= 50) {
-                    if (lastPoint.getTime() - points.get(i).getTime() > 60 * 1000) {
+                    if (lastPoint.getTime() - points.get(i).getTime() > 3 * 60 * 1000) {
+                        dbProvider.getRealm().beginTransaction();
                         openedTrack.setEndPoint(points.get(i));
                         openedTrack.setEndTime(points.get(i).getTime());
                         openedTrack.setMode(Track.ENDED_MODE);
-                        dbProvider.saveTrack(openedTrack);
+                        dbProvider.getRealm().commitTransaction();
+                        stringBuffer.append("track finished\n");
                     }
                 }
             }
@@ -206,9 +225,11 @@ public class TrackerService extends Service
         double[] latLonOut = new double[2];
         KalmanUtils.get_lat_long(kalmanFilter, latLonOut);
         Point smoothedPoint = new Point(latLonOut);
+        stringBuffer.append("smoothedPoint lat " + smoothedPoint.getLat() + " lng " + smoothedPoint.getLng() + "\n");
         smoothedPoint.setTime(point.getTime());
         smoothedPoint.setSmoothed(Point.SMOOTHED);
-        dbProvider.addPoint(smoothedPoint);
+        smoothedPoint = dbProvider.addPoint(smoothedPoint);
+        dbProvider.getRealm().beginTransaction();
         if (openedTrack.getMode() == Track.STARTED_MODE)
             openedTrack.setStartSmoothedPoint(smoothedPoint);
         if (openedTrack.getMode() == Track.ENDED_MODE)
@@ -221,7 +242,7 @@ public class TrackerService extends Service
             openedTrack.setBearing(bearing);
             openedTrack.addDistance(distanceSinceLastPoint);
         }
-        dbProvider.saveTrack(openedTrack);
+        dbProvider.getRealm().commitTransaction();
         lastLatLng = latLonOut;
     }
 
