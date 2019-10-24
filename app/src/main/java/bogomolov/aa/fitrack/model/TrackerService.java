@@ -163,6 +163,7 @@ public class TrackerService extends Service
                 double distance = GeoUtils.distance(firstPoint, lastPoint);
                 if (distance > 50) {
                     Track track = new Track();
+                    track.setMode(Track.STARTED_MODE);
                     track.setStartPoint(lastPoint);
                     track.setStartTime(System.currentTimeMillis());
                     dbProvider.addTrack(track);
@@ -171,7 +172,7 @@ public class TrackerService extends Service
             }
             trackPoints = points;
         } else {
-            List<Point> points = dbProvider.getTrackPoints(openedTrack);
+            List<Point> points = dbProvider.getTrackPoints(openedTrack, Point.RAW);
             trackPoints = points;
             Point lastPoint = points.get(points.size() - 1);
             for (int i = points.size() - 1; i >= 0; i--) {
@@ -179,6 +180,8 @@ public class TrackerService extends Service
                     if (lastPoint.getTime() - points.get(i).getTime() > 60 * 1000) {
                         openedTrack.setEndPoint(points.get(i));
                         openedTrack.setEndTime(points.get(i).getTime());
+                        openedTrack.setMode(Track.ENDED_MODE);
+                        dbProvider.saveTrack(openedTrack);
                     }
                 }
             }
@@ -202,6 +205,14 @@ public class TrackerService extends Service
         KalmanUtils.update_velocity2d(kalmanFilter, point.getLat(), point.getLng(), secondsSinceLastPoint);
         double[] latLonOut = new double[2];
         KalmanUtils.get_lat_long(kalmanFilter, latLonOut);
+        Point smoothedPoint = new Point(latLonOut);
+        smoothedPoint.setTime(point.getTime());
+        smoothedPoint.setSmoothed(Point.SMOOTHED);
+        dbProvider.addPoint(smoothedPoint);
+        if (openedTrack.getMode() == Track.STARTED_MODE)
+            openedTrack.setStartSmoothedPoint(smoothedPoint);
+        if (openedTrack.getMode() == Track.ENDED_MODE)
+            openedTrack.setEndSmoothedPoint(smoothedPoint);
         if (secondsSinceLastPoint > 0) {
             double distanceSinceLastPoint = GeoUtils.distance(new Point(lastLatLng), new Point(latLonOut));
             double velocity = distanceSinceLastPoint / secondsSinceLastPoint;
@@ -210,6 +221,7 @@ public class TrackerService extends Service
             openedTrack.setBearing(bearing);
             openedTrack.addDistance(distanceSinceLastPoint);
         }
+        dbProvider.saveTrack(openedTrack);
         lastLatLng = latLonOut;
     }
 

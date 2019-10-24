@@ -24,17 +24,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.model.DbProvider;
 import bogomolov.aa.fitrack.model.Point;
+import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.model.TrackerService;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity {
-    private TextView locationTw;
+    private TextView textDistance;
+    private TextView textTime;
+    private TextView textSpeed;
+    private TextView textDebug;
     private ArrayList<String> permissionsToRequest;
     private ArrayList<String> permissionsRejected = new ArrayList<>();
     private ArrayList<String> permissions = new ArrayList<>();
+    private DbProvider dbProvider;
 
     private static final int ALL_PERMISSIONS_RESULT = 1011;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
@@ -45,7 +51,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        locationTw = (TextView) findViewById(R.id.location);
+        textDistance = findViewById(R.id.text_distance);
+        textTime = findViewById(R.id.text_time);
+        textSpeed = findViewById(R.id.text_speed);
+        textDebug = findViewById(R.id.text_debug);
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
         permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         permissionsToRequest = permissionsToRequest(permissions);
@@ -84,20 +93,41 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
+        dbProvider = new DbProvider();
+
         final Handler handler = new Handler();
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                Realm realm = Realm.getInstance(new RealmConfiguration.Builder().deleteRealmIfMigrationNeeded().build());
-                List<Point> points = realm.where(Point.class).findAll();
-                if (points.size() > 0) {
-                    Point point = ((RealmResults<Point>) points).last();
-                    locationTw.setText("Latitude : " + point.getLat() + "\nLongitude : " + point.getLng());
+                Track track = dbProvider.getLastTrack();
+                String debugString = "";
+                if (track != null) {
+                    textDistance.setText(track.getDistance()+" m");
+                    textTime.setText(track.getTimeString(System.currentTimeMillis()));
+                    textSpeed.setText(track.getCurrentSpeed()+" m/s");
+                } else {
+                    textDistance.setText("");
+                    textTime.setText("");
+                    textSpeed.setText("");
+                    debugString = debugString + "null track";
                 }
+                List<Point> points = dbProvider.getLastPoints();
+                if (points.size() > 0) {
+                    Point point = points.get(points.size() - 1);
+                    debugString = debugString + "\nlat " + point.getLat() + " lng " + point.getLng();
+                }
+                textDebug.setText(debugString);
+
                 handler.postDelayed(this, 5000);
             }
         };
         runnable.run();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        dbProvider.close();
     }
 
     private ArrayList<String> permissionsToRequest(ArrayList<String> wantedPermissions) {

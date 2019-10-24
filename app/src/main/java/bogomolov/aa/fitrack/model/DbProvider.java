@@ -36,6 +36,7 @@ public class DbProvider {
         Log.i(DB_PROVIDER, "added point lat : " + point.getLat() + " lng : " + point.getLng());
     }
 
+
     public void addTrack(Track track) {
         Number maxId = realm.where(Track.class).max("id");
         long id = maxId != null ? maxId.longValue() : 0 + 1;
@@ -46,12 +47,18 @@ public class DbProvider {
         Log.i(DB_PROVIDER, "added track " + id);
     }
 
+    public void saveTrack(Track track) {
+        realm.beginTransaction();
+        realm.copyToRealm(track);
+        realm.commitTransaction();
+    }
 
-    public List<Point> getTrackPoints(Track track) {
+
+    public List<Point> getTrackPoints(Track track, int smoothed) {
         if (track.isOpened()) {
-            return realm.where(Point.class).greaterThanOrEqualTo("id", track.getStartPoint().getId()).findAll();
+            return realm.where(Point.class).equalTo("smoothed", smoothed).greaterThanOrEqualTo("id", track.getStartPoint(smoothed).getId()).findAll();
         } else {
-            return realm.where(Point.class).between("id", track.getStartPoint().getId(), track.getEndPoint().getId()).findAll();
+            return realm.where(Point.class).equalTo("smoothed", smoothed).between("id", track.getStartPoint(smoothed).getId(), track.getEndPoint(smoothed).getId()).findAll();
         }
     }
 
@@ -66,11 +73,11 @@ public class DbProvider {
     public List<Point> getLastPoints() {
         Track lastTrack = getLastTrack();
         if (lastTrack == null) {
-            return realm.where(Point.class).findAll();
+            return realm.where(Point.class).equalTo("smoothed", Point.RAW).findAll();
         } else {
             if (lastTrack.getEndPoint() == null)
                 throw new IllegalStateException("getLastPoints with opened track");
-            return realm.where(Point.class).greaterThan("id", lastTrack.getEndPoint().getId()).findAll();
+            return realm.where(Point.class).equalTo("smoothed", Point.RAW).greaterThan("id", lastTrack.getEndPoint().getId()).findAll();
         }
     }
 
