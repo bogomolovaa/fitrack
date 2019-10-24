@@ -31,9 +31,12 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.model.kalman.KalmanFilter;
+import bogomolov.aa.fitrack.model.kalman.KalmanUtils;
 import io.realm.Realm;
 
 
@@ -45,6 +48,9 @@ public class TrackerService extends Service
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private DbProvider dbProvider;
+    private KalmanFilter kalmanFilter;
+    private long lastTime;
+    private double[] lastLatLng;
 
 
     private static final long UPDATE_INTERVAL = 5000, FASTEST_INTERVAL = 5000; // = 5 seconds
@@ -136,10 +142,10 @@ public class TrackerService extends Service
             public void onLocationResult(LocationResult locationResult) {
                 if (!(locationResult.getLastLocation().getLongitude() == location.getLongitude() && locationResult.getLastLocation().getLatitude() == location.getLatitude())) {
                     location = locationResult.getLastLocation();
-
                     Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
                     dbProvider.addPoint(point);
                     checkTrack();
+                    lastTime = location.getTime();
                 }
             }
         };
@@ -147,6 +153,7 @@ public class TrackerService extends Service
     }
 
     private void checkTrack() {
+        List<Point> trackPoints = null;
         Track openedTrack = dbProvider.getOpenedTrack();
         if (openedTrack == null) {
             List<Point> points = dbProvider.getLastPoints();
@@ -159,21 +166,51 @@ public class TrackerService extends Service
                     track.setStartPoint(lastPoint);
                     track.setStartTime(System.currentTimeMillis());
                     dbProvider.addTrack(track);
+                    openedTrack = track;
                 }
             }
+            trackPoints = points;
         } else {
             List<Point> points = dbProvider.getTrackPoints(openedTrack);
+            trackPoints = points;
             Point lastPoint = points.get(points.size() - 1);
             for (int i = points.size() - 1; i >= 0; i--) {
-                Point point = points.get(i);
-                if (GeoUtils.distance(lastPoint, point) <= 50) {
-                    if (lastPoint.getTime() - point.getTime() > 60 * 1000) {
-                        openedTrack.setEndPoint(point);
-                        openedTrack.setEndTime(point.getTime());
+                if (GeoUtils.distance(lastPoint, points.get(i)) <= 50) {
+                    if (lastPoint.getTime() - points.get(i).getTime() > 60 * 1000) {
+                        openedTrack.setEndPoint(points.get(i));
+                        openedTrack.setEndTime(points.get(i).getTime());
                     }
                 }
             }
         }
+        if (openedTrack != null) applyKalmanFilter(openedTrack, trackPoints);
+    }
+
+    private void applyKalmanFilter(Track openedTrack, List<Point> trackPoints) {
+        Point point = trackPoints.get(trackPoints.size() - 1);
+        if (kalmanFilter == null) {
+            lastLatLng = new double[2];
+            lastTime = point.getTime();
+            kalmanFilter = KalmanUtils.alloc_filter_velocity2d(1);
+            for (int i = 0; i < trackPoints.size() - 1; i++) {
+                KalmanUtils.update_velocity2d(kalmanFilter, trackPoints.get(i).getLat(), trackPoints.get(i).getLng(), i == 0 ? 0 : (trackPoints.get(i).getTime() - trackPoints.get(i - 1).getTime()) / 1000.0);
+                KalmanUtils.get_lat_long(kalmanFilter, lastLatLng);
+                lastTime = trackPoints.get(i).getTime();
+            }
+        }
+        double secondsSinceLastPoint = (point.getTime() - lastTime) / 1000.0;
+        KalmanUtils.update_velocity2d(kalmanFilter, point.getLat(), point.getLng(), secondsSinceLastPoint);
+        double[] latLonOut = new double[2];
+        KalmanUtils.get_lat_long(kalmanFilter, latLonOut);
+        if (secondsSinceLastPoint > 0) {
+            double distanceSinceLastPoint = GeoUtils.distance(new Point(lastLatLng), new Point(latLonOut));
+            double velocity = distanceSinceLastPoint / secondsSinceLastPoint;
+            double bearing = KalmanUtils.get_bearing(kalmanFilter);
+            openedTrack.setCurrentSpeed(velocity);
+            openedTrack.setBearing(bearing);
+            openedTrack.addDistance(distanceSinceLastPoint);
+        }
+        lastLatLng = latLonOut;
     }
 
     @Override

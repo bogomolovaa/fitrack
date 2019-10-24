@@ -10,6 +10,35 @@ public class Track extends RealmObject {
     private long startTime;
     private long endTime;
 
+    private double distance;
+    private double currentSpeed;
+    private double bearing;
+
+
+    public double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(double distance) {
+        this.distance = distance;
+    }
+
+    public double getCurrentSpeed() {
+        return currentSpeed;
+    }
+
+    public void setCurrentSpeed(double currentSpeed) {
+        this.currentSpeed = currentSpeed;
+    }
+
+    public double getBearing() {
+        return bearing;
+    }
+
+    public void setBearing(double bearing) {
+        this.bearing = bearing;
+    }
+
     public long getId() {
         return id;
     }
@@ -52,5 +81,9 @@ public class Track extends RealmObject {
 
     public boolean isOpened() {
         return endTime == 0;
+    }
+
+    public void addDistance(double add) {
+        distance += add;
     }
 }

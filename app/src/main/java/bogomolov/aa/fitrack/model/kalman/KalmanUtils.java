@@ -112,7 +112,7 @@ public class KalmanUtils {
     /*
      * See http://www.movable-type.co.uk/scripts/latlong.html for formulas
      */
-    static double get_bearing(KalmanFilter f) {
+    public static double get_bearing(KalmanFilter f) {
         double[] out = new double[2];
 
         double lat, lon, delta_lat, delta_lon, x, y;
