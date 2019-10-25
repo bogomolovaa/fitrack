@@ -225,7 +225,6 @@ public class TrackerService extends Service
         double[] latLonOut = new double[2];
         KalmanUtils.get_lat_long(kalmanFilter, latLonOut);
         Point smoothedPoint = new Point(latLonOut);
-        stringBuffer.append("smoothedPoint lat " + smoothedPoint.getLat() + " lng " + smoothedPoint.getLng() + "\n");
         smoothedPoint.setTime(point.getTime());
         smoothedPoint.setSmoothed(Point.SMOOTHED);
         smoothedPoint = dbProvider.addPoint(smoothedPoint);
@@ -234,6 +233,7 @@ public class TrackerService extends Service
             openedTrack.setStartSmoothedPoint(smoothedPoint);
         if (openedTrack.getMode() == Track.ENDED_MODE)
             openedTrack.setEndSmoothedPoint(smoothedPoint);
+        stringBuffer.append("smoothedPoint lat " + smoothedPoint.getLat() + " lng " + smoothedPoint.getLng() + " getStartSmoothedPoint is null "+(openedTrack.getStartSmoothedPoint()==null)+"\n");
         if (secondsSinceLastPoint > 0) {
             double distanceSinceLastPoint = GeoUtils.distance(new Point(lastLatLng), new Point(latLonOut));
             double velocity = distanceSinceLastPoint / secondsSinceLastPoint;

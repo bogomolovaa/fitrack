@@ -149,14 +149,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
 
                     if (track != null) {
+                        /*
                         if (trackRawPolyline == null) {
                             trackRawPolyline = googleMap.addPolyline((new PolylineOptions())
                                     .clickable(false).add(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.RAW))));
                         } else {
                             trackRawPolyline.setPoints(Arrays.asList(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.RAW))));
                         }
+                        */
+                        if (trackSmoothedPolyline == null) {
+                            trackSmoothedPolyline = googleMap.addPolyline((new PolylineOptions()).color(0xffffff00)
+                                    .clickable(false).add(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.SMOOTHED))));
+                        } else {
+                            trackSmoothedPolyline.setPoints(Arrays.asList(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.SMOOTHED))));
+                            Log.i(MAIN_ACTIVITY,"smoothed points "+dbProvider.getTrackPoints(track, Point.SMOOTHED).size());
+                        }
                     } else {
-                        trackRawPolyline.remove();
+                        if (trackRawPolyline != null) trackRawPolyline.remove();
+                        if (trackSmoothedPolyline != null) trackSmoothedPolyline.remove();
                     }
                 }
                 handler.postDelayed(this, 5000);

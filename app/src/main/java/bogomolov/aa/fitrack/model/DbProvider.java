@@ -3,6 +3,7 @@ package bogomolov.aa.fitrack.model;
 import android.content.Context;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.Realm;
@@ -55,8 +56,11 @@ public class DbProvider {
 
     public List<Point> getTrackPoints(Track track, int smoothed) {
         if (track.isOpened()) {
+            if (track.getStartPoint(smoothed) == null) return new ArrayList<>();
             return realm.where(Point.class).equalTo("smoothed", smoothed).greaterThanOrEqualTo("id", track.getStartPoint(smoothed).getId()).findAll();
         } else {
+            if (track.getStartPoint(smoothed) == null || track.getEndPoint(smoothed) == null)
+                return new ArrayList<>();
             return realm.where(Point.class).equalTo("smoothed", smoothed).between("id", track.getStartPoint(smoothed).getId(), track.getEndPoint(smoothed).getId()).findAll();
         }
     }
@@ -79,11 +83,9 @@ public class DbProvider {
 
     public List<Point> getLastPoints() {
         Track lastTrack = getLastTrack();
-        if (lastTrack == null) {
+        if (lastTrack == null || lastTrack.getEndPoint() == null) {
             return realm.where(Point.class).equalTo("smoothed", Point.RAW).findAll();
         } else {
-            if (lastTrack.getEndPoint() == null)
-                throw new IllegalStateException("getLastPoints with opened track");
             return realm.where(Point.class).equalTo("smoothed", Point.RAW).greaterThan("id", lastTrack.getEndPoint().getId()).findAll();
         }
     }
