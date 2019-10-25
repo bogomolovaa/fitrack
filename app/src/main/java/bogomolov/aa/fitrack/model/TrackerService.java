@@ -54,6 +54,8 @@ public class TrackerService extends Service
 
     public static StringBuffer stringBuffer = new StringBuffer();
 
+    public static final int STARTED_MODE = 1;
+    public static final int ENDED_MODE = 2;
 
     private static final long UPDATE_INTERVAL = 5000, FASTEST_INTERVAL = 5000; // = 5 seconds
     private static final String TRACKER_SERVICE = "TrackerService";
@@ -167,6 +169,7 @@ public class TrackerService extends Service
         stringBuffer.append("checkTrack\n");
         List<Point> trackPoints = null;
         Track openedTrack = dbProvider.getOpenedTrack();
+        int mode = 0;
         if (openedTrack == null) {
             stringBuffer.append("openedTrack is null\n");
             List<Point> points = dbProvider.getLastPoints();
@@ -178,7 +181,7 @@ public class TrackerService extends Service
                 if (distance > 50) {
                     stringBuffer.append("track created\n");
                     Track track = new Track();
-                    track.setMode(Track.STARTED_MODE);
+                    mode = STARTED_MODE;
                     track.setStartPoint(lastPoint);
                     track.setStartTime(lastPoint.getTime());
                     dbProvider.addTrack(track);
@@ -198,22 +201,22 @@ public class TrackerService extends Service
                         dbProvider.getRealm().beginTransaction();
                         openedTrack.setEndPoint(points.get(i));
                         openedTrack.setEndTime(points.get(i).getTime());
-                        openedTrack.setMode(Track.ENDED_MODE);
+                        mode = ENDED_MODE;
                         dbProvider.getRealm().commitTransaction();
                         stringBuffer.append("track finished\n");
                     }
                 }
             }
         }
-        if (openedTrack != null) applyKalmanFilter(openedTrack, trackPoints);
+        if (openedTrack != null) applyKalmanFilter(openedTrack, trackPoints, mode);
     }
 
-    private void applyKalmanFilter(Track openedTrack, List<Point> trackPoints) {
+    private void applyKalmanFilter(Track openedTrack, List<Point> trackPoints, int mode) {
         Point point = trackPoints.get(trackPoints.size() - 1);
         if (kalmanFilter == null) {
             lastLatLng = new double[2];
             lastTime = point.getTime();
-            kalmanFilter = KalmanUtils.alloc_filter_velocity2d(2);
+            kalmanFilter = KalmanUtils.alloc_filter_velocity2d(5);
             for (int i = 0; i < trackPoints.size() - 1; i++) {
                 KalmanUtils.update_velocity2d(kalmanFilter, trackPoints.get(i).getLat(), trackPoints.get(i).getLng(), i == 0 ? 0 : (trackPoints.get(i).getTime() - trackPoints.get(i - 1).getTime()) / 1000.0);
                 KalmanUtils.get_lat_long(kalmanFilter, lastLatLng);
@@ -229,11 +232,11 @@ public class TrackerService extends Service
         smoothedPoint.setSmoothed(Point.SMOOTHED);
         smoothedPoint = dbProvider.addPoint(smoothedPoint);
         dbProvider.getRealm().beginTransaction();
-        if (openedTrack.getMode() == Track.STARTED_MODE)
+        if (mode == STARTED_MODE)
             openedTrack.setStartSmoothedPoint(smoothedPoint);
-        if (openedTrack.getMode() == Track.ENDED_MODE)
+        if (mode == ENDED_MODE)
             openedTrack.setEndSmoothedPoint(smoothedPoint);
-        stringBuffer.append("smoothedPoint lat " + smoothedPoint.getLat() + " lng " + smoothedPoint.getLng() + " getStartSmoothedPoint is null "+(openedTrack.getStartSmoothedPoint()==null)+"\n");
+        stringBuffer.append("smoothedPoint lat " + smoothedPoint.getLat() + " lng " + smoothedPoint.getLng() + " getStartSmoothedPoint is null " + (openedTrack.getStartSmoothedPoint() == null) + "\n");
         if (secondsSinceLastPoint > 0) {
             double distanceSinceLastPoint = GeoUtils.distance(new Point(lastLatLng), new Point(latLonOut));
             double velocity = distanceSinceLastPoint / secondsSinceLastPoint;

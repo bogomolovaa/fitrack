@@ -5,8 +5,7 @@ import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 
 public class Track extends RealmObject {
-    public static final int STARTED_MODE = 1;
-    public static final int ENDED_MODE = 2;
+
 
     private long id;
     private Point startPoint;
@@ -20,9 +19,6 @@ public class Track extends RealmObject {
     private double currentSpeed;
     private double bearing;
 
-    @Ignore
-    private int mode;
-
 
     public String getTimeString(long time) {
         long deltaTime = time - startTime;
@@ -34,13 +30,6 @@ public class Track extends RealmObject {
         return hours + ":" + minutes + ":" + seconds;
     }
 
-    public int getMode() {
-        return mode;
-    }
-
-    public void setMode(int mode) {
-        this.mode = mode;
-    }
 
     public Point getStartSmoothedPoint() {
         return startSmoothedPoint;
