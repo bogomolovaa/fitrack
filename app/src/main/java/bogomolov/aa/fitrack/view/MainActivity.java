@@ -18,9 +18,20 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import bogomolov.aa.fitrack.R;
@@ -32,7 +43,7 @@ import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
     private TextView textDistance;
     private TextView textTime;
     private TextView textSpeed;
@@ -42,6 +53,10 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> permissionsRejected = new ArrayList<>();
     private ArrayList<String> permissions = new ArrayList<>();
     private DbProvider dbProvider;
+    private GoogleMap googleMap;
+    private Polyline trackRawPolyline;
+    private Polyline trackSmoothedPolyline;
+    private Marker currentPositionMarker;
 
     private static final int ALL_PERMISSIONS_RESULT = 1011;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
@@ -57,6 +72,10 @@ public class MainActivity extends AppCompatActivity {
         textSpeed = findViewById(R.id.text_speed);
         textAvgSpeed = findViewById(R.id.text_avg_speed);
         textDebug = findViewById(R.id.text_debug);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map_fragment);
+        mapFragment.getMapAsync(this);
+
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
         permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         permissionsToRequest = permissionsToRequest(permissions);
@@ -115,13 +134,42 @@ public class MainActivity extends AppCompatActivity {
                 }
                 String[] lines = TrackerService.stringBuffer.toString().split("\n");
                 StringBuilder sb = new StringBuilder();
-                for (int i = lines.length - 1; i >= 0; i--) sb.append(lines[i] + "\n");
+                for (int i = lines.length - 1; i >= Math.max(lines.length - 30, 0); i--)
+                    sb.append(lines[i] + "\n");
                 textDebug.setText(sb.toString());
 
+                Point point = dbProvider.getLastPoint();
+                if (googleMap != null && point != null) {
+                    LatLng latLng = new LatLng(point.getLat(), point.getLng());
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                    if (currentPositionMarker == null) {
+                        currentPositionMarker = googleMap.addMarker(new MarkerOptions().position(latLng).title("Current Location"));
+                    } else {
+                        currentPositionMarker.setPosition(latLng);
+                    }
+
+                    if (track != null) {
+                        if (trackRawPolyline == null) {
+                            trackRawPolyline = googleMap.addPolyline((new PolylineOptions())
+                                    .clickable(false).add(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.RAW))));
+                        } else {
+                            trackRawPolyline.setPoints(Arrays.asList(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.RAW))));
+                        }
+                    } else {
+                        trackRawPolyline.remove();
+                    }
+                }
                 handler.postDelayed(this, 5000);
             }
         };
         runnable.run();
+    }
+
+    private LatLng[] pointsToPolylineCoordinates(List<Point> points) {
+        LatLng[] latLngs = new LatLng[points.size()];
+        for (int i = 0; i < points.size(); i++)
+            latLngs[i] = new LatLng(points.get(i).getLat(), points.get(i).getLng());
+        return latLngs;
     }
 
     @Override
@@ -202,4 +250,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        this.googleMap = googleMap;
+
+
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+
+    }
 }

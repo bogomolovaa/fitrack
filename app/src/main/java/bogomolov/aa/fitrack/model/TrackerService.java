@@ -213,7 +213,7 @@ public class TrackerService extends Service
         if (kalmanFilter == null) {
             lastLatLng = new double[2];
             lastTime = point.getTime();
-            kalmanFilter = KalmanUtils.alloc_filter_velocity2d(1);
+            kalmanFilter = KalmanUtils.alloc_filter_velocity2d(2);
             for (int i = 0; i < trackPoints.size() - 1; i++) {
                 KalmanUtils.update_velocity2d(kalmanFilter, trackPoints.get(i).getLat(), trackPoints.get(i).getLng(), i == 0 ? 0 : (trackPoints.get(i).getTime() - trackPoints.get(i - 1).getTime()) / 1000.0);
                 KalmanUtils.get_lat_long(kalmanFilter, lastLatLng);

@@ -18,16 +18,16 @@ public class DbProvider {
                 .deleteRealmIfMigrationNeeded()
                 .build();
         realm = Realm.getInstance(config);
-        if(delete)
-        realm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.deleteAll();
-            }
-        });
+        if (delete)
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    realm.deleteAll();
+                }
+            });
     }
 
-    public Realm getRealm(){
+    public Realm getRealm() {
         return realm;
     }
 
@@ -53,7 +53,6 @@ public class DbProvider {
     }
 
 
-
     public List<Point> getTrackPoints(Track track, int smoothed) {
         if (track.isOpened()) {
             return realm.where(Point.class).equalTo("smoothed", smoothed).greaterThanOrEqualTo("id", track.getStartPoint(smoothed).getId()).findAll();
@@ -72,6 +71,11 @@ public class DbProvider {
         return tracks.size() > 0 ? tracks.get(0) : null;
     }
 
+    public Point getLastPoint() {
+        List<Point> points = getLastPoints();
+        if (points.size() > 0) return points.get(points.size() - 1);
+        return null;
+    }
 
     public List<Point> getLastPoints() {
         Track lastTrack = getLastTrack();
