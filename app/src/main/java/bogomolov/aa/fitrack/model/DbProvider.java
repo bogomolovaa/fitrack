@@ -43,23 +43,23 @@ public class DbProvider {
     }
 
 
-    public void addTrack(Track track) {
+    public Track addTrack(Track track) {
         Number maxId = realm.where(Track.class).max("id");
         long id = maxId != null ? maxId.longValue() : 0 + 1;
         track.setId(id);
         realm.beginTransaction();
-        realm.copyToRealm(track);
+        track = realm.copyToRealm(track);
         realm.commitTransaction();
-        Log.i(DB_PROVIDER, "added track " + id);
+        return track;
     }
 
 
     public List<Point> getTrackPoints(Track track, int smoothed) {
         if (track.isOpened()) {
-            //if (track.getStartPoint(smoothed) == null) return new ArrayList<>();
+            if (track.getStartPoint(smoothed) == null) return new ArrayList<>();
             return realm.where(Point.class).equalTo("smoothed", smoothed).greaterThanOrEqualTo("id", track.getStartPoint(smoothed).getId()).findAll();
         } else {
-            //if (track.getStartPoint(smoothed) == null || track.getEndPoint(smoothed) == null) return new ArrayList<>();
+            if (track.getStartPoint(smoothed) == null || track.getEndPoint(smoothed) == null) return new ArrayList<>();
             return realm.where(Point.class).equalTo("smoothed", smoothed).between("id", track.getStartPoint(smoothed).getId(), track.getEndPoint(smoothed).getId()).findAll();
         }
     }
