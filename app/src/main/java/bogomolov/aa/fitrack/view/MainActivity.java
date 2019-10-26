@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         if (trackSmoothedPolyline != null) trackSmoothedPolyline.remove();
                     }
                 }
-                handler.postDelayed(this, 2000);
+                handler.postDelayed(this, 4000);
             }
         };
         runnable.run();

@@ -37,7 +37,6 @@ import java.util.List;
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.kalman.KalmanFilter;
 import bogomolov.aa.fitrack.model.kalman.KalmanUtils;
-import io.realm.Realm;
 
 
 public class TrackerService extends Service
@@ -51,13 +50,14 @@ public class TrackerService extends Service
     private KalmanFilter kalmanFilter;
     private long lastTime;
     private double[] lastLatLng;
+    private int smoothedPointCounter = 0;
 
     public static StringBuffer stringBuffer = new StringBuffer();
 
     public static final int STARTED_MODE = 1;
     public static final int ENDED_MODE = 2;
 
-    private static final long UPDATE_INTERVAL = 2000, FASTEST_INTERVAL = 2000;
+    private static final long UPDATE_INTERVAL = 1000, FASTEST_INTERVAL = 1000;
     private static final String TRACKER_SERVICE = "TrackerService";
 
     @Override
@@ -72,7 +72,7 @@ public class TrackerService extends Service
             notificationChannel.setDescription("Sample Channel description");
             notificationChannel.enableLights(true);
             notificationChannel.setLightColor(Color.RED);
-            notificationChannel.setVibrationPattern(new long[]{0, 1000, 500, 1000});
+            //notificationChannel.setVibrationPattern(new long[]{0, 1000, 500, 1000});
             notificationChannel.enableVibration(false);
             notificationManager.createNotificationChannel(notificationChannel);
         }
@@ -219,7 +219,7 @@ public class TrackerService extends Service
         if (kalmanFilter == null) {
             lastLatLng = new double[2];
             lastTime = point.getTime();
-            kalmanFilter = KalmanUtils.alloc_filter_velocity2d(1000);
+            kalmanFilter = KalmanUtils.alloc_filter_velocity2d(500);
             for (int i = 0; i < trackPoints.size() - 1; i++) {
                 KalmanUtils.update_velocity2d(kalmanFilter, trackPoints.get(i).getLat(), trackPoints.get(i).getLng(), i == 0 ? 0 : (trackPoints.get(i).getTime() - trackPoints.get(i - 1).getTime()) / 1000.0);
                 KalmanUtils.get_lat_long(kalmanFilter, lastLatLng);
@@ -233,7 +233,9 @@ public class TrackerService extends Service
         Point smoothedPoint = new Point(latLonOut);
         smoothedPoint.setTime(point.getTime());
         smoothedPoint.setSmoothed(Point.SMOOTHED);
-        smoothedPoint = dbProvider.addPoint(smoothedPoint);
+        if (mode == STARTED_MODE || mode == ENDED_MODE || smoothedPointCounter % 4 == 0)
+            smoothedPoint = dbProvider.addPoint(smoothedPoint);
+        smoothedPointCounter++;
         dbProvider.getRealm().beginTransaction();
         if (mode == STARTED_MODE)
             openedTrack.setStartSmoothedPoint(smoothedPoint);
