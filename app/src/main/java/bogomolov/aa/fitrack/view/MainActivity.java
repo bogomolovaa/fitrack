@@ -162,14 +162,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     .clickable(false).add(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.SMOOTHED))));
                         } else {
                             trackSmoothedPolyline.setPoints(Arrays.asList(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.SMOOTHED))));
-                            Log.i(MAIN_ACTIVITY,"smoothed points "+dbProvider.getTrackPoints(track, Point.SMOOTHED).size());
                         }
                     } else {
                         if (trackRawPolyline != null) trackRawPolyline.remove();
                         if (trackSmoothedPolyline != null) trackSmoothedPolyline.remove();
                     }
                 }
-                handler.postDelayed(this, 5000);
+                handler.postDelayed(this, 2000);
             }
         };
         runnable.run();

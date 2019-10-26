@@ -57,7 +57,7 @@ public class TrackerService extends Service
     public static final int STARTED_MODE = 1;
     public static final int ENDED_MODE = 2;
 
-    private static final long UPDATE_INTERVAL = 5000, FASTEST_INTERVAL = 5000; // = 5 seconds
+    private static final long UPDATE_INTERVAL = 2000, FASTEST_INTERVAL = 2000;
     private static final String TRACKER_SERVICE = "TrackerService";
 
     @Override
@@ -153,25 +153,24 @@ public class TrackerService extends Service
                 if (!(locationResult.getLastLocation().getLongitude() == location.getLongitude() && locationResult.getLastLocation().getLatitude() == location.getLatitude())) {
                     location = locationResult.getLastLocation();
                     Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
-                    dbProvider.addPoint(point);
-                    stringBuffer.append("point lat " + point.getLat() + " lng " + point.getLng() + " id " + point.getId() + "\n");
-                    checkTrack();
+
+                    checkTrack(point);
                     lastTime = location.getTime();
                 } else {
-                    stringBuffer.append("same location\n");
+                    //stringBuffer.append("same location\n");
                 }
             }
         };
         LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(locationRequest, locationCallback, null);
     }
 
-    private void checkTrack() {
-        stringBuffer.append("checkTrack\n");
+    private void checkTrack(Point point) {
+
         List<Point> trackPoints = null;
         Track openedTrack = dbProvider.getOpenedTrack();
         int mode = 0;
         if (openedTrack == null) {
-            stringBuffer.append("openedTrack is null\n");
+            dbProvider.addPoint(point);
             List<Point> points = dbProvider.getLastPoints();
             if (points.size() > 1) {
                 Point firstPoint = points.get(0);
@@ -189,9 +188,15 @@ public class TrackerService extends Service
             }
             trackPoints = points;
         } else {
-            List<Point> points = dbProvider.getTrackPoints(openedTrack, Point.RAW);
+            List<Point> points = new ArrayList<>(dbProvider.getTrackPoints(openedTrack, Point.RAW));
             trackPoints = points;
             Point lastPoint = points.get(points.size() - 1);
+            if (!(GeoUtils.distance(point, lastPoint) > 200 || point.getTime() - lastPoint.getTime() <= 2 * UPDATE_INTERVAL)) {
+                points.add(point);
+                lastPoint = point;
+                dbProvider.addPoint(point);
+            }
+
             for (int i = points.size() - 1; i >= 0; i--) {
                 //stringBuffer.append(i + " distance " + GeoUtils.distance(lastPoint, points.get(i)) + " time " + (lastPoint.getTime() - points.get(i).getTime()) / 1000 + "\n");
                 if (GeoUtils.distance(lastPoint, points.get(i)) <= 50) {
@@ -214,7 +219,7 @@ public class TrackerService extends Service
         if (kalmanFilter == null) {
             lastLatLng = new double[2];
             lastTime = point.getTime();
-            kalmanFilter = KalmanUtils.alloc_filter_velocity2d(300);
+            kalmanFilter = KalmanUtils.alloc_filter_velocity2d(1000);
             for (int i = 0; i < trackPoints.size() - 1; i++) {
                 KalmanUtils.update_velocity2d(kalmanFilter, trackPoints.get(i).getLat(), trackPoints.get(i).getLng(), i == 0 ? 0 : (trackPoints.get(i).getTime() - trackPoints.get(i - 1).getTime()) / 1000.0);
                 KalmanUtils.get_lat_long(kalmanFilter, lastLatLng);
@@ -234,7 +239,6 @@ public class TrackerService extends Service
             openedTrack.setStartSmoothedPoint(smoothedPoint);
         if (mode == ENDED_MODE)
             openedTrack.setEndSmoothedPoint(smoothedPoint);
-        stringBuffer.append("mode "+mode + " smoothedPoint lat " + smoothedPoint.getLat() + " lng " + smoothedPoint.getLng() + " getStartSmoothedPoint is null " + (openedTrack.getStartSmoothedPoint() == null) + "\n");
         if (secondsSinceLastPoint > 0) {
             double distanceSinceLastPoint = GeoUtils.distance(new Point(lastLatLng), new Point(latLonOut));
             double velocity = distanceSinceLastPoint / secondsSinceLastPoint;
