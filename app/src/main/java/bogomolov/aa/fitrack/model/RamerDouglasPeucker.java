@@ -1,5 +1,7 @@
 package bogomolov.aa.fitrack.model;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +11,7 @@ public class RamerDouglasPeucker {
         return GeoUtils.distance(v, w);
     }
 
-    private static double distanceToSegmentSquared(Point p, Point v, Point w) {
+    private static double perpendicularDistance(Point p, Point v, Point w) {
         final double l2 = distanceBetweenPoints(v, w);
         if (l2 == 0)
             return distanceBetweenPoints(p, v);
@@ -19,10 +21,6 @@ public class RamerDouglasPeucker {
         if (t > 1)
             return distanceBetweenPoints(p, w);
         return distanceBetweenPoints(p, new Point(v.getTime(), (v.getLat() + t * (w.getLat() - v.getLat())), (v.getLng() + t * (w.getLng() - v.getLng()))));
-    }
-
-    private static double perpendicularDistance(Point p, Point v, Point w) {
-        return Math.sqrt(distanceToSegmentSquared(p, v, w));
     }
 
     private static void douglasPeucker(List<Point> list, int s, int e, double epsilon, List<Point> resultList) {
@@ -40,11 +38,13 @@ public class RamerDouglasPeucker {
             // End
             Point w = list.get(end);
             final double d = perpendicularDistance(p, v, w);
+
             if (d > dmax) {
                 index = i;
                 dmax = d;
             }
         }
+        Log.i("RamerDouglasPeucker","perpendicularDistance "+dmax+" epsilon "+epsilon);
         // If max distance is greater than epsilon, recursively simplify
         if (dmax > epsilon) {
             // Recursive call
@@ -69,6 +69,7 @@ public class RamerDouglasPeucker {
      */
     public static List<Point> douglasPeucker(List<Point> list, double epsilon) {
         List<Point> resultList = new ArrayList<>();
+        Log.i("start","start points "+list.size());
         douglasPeucker(list, 0, list.size(), epsilon, resultList);
         return resultList;
     }

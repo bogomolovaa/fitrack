@@ -75,7 +75,7 @@ public class DbProvider {
     }
 
     public Point getLastPoint() {
-        List<Point> points = getLastPoints();
+        List<Point> points = realm.where(Point.class).equalTo("smoothed", Point.RAW).findAll();
         if (points.size() > 0) return points.get(points.size() - 1);
         return null;
     }

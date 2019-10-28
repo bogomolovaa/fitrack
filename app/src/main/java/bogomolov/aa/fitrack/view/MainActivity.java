@@ -122,8 +122,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void run() {
                 Track track = dbProvider.getLastTrack();
-                List<Point> points = dbProvider.getLastPoints();
-                Point point = points.size() > 0 ? points.get(points.size() - 1) : null;
+                Point point = dbProvider.getLastPoint();
 
                 if (googleMap != null && point != null) {
                     LatLng latLng = new LatLng(point.getLat(), point.getLng());
@@ -157,7 +156,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
 
                     if (track != null) {
-                        List<Point> smoothedPoints = RamerDouglasPeucker.douglasPeucker(points, 10);
+                        List<Point> points = dbProvider.getTrackPoints(track, Point.RAW);
+
+                        List<Point> smoothedPoints = RamerDouglasPeucker.douglasPeucker(points, 20);
                         if (trackSmoothedPolyline == null) {
                             trackSmoothedPolyline = googleMap.addPolyline((new PolylineOptions()).color(0xffffff00)
                                     .clickable(false).add(pointsToPolylineCoordinates(smoothedPoints)));
@@ -188,7 +189,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 for (int i = lines.length - 1; i >= Math.max(lines.length - 30, 0); i--)
                     sb.append(lines[i] + "\n");
                 textDebug.setText(sb.toString());
-
 
 
                 handler.postDelayed(this, 4000);
