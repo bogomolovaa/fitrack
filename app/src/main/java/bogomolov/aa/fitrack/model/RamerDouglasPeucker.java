@@ -7,47 +7,38 @@ import java.util.List;
 
 public class RamerDouglasPeucker {
 
-    private static double distanceBetweenPoints(Point v, Point w) {
-        return GeoUtils.distance(v, w);
-    }
 
-    private static double perpendicularDistance(Point p, Point v, Point w) {
-        final double l2 = distanceBetweenPoints(v, w);
+    private static double perpendicularDistance(double px, double py, double vx, double vy, double wx, double wy) {
+        final double l2 = (vx - wx) * (vx - wx) + (vy - wy) * (vy - wy);
         if (l2 == 0)
-            return distanceBetweenPoints(p, v);
-        final double t = ((p.getLat() - v.getLat()) * (w.getLat() - v.getLat()) + (p.getLng() - v.getLng()) * (w.getLng() - v.getLng())) / l2;
+            return GeoUtils.distance(new Point(px, py), new Point(vx, vy));
+        final double t = ((px - vx) * (wx - vx) + (py - vy) * (wy - vy)) / l2;
         if (t < 0)
-            return distanceBetweenPoints(p, v);
+            return GeoUtils.distance(new Point(px, py), new Point(vx, vy));
         if (t > 1)
-            return distanceBetweenPoints(p, w);
-        return distanceBetweenPoints(p, new Point(v.getTime(), (v.getLat() + t * (w.getLat() - v.getLat())), (v.getLng() + t * (w.getLng() - v.getLng()))));
+            return GeoUtils.distance(new Point(px, py), new Point(wx, wy));
+        return GeoUtils.distance(new Point(px, py), new Point((vx + t * (wx - vx)), (vy + t * (wy - vy))));
     }
 
     private static void douglasPeucker(List<Point> list, int s, int e, double epsilon, List<Point> resultList) {
-        // Find the point with the maximum distance
         double dmax = 0;
         int index = 0;
 
         final int start = s;
         final int end = e - 1;
         for (int i = start + 1; i < end; i++) {
-            // Point
             Point p = list.get(i);
-            // Start
             Point v = list.get(start);
-            // End
             Point w = list.get(end);
-            final double d = perpendicularDistance(p, v, w);
-
+            final double d = perpendicularDistance(p.getLat(), p.getLng(), v.getLat(), v.getLng(), w.getLat(), w.getLng());
             if (d > dmax) {
                 index = i;
                 dmax = d;
             }
         }
-        Log.i("RamerDouglasPeucker","perpendicularDistance "+dmax+" epsilon "+epsilon);
-        // If max distance is greater than epsilon, recursively simplify
+        if (e - s < 5)
+            TrackerService.stringBuffer.append("perpendicularDistance " + dmax + " epsilon " + epsilon + "\n");
         if (dmax > epsilon) {
-            // Recursive call
             douglasPeucker(list, s, index, epsilon, resultList);
             douglasPeucker(list, index, e, epsilon, resultList);
         } else {
@@ -60,16 +51,8 @@ public class RamerDouglasPeucker {
         }
     }
 
-    /**
-     * Given a curve composed of line segments find a similar curve with fewer points.
-     *
-     * @param list    List of Double[] points (x,y)
-     * @param epsilon Distance dimension
-     * @return Similar curve with fewer points
-     */
     public static List<Point> douglasPeucker(List<Point> list, double epsilon) {
         List<Point> resultList = new ArrayList<>();
-        Log.i("start","start points "+list.size());
         douglasPeucker(list, 0, list.size(), epsilon, resultList);
         return resultList;
     }

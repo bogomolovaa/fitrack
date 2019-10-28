@@ -198,16 +198,15 @@ public class TrackerService extends Service
             Point lastPoint = points.get(points.size() - 1);
             if (!(GeoUtils.distance(point, lastPoint) > 200 || point.getTime() - lastPoint.getTime() <= 2 * UPDATE_INTERVAL)) {
                 points.add(point);
-                lastPoint = point;
-                dbProvider.addPoint(point);
+                lastPoint = dbProvider.addPoint(point);
             }
 
             for (int i = points.size() - 1; i >= 0; i--) {
                 //stringBuffer.append(i + " distance " + GeoUtils.distance(lastPoint, points.get(i)) + " time " + (lastPoint.getTime() - points.get(i).getTime()) / 1000 + "\n");
-                if (GeoUtils.distance(lastPoint, points.get(i)) <= 50) {
+                if (GeoUtils.distance(lastPoint, points.get(i)) <= 20) {
                     if (lastPoint.getTime() - points.get(i).getTime() > 3 * 60 * 1000) {
                         dbProvider.getRealm().beginTransaction();
-                        openedTrack.setEndPoint(points.get(i));
+                        openedTrack.setEndPoint(lastPoint);
                         openedTrack.setEndTime(points.get(i).getTime());
                         mode = ENDED_MODE;
                         dbProvider.getRealm().commitTransaction();

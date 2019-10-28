@@ -126,7 +126,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 if (googleMap != null && point != null) {
                     LatLng latLng = new LatLng(point.getLat(), point.getLng());
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
                     if (currentPositionMarker == null) {
                         currentPositionMarker = googleMap.addMarker(new MarkerOptions().position(latLng).title("Current Location"));
                     } else {
@@ -134,6 +133,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
 
                     if (track != null) {
+                        googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
 
                         if (trackRawPolyline == null) {
                             trackRawPolyline = googleMap.addPolyline((new PolylineOptions())
@@ -151,6 +151,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                         */
                     } else {
+                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18));
                         if (trackRawPolyline != null) trackRawPolyline.remove();
                         //if (trackSmoothedPolyline != null) trackSmoothedPolyline.remove();
                     }
@@ -158,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if (track != null) {
                         List<Point> points = dbProvider.getTrackPoints(track, Point.RAW);
 
-                        List<Point> smoothedPoints = RamerDouglasPeucker.douglasPeucker(points, 20);
+                        List<Point> smoothedPoints = RamerDouglasPeucker.douglasPeucker(points, 10);
                         if (trackSmoothedPolyline == null) {
                             trackSmoothedPolyline = googleMap.addPolyline((new PolylineOptions()).color(0xffffff00)
                                     .clickable(false).add(pointsToPolylineCoordinates(smoothedPoints)));

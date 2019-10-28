@@ -17,6 +17,11 @@ public class Point extends RealmObject {
     public Point() {
     }
 
+    public Point(double lat, double lng) {
+        this.lat = lat;
+        this.lng = lng;
+    }
+
     public Point(double[] latlng) {
         lat = latlng[0];
         lng = latlng[1];
