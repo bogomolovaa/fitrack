@@ -36,7 +36,9 @@ import java.util.List;
 
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.DbProvider;
+import bogomolov.aa.fitrack.model.GeoUtils;
 import bogomolov.aa.fitrack.model.Point;
+import bogomolov.aa.fitrack.model.RamerDouglasPeucker;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.model.TrackerService;
 import io.realm.Realm;
@@ -120,25 +122,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void run() {
                 Track track = dbProvider.getLastTrack();
-                if (track != null) {
-                    textDistance.setText((int) track.getDistance() + " m");
-                    long time = track.isOpened() ? System.currentTimeMillis() : track.getEndTime();
-                    textTime.setText(track.getTimeString(time));
-                    textSpeed.setText(String.format("%.1f", 3.6 * track.getCurrentSpeed()) + " km/h");
-                    textAvgSpeed.setText(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
-                } else {
-                    textDistance.setText("");
-                    textTime.setText("");
-                    textSpeed.setText("");
-                    textAvgSpeed.setText("");
-                }
-                String[] lines = TrackerService.stringBuffer.toString().split("\n");
-                StringBuilder sb = new StringBuilder();
-                for (int i = lines.length - 1; i >= Math.max(lines.length - 30, 0); i--)
-                    sb.append(lines[i] + "\n");
-                textDebug.setText(sb.toString());
+                List<Point> points = dbProvider.getLastPoints();
+                Point point = points.size() > 0 ? points.get(points.size() - 1) : null;
 
-                Point point = dbProvider.getLastPoint();
                 if (googleMap != null && point != null) {
                     LatLng latLng = new LatLng(point.getLat(), point.getLng());
                     googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
@@ -157,17 +143,54 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             trackRawPolyline.setPoints(Arrays.asList(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.RAW))));
                         }
 
+                        /*
                         if (trackSmoothedPolyline == null) {
                             trackSmoothedPolyline = googleMap.addPolyline((new PolylineOptions()).color(0xffffff00)
                                     .clickable(false).add(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.SMOOTHED))));
                         } else {
                             trackSmoothedPolyline.setPoints(Arrays.asList(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.SMOOTHED))));
                         }
+                        */
                     } else {
                         if (trackRawPolyline != null) trackRawPolyline.remove();
-                        if (trackSmoothedPolyline != null) trackSmoothedPolyline.remove();
+                        //if (trackSmoothedPolyline != null) trackSmoothedPolyline.remove();
                     }
+
+                    if (track != null) {
+                        List<Point> smoothedPoints = RamerDouglasPeucker.douglasPeucker(points, 10);
+                        if (trackSmoothedPolyline == null) {
+                            trackSmoothedPolyline = googleMap.addPolyline((new PolylineOptions()).color(0xffffff00)
+                                    .clickable(false).add(pointsToPolylineCoordinates(smoothedPoints)));
+                        } else {
+                            trackSmoothedPolyline.setPoints(Arrays.asList(pointsToPolylineCoordinates(smoothedPoints)));
+                        }
+                        dbProvider.getRealm().beginTransaction();
+                        track.setDistance(GeoUtils.getTrackDistance(smoothedPoints));
+                        dbProvider.getRealm().commitTransaction();
+                    }
+
                 }
+
+                if (track != null) {
+                    textDistance.setText((int) track.getDistance() + " m");
+                    long time = track.isOpened() ? System.currentTimeMillis() : track.getEndTime();
+                    textTime.setText(track.getTimeString(time));
+                    textSpeed.setText(String.format("%.1f", 3.6 * track.getCurrentSpeed()) + " km/h");
+                    textAvgSpeed.setText(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
+                } else {
+                    textDistance.setText("");
+                    textTime.setText("");
+                    textSpeed.setText("");
+                    textAvgSpeed.setText("");
+                }
+                String[] lines = TrackerService.stringBuffer.toString().split("\n");
+                StringBuilder sb = new StringBuilder();
+                for (int i = lines.length - 1; i >= Math.max(lines.length - 30, 0); i--)
+                    sb.append(lines[i] + "\n");
+                textDebug.setText(sb.toString());
+
+
+
                 handler.postDelayed(this, 4000);
             }
         };

@@ -153,7 +153,7 @@ public class TrackerService extends Service
                 if (!(locationResult.getLastLocation().getLongitude() == location.getLongitude() && locationResult.getLastLocation().getLatitude() == location.getLatitude())) {
                     location = locationResult.getLastLocation();
                     Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
-
+                    //location.getAccuracy()
                     checkTrack(point);
                     lastTime = location.getTime();
                 } else {
@@ -188,6 +188,11 @@ public class TrackerService extends Service
             }
             trackPoints = points;
         } else {
+            if (location != null){
+                dbProvider.getRealm().beginTransaction();
+                openedTrack.setCurrentSpeed(location.getSpeed());
+                dbProvider.getRealm().commitTransaction();
+            }
             List<Point> points = new ArrayList<>(dbProvider.getTrackPoints(openedTrack, Point.RAW));
             trackPoints = points;
             Point lastPoint = points.get(points.size() - 1);
@@ -211,7 +216,7 @@ public class TrackerService extends Service
                 }
             }
         }
-        if (openedTrack != null) applyKalmanFilter(openedTrack, trackPoints, mode);
+        //if (openedTrack != null) applyKalmanFilter(openedTrack, trackPoints, mode);
     }
 
     private void applyKalmanFilter(Track openedTrack, List<Point> trackPoints, int mode) {
@@ -228,6 +233,7 @@ public class TrackerService extends Service
         }
         double secondsSinceLastPoint = (point.getTime() - lastTime) / 1000.0;
         KalmanUtils.update_velocity2d(kalmanFilter, point.getLat(), point.getLng(), secondsSinceLastPoint);
+
         double[] latLonOut = new double[2];
         KalmanUtils.get_lat_long(kalmanFilter, latLonOut);
         Point smoothedPoint = new Point(latLonOut);
@@ -235,6 +241,7 @@ public class TrackerService extends Service
         smoothedPoint.setSmoothed(Point.SMOOTHED);
         if (mode == STARTED_MODE || mode == ENDED_MODE || smoothedPointCounter % 4 == 0)
             smoothedPoint = dbProvider.addPoint(smoothedPoint);
+
         smoothedPointCounter++;
         dbProvider.getRealm().beginTransaction();
         if (mode == STARTED_MODE)
