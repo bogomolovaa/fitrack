@@ -20,7 +20,6 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -41,9 +40,6 @@ import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.RamerDouglasPeucker;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.model.TrackerService;
-import io.realm.Realm;
-import io.realm.RealmConfiguration;
-import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
     private TextView textDistance;
@@ -59,6 +55,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Polyline trackRawPolyline;
     private Polyline trackSmoothedPolyline;
     private Marker currentPositionMarker;
+
+    private List<Point> tailSmoothedPoints;
+    private int windowStartId;
+    private static final int WINDOW_MAX_SIZE = 50;
+    private static final int EPSILON = 20;
 
     private static final int ALL_PERMISSIONS_RESULT = 1011;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
@@ -142,24 +143,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             trackRawPolyline.setPoints(Arrays.asList(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.RAW))));
                         }
 
-                        /*
-                        if (trackSmoothedPolyline == null) {
-                            trackSmoothedPolyline = googleMap.addPolyline((new PolylineOptions()).color(0xffffff00)
-                                    .clickable(false).add(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.SMOOTHED))));
-                        } else {
-                            trackSmoothedPolyline.setPoints(Arrays.asList(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.SMOOTHED))));
-                        }
-                        */
-                    } else {
-                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18));
-                        if (trackRawPolyline != null) trackRawPolyline.remove();
-                        //if (trackSmoothedPolyline != null) trackSmoothedPolyline.remove();
-                    }
-
-                    if (track != null) {
                         List<Point> points = dbProvider.getTrackPoints(track, Point.RAW);
 
-                        List<Point> smoothedPoints = RamerDouglasPeucker.douglasPeucker(points, 10);
+                        //List<Point> smoothedPoints = RamerDouglasPeucker.douglasPeucker(points, EPSILON);
+                        List<Point> smoothedPoints = getSmoothedPoints(points);
+
                         if (trackSmoothedPolyline == null) {
                             trackSmoothedPolyline = googleMap.addPolyline((new PolylineOptions()).color(0xffffff00)
                                     .clickable(false).add(pointsToPolylineCoordinates(smoothedPoints)));
@@ -167,8 +155,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             trackSmoothedPolyline.setPoints(Arrays.asList(pointsToPolylineCoordinates(smoothedPoints)));
                         }
                         dbProvider.getRealm().beginTransaction();
+                        track.setCurrentSpeed(getCurrentSpeed(smoothedPoints));
                         track.setDistance(GeoUtils.getTrackDistance(smoothedPoints));
                         dbProvider.getRealm().commitTransaction();
+
+                    } else {
+                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18));
+                        if (trackRawPolyline != null) trackRawPolyline.remove();
                     }
 
                 }
@@ -196,6 +189,58 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         };
         runnable.run();
+    }
+
+    private double getCurrentSpeed(List<Point> points) {
+        double distance = points.size() > 1 ? GeoUtils.distance(points.get(points.size() - 1), points.get(points.size() - 2)) : 0;
+        double seconds = points.size() > 1 ? (points.get(points.size() - 1).getTime() - points.get(points.size() - 2).getTime()) / 1000.0 : 0;
+        return seconds > 0 ? distance / seconds : 0;
+    }
+
+    private List<Point> getSmoothedPoints(List<Point> points) {
+        if (points.size() < 3) {
+            tailSmoothedPoints = null;
+            return points;
+        }
+        List<Point> smoothedPoints = new ArrayList<>();
+        if (tailSmoothedPoints == null) {
+            tailSmoothedPoints = new ArrayList<>();
+            int windowSize = WINDOW_MAX_SIZE / 2;
+            windowStartId = Math.max(points.size() - windowSize, 0);
+            List<Point> windowPointsRaw = getWindowPoints(points, windowSize);
+            List<Point> preWindowPointsRaw = getPreWindowPoints(points, windowSize);
+            tailSmoothedPoints = RamerDouglasPeucker.douglasPeucker(preWindowPointsRaw, EPSILON);
+            List<Point> windowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(windowPointsRaw, EPSILON);
+            smoothedPoints.addAll(tailSmoothedPoints);
+            smoothedPoints.addAll(windowSmoothedPoints);
+        } else {
+            int windowSize = points.size() - windowStartId;
+            if (windowSize >= WINDOW_MAX_SIZE) {
+                List<Point> windowPointsRaw = getWindowPoints(points, windowSize);
+                List<Point> secondHalfWindowPointsRaw = getWindowPoints(points, windowSize / 2);
+                List<Point> firstHalfWindowPointsRaw = getPreWindowPoints(windowPointsRaw, windowSize / 2);
+                List<Point> secondHalfWindowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(secondHalfWindowPointsRaw, EPSILON);
+                List<Point> firstHalfWindowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(firstHalfWindowPointsRaw, EPSILON);
+                tailSmoothedPoints.addAll(firstHalfWindowSmoothedPoints);
+                smoothedPoints.addAll(tailSmoothedPoints);
+                smoothedPoints.addAll(secondHalfWindowSmoothedPoints);
+                windowStartId = points.size() - windowSize / 2;
+            } else {
+                List<Point> windowPointsRaw = getWindowPoints(points, windowSize);
+                List<Point> windowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(windowPointsRaw, EPSILON);
+                smoothedPoints.addAll(tailSmoothedPoints);
+                smoothedPoints.addAll(windowSmoothedPoints);
+            }
+        }
+        return smoothedPoints;
+    }
+
+    private List<Point> getWindowPoints(List<Point> points, int windowSize) {
+        return points.size() > windowSize ? points.subList(points.size() - windowSize, points.size()) : points;
+    }
+
+    private List<Point> getPreWindowPoints(List<Point> points, int windowSize) {
+        return points.size() > windowSize ? points.subList(0, points.size() - windowSize) : new ArrayList<Point>();
     }
 
     private LatLng[] pointsToPolylineCoordinates(List<Point> points) {

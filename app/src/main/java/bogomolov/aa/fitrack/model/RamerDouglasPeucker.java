@@ -36,8 +36,7 @@ public class RamerDouglasPeucker {
                 dmax = d;
             }
         }
-        if (e - s < 5)
-            TrackerService.stringBuffer.append("perpendicularDistance " + dmax + " epsilon " + epsilon + "\n");
+        //if (e - s < 5) TrackerService.stringBuffer.append("perpendicularDistance " + dmax + " epsilon " + epsilon + "\n");
         if (dmax > epsilon) {
             douglasPeucker(list, s, index, epsilon, resultList);
             douglasPeucker(list, index, e, epsilon, resultList);
@@ -52,6 +51,7 @@ public class RamerDouglasPeucker {
     }
 
     public static List<Point> douglasPeucker(List<Point> list, double epsilon) {
+        if (list.size() < 3) return list;
         List<Point> resultList = new ArrayList<>();
         douglasPeucker(list, 0, list.size(), epsilon, resultList);
         return resultList;
