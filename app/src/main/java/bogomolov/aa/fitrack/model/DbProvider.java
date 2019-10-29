@@ -32,6 +32,11 @@ public class DbProvider {
         return realm;
     }
 
+    public List<Track> getFinishedTracks(){
+        return realm.where(Track.class).notEqualTo("endTime", 0).findAll();
+    }
+
+
     public Point addPoint(Point point) {
         realm.beginTransaction();
         Number maxId = realm.where(Point.class).max("id");

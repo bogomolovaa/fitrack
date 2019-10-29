@@ -17,10 +17,9 @@ public class Track extends RealmObject {
 
     private double distance;
     private double currentSpeed;
-    private double bearing;
 
-
-    public String getTimeString(long time) {
+    public String getTimeString() {
+        long time = isOpened() ? System.currentTimeMillis() : endTime;
         long deltaTime = time - startTime;
         int hours = (int) (deltaTime / (3600 * 1000));
         deltaTime = deltaTime % (3600 * 1000);
@@ -29,7 +28,6 @@ public class Track extends RealmObject {
         int seconds = (int) (deltaTime / 1000);
         return hours + ":" + minutes + ":" + seconds;
     }
-
 
     public Point getStartSmoothedPoint() {
         return startSmoothedPoint;
@@ -66,14 +64,6 @@ public class Track extends RealmObject {
 
     public void setCurrentSpeed(double currentSpeed) {
         this.currentSpeed = currentSpeed;
-    }
-
-    public double getBearing() {
-        return bearing;
-    }
-
-    public void setBearing(double bearing) {
-        this.bearing = bearing;
     }
 
     public long getId() {

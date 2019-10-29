@@ -20,6 +20,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -138,8 +139,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         startActivity(intent);
 
-        //DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        //drawer.closeDrawer(GravityCompat.START);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
 
         return true;
     }
@@ -219,8 +220,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 if (track != null) {
                     textDistance.setText((int) track.getDistance() + " m");
-                    long time = track.isOpened() ? System.currentTimeMillis() : track.getEndTime();
-                    textTime.setText(track.getTimeString(time));
+                    textTime.setText(track.getTimeString());
                     textSpeed.setText(String.format("%.1f", 3.6 * track.getCurrentSpeed()) + " km/h");
                     textAvgSpeed.setText(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
                 } else {
