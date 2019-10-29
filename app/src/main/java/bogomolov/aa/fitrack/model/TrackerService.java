@@ -35,8 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.model.kalman.KalmanFilter;
-import bogomolov.aa.fitrack.model.kalman.KalmanUtils;
 
 
 public class TrackerService extends Service
@@ -47,7 +45,6 @@ public class TrackerService extends Service
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private DbProvider dbProvider;
-    private KalmanFilter kalmanFilter;
     private long lastTime;
     private double[] lastLatLng;
     private int smoothedPointCounter = 0;
@@ -99,10 +96,7 @@ public class TrackerService extends Service
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TRACKER_SERVICE, "onStartCommand");
-
         if (googleApiClient != null) googleApiClient.connect();
-
         return START_STICKY;
     }
 
@@ -120,15 +114,6 @@ public class TrackerService extends Service
             @Override
             public void onSuccess(Location theLocation) {
                 location = theLocation;
-                   /*
-                if (location != null) {
-                    Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
-                    dbProvider.addPoint(point);
-                    stringBuffer.append("point lat "+point.getLat()+" lng "+point.getLng()+"\n");
-                    checkTrack();
-                    lastTime = location.getTime();
-                }
-                */
             }
         });
         startLocationUpdates();
@@ -203,7 +188,7 @@ public class TrackerService extends Service
 
             for (int i = points.size() - 1; i >= 0; i--) {
                 //stringBuffer.append(i + " distance " + GeoUtils.distance(lastPoint, points.get(i)) + " time " + (lastPoint.getTime() - points.get(i).getTime()) / 1000 + "\n");
-                if (GeoUtils.distance(lastPoint, points.get(i)) <= 20) {
+                if (GeoUtils.distance(lastPoint, points.get(i)) <= 50) {
                     if (lastPoint.getTime() - points.get(i).getTime() > 3 * 60 * 1000) {
                         dbProvider.getRealm().beginTransaction();
                         openedTrack.setEndPoint(lastPoint);
@@ -218,46 +203,6 @@ public class TrackerService extends Service
         //if (openedTrack != null) applyKalmanFilter(openedTrack, trackPoints, mode);
     }
 
-    private void applyKalmanFilter(Track openedTrack, List<Point> trackPoints, int mode) {
-        Point point = trackPoints.get(trackPoints.size() - 1);
-        if (kalmanFilter == null) {
-            lastLatLng = new double[2];
-            lastTime = point.getTime();
-            kalmanFilter = KalmanUtils.alloc_filter_velocity2d(500);
-            for (int i = 0; i < trackPoints.size() - 1; i++) {
-                KalmanUtils.update_velocity2d(kalmanFilter, trackPoints.get(i).getLat(), trackPoints.get(i).getLng(), i == 0 ? 0 : (trackPoints.get(i).getTime() - trackPoints.get(i - 1).getTime()) / 1000.0);
-                KalmanUtils.get_lat_long(kalmanFilter, lastLatLng);
-                lastTime = trackPoints.get(i).getTime();
-            }
-        }
-        double secondsSinceLastPoint = (point.getTime() - lastTime) / 1000.0;
-        KalmanUtils.update_velocity2d(kalmanFilter, point.getLat(), point.getLng(), secondsSinceLastPoint);
-
-        double[] latLonOut = new double[2];
-        KalmanUtils.get_lat_long(kalmanFilter, latLonOut);
-        Point smoothedPoint = new Point(latLonOut);
-        smoothedPoint.setTime(point.getTime());
-        smoothedPoint.setSmoothed(Point.SMOOTHED);
-        if (mode == STARTED_MODE || mode == ENDED_MODE || smoothedPointCounter % 4 == 0)
-            smoothedPoint = dbProvider.addPoint(smoothedPoint);
-
-        smoothedPointCounter++;
-        dbProvider.getRealm().beginTransaction();
-        if (mode == STARTED_MODE)
-            openedTrack.setStartSmoothedPoint(smoothedPoint);
-        if (mode == ENDED_MODE)
-            openedTrack.setEndSmoothedPoint(smoothedPoint);
-        if (secondsSinceLastPoint > 0) {
-            double distanceSinceLastPoint = GeoUtils.distance(new Point(lastLatLng), new Point(latLonOut));
-            double velocity = distanceSinceLastPoint / secondsSinceLastPoint;
-            double bearing = KalmanUtils.get_bearing(kalmanFilter);
-            openedTrack.setCurrentSpeed(velocity);
-            openedTrack.setBearing(bearing);
-            openedTrack.addDistance(distanceSinceLastPoint);
-        }
-        dbProvider.getRealm().commitTransaction();
-        lastLatLng = latLonOut;
-    }
 
     @Override
     public void onConnectionSuspended(int i) {

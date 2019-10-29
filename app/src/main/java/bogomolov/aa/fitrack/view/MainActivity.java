@@ -8,13 +8,19 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TextView;
 
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -27,6 +33,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.material.navigation.NavigationView;
 
 
 import java.util.ArrayList;
@@ -41,7 +48,7 @@ import bogomolov.aa.fitrack.model.RamerDouglasPeucker;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.model.TrackerService;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener{
     private TextView textDistance;
     private TextView textTime;
     private TextView textSpeed;
@@ -70,6 +77,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
+                R.string.nav_open_drawer,
+                R.string.nav_close_drawer);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
         textDistance = findViewById(R.id.text_distance);
         textTime = findViewById(R.id.text_time);
         textSpeed = findViewById(R.id.text_speed);
@@ -100,6 +120,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        Intent intent = null;
+        switch (menuItem.getItemId()) {
+            case R.id.menu_tracks:
+                intent = new Intent(this, ListActivity.class);
+                break;
+            case R.id.menu_stats:
+                intent = new Intent(this, StatsActivity.class);
+                break;
+            case R.id.menu_settings:
+                intent = new Intent(this, SettingsActivity.class);
+                break;
+            default:
+                return super.onOptionsItemSelected(menuItem);
+        }
+        startActivity(intent);
+
+        //DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        //drawer.closeDrawer(GravityCompat.START);
+
+        return true;
+    }
+
     private void startTrackerService() {
         Log.i(MAIN_ACTIVITY, "startTrackerService");
 
@@ -110,6 +154,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             ContextCompat.startForegroundService(this, notificationIntent);
         }
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
     }
 
     @Override
@@ -339,4 +390,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onPointerCaptureChanged(boolean hasCapture) {
 
     }
+
+
 }
