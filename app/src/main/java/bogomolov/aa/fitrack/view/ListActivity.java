@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.view.MenuItem;
 
 import java.util.List;
 
@@ -24,7 +25,14 @@ public class ListActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
-        DbProvider dbProvider = new DbProvider(false);
+        DbProvider dbProvider = new DbProvider(true);
+        for (int i = 0; i < 5; i++) {
+            Track track = new Track();
+            track.setDistance(i * 1000 + 100);
+            track.setStartTime(System.currentTimeMillis() - (i + 1) * 3600 * 1000);
+            track.setEndTime(System.currentTimeMillis());
+            dbProvider.addTrack(track);
+        }
         List<Track> tracks = dbProvider.getFinishedTracks();
         dbProvider.close();
         TracksRecyclerAdapter adapter = new TracksRecyclerAdapter(tracks);
@@ -32,5 +40,16 @@ public class ListActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+
     }
 }
