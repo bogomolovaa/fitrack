@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -49,7 +50,7 @@ import bogomolov.aa.fitrack.model.RamerDouglasPeucker;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.model.TrackerService;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener{
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
     private TextView textDistance;
     private TextView textTime;
     private TextView textSpeed;
@@ -63,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Polyline trackRawPolyline;
     private Polyline trackSmoothedPolyline;
     private Marker currentPositionMarker;
+    private Menu startStopMenu;
 
     private List<Point> tailSmoothedPoints;
     private int windowStartId;
@@ -118,7 +120,65 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             startTrackerService();
         }
 
+        dbProvider = new DbProvider(false);
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.start_stop, menu);
+        startStopMenu = menu;
+        Track lastTrack = dbProvider.getLastTrack();
+        if (lastTrack != null) {
+            startStopMenu.findItem(R.id.menu_track_start).setVisible(!lastTrack.isOpened());
+            startStopMenu.findItem(R.id.menu_track_stop).setVisible(lastTrack.isOpened());
+        } else {
+            startStopMenu.findItem(R.id.menu_track_start).setVisible(true);
+            startStopMenu.findItem(R.id.menu_track_stop).setVisible(false);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_track_start:
+                startTrack();
+                break;
+            case R.id.menu_track_stop:
+                stopTrack();
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
+    private void startTrack() {
+        Point lastPoint = dbProvider.getLastPoint();
+        if (lastPoint != null) {
+            Track track = new Track();
+            track.setStartPoint(lastPoint);
+            track.setStartTime(lastPoint.getTime());
+            dbProvider.addTrack(track);
+            startStopMenu.findItem(R.id.menu_track_start).setVisible(false);
+            startStopMenu.findItem(R.id.menu_track_stop).setVisible(true);
+        }
+    }
+
+    private void stopTrack() {
+        Track openedTrack = dbProvider.getLastTrack();
+        if (openedTrack != null) {
+            Point lastPoint = dbProvider.getLastPoint();
+            if (lastPoint != null) {
+                dbProvider.getRealm().beginTransaction();
+                openedTrack.setEndPoint(lastPoint);
+                openedTrack.setEndTime(lastPoint.getTime());
+                dbProvider.getRealm().commitTransaction();
+                startStopMenu.findItem(R.id.menu_track_start).setVisible(true);
+                startStopMenu.findItem(R.id.menu_track_stop).setVisible(false);
+            }
+        }
     }
 
     @Override
@@ -156,12 +216,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
     }
-    
+
     @Override
     protected void onStart() {
         super.onStart();
 
-        dbProvider = new DbProvider(false);
 
         final Handler handler = new Handler();
         final Runnable runnable = new Runnable() {
@@ -180,6 +239,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     if (track != null) {
                         googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+
+                        if (startStopMenu != null) {
+                            startStopMenu.findItem(R.id.menu_track_start).setVisible(!track.isOpened());
+                            startStopMenu.findItem(R.id.menu_track_stop).setVisible(track.isOpened());
+                        }
 
                         if (trackRawPolyline == null) {
                             trackRawPolyline = googleMap.addPolyline((new PolylineOptions())

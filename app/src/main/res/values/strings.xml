@@ -25,6 +25,11 @@
     <string name="menu_stats">Statistics</string>
     <string name="menu_settings">Settings</string>
 
+    <string name="menu_track_start">Start</string>
+    <string name="menu_track_stop">Stop</string>
+
+
+
     <string name="nav_open_drawer">open</string>
     <string name="nav_close_drawer">close</string>
 

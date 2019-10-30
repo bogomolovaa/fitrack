@@ -150,10 +150,8 @@ public class TrackerService extends Service
     }
 
     private void checkTrack(Point point) {
-
         List<Point> trackPoints = null;
         Track openedTrack = dbProvider.getOpenedTrack();
-        int mode = 0;
         if (openedTrack == null) {
             dbProvider.addPoint(point);
             List<Point> points = dbProvider.getLastPoints();
@@ -165,7 +163,6 @@ public class TrackerService extends Service
                 if (distance > 50) {
                     stringBuffer.append("track created\n");
                     Track track = new Track();
-                    mode = STARTED_MODE;
                     track.setStartPoint(lastPoint);
                     track.setStartTime(lastPoint.getTime());
                     openedTrack = dbProvider.addTrack(track);
@@ -187,20 +184,17 @@ public class TrackerService extends Service
             }
 
             for (int i = points.size() - 1; i >= 0; i--) {
-                //stringBuffer.append(i + " distance " + GeoUtils.distance(lastPoint, points.get(i)) + " time " + (lastPoint.getTime() - points.get(i).getTime()) / 1000 + "\n");
                 if (GeoUtils.distance(lastPoint, points.get(i)) <= 50) {
                     if (lastPoint.getTime() - points.get(i).getTime() > 3 * 60 * 1000) {
                         dbProvider.getRealm().beginTransaction();
                         openedTrack.setEndPoint(lastPoint);
                         openedTrack.setEndTime(points.get(i).getTime());
-                        mode = ENDED_MODE;
                         dbProvider.getRealm().commitTransaction();
                         stringBuffer.append("track finished\n");
                     }
                 }
             }
         }
-        //if (openedTrack != null) applyKalmanFilter(openedTrack, trackPoints, mode);
     }
 
 
