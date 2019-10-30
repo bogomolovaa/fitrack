@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import io.realm.Realm;
@@ -34,6 +35,10 @@ public class DbProvider {
 
     public List<Track> getFinishedTracks(){
         return realm.where(Track.class).notEqualTo("endTime", 0).findAll();
+    }
+
+    public List<Track> getFinishedTracks(Date[] datesRange){
+        return realm.where(Track.class).greaterThanOrEqualTo("startTime", datesRange[0].getTime()).lessThan("startTime", datesRange[1].getTime()).findAll();
     }
 
 

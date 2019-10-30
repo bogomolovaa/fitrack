@@ -9,4 +9,11 @@
         <item>reply</item>
         <item>reply_all</item>
     </string-array>
+
+    <string-array name="track_time_filter">
+        <item>Today</item>
+        <item>Week</item>
+        <item>Month</item>
+        <item>Select</item>
+    </string-array>
 </resources>
