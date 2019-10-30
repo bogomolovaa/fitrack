@@ -10,6 +10,8 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ActionMode;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -29,6 +31,9 @@ public class ListActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private DbProvider dbProvider;
     private TracksRecyclerAdapter adapter;
+    private ActionMode actionMode;
+    private Toolbar toolbar;
+
     private static final int FILTER_TODAY = 0;
     private static final int FILTER_WEEK = 1;
     private static final int FILTER_MONTH = 2;
@@ -38,7 +43,7 @@ public class ListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
-        Toolbar toolbar = findViewById(R.id.toolbar_tracks_list);
+        toolbar = findViewById(R.id.toolbar_tracks_list);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -74,6 +79,7 @@ public class ListActivity extends AppCompatActivity {
         dbProvider = new DbProvider(true);
         for (int i = 0; i < 5; i++) {
             Track track = new Track();
+            track.setId(i+1);
             track.setDistance(i * 1000 + 100);
             track.setStartTime(System.currentTimeMillis() - i * 24 * 3600 * 1000);
             track.setEndTime(System.currentTimeMillis());
@@ -81,12 +87,44 @@ public class ListActivity extends AppCompatActivity {
         }
 
         recyclerView = findViewById(R.id.track_recycler);
-        adapter = new TracksRecyclerAdapter();
+        adapter = new TracksRecyclerAdapter(this);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         updateTracksList(getTodayRange());
 
     }
+
+
+
+    public void onLongClick() {
+        if (actionMode == null)
+            actionMode = toolbar.startActionMode(callback);
+        else
+            actionMode.finish();
+    }
+
+    private ActionMode.Callback callback = new ActionMode.Callback() {
+
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            mode.getMenuInflater().inflate(R.menu.track_group_actions, menu);
+            return true;
+        }
+
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            Log.d("test", "item " + item.getTitle());
+            return false;
+        }
+
+        public void onDestroyActionMode(ActionMode mode) {
+            adapter.disableCheckMode();
+            actionMode = null;
+        }
+
+    };
 
     private void selectDatesRange(final Date[] dates) {
         new DatePickerFragment(new DatePickerDialog.OnDateSetListener() {

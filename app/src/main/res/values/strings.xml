@@ -28,9 +28,12 @@
     <string name="menu_track_start">Start</string>
     <string name="menu_track_stop">Stop</string>
 
-
+    <string name="menu_track_delete">Delete</string>
+    <string name="menu_track_tag">Set tag</string>
 
     <string name="nav_open_drawer">open</string>
     <string name="nav_close_drawer">close</string>
+
+
 
 </resources>

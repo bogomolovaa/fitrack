@@ -54,9 +54,11 @@ public class DbProvider {
 
 
     public Track addTrack(Track track) {
-        Number maxId = realm.where(Track.class).max("id");
-        long id = maxId != null ? maxId.longValue() : 0 + 1;
-        track.setId(id);
+        if(track.getId()==0) {
+            Number maxId = realm.where(Track.class).max("id");
+            long id = maxId != null ? maxId.longValue() : 0 + 1;
+            track.setId(id);
+        }
         realm.beginTransaction();
         track = realm.copyToRealm(track);
         realm.commitTransaction();

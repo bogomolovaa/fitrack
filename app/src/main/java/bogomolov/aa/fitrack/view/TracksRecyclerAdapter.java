@@ -1,6 +1,8 @@
 package bogomolov.aa.fitrack.view;
 
 import android.graphics.Color;
+import android.util.Log;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,11 +27,20 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
     private List<Track> tracks;
     private Set<Long> selectedIds;
     private boolean checkMode;
+    private ListActivity listActivity;
 
+    public TracksRecyclerAdapter(ListActivity listActivity) {
+        this.listActivity = listActivity;
+    }
 
     public void setTracks(List<Track> tracks) {
         this.tracks = tracks;
         selectedIds = new HashSet<>();
+        notifyDataSetChanged();
+    }
+
+    public void disableCheckMode() {
+        checkMode = false;
         notifyDataSetChanged();
     }
 
@@ -47,6 +58,7 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
         CardView cardView = holder.cardView;
         RadioButton radioButton = cardView.findViewById(R.id.card_checked_button);
         boolean selected = selectedIds.contains(track.getId());
+        Log.i("test", "position " + position + " id " + track.getId() + " selected " + selected);
         radioButton.setVisibility(checkMode ? View.VISIBLE : View.GONE);
         radioButton.setChecked(selected);
 
@@ -69,6 +81,7 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
             cardView = itemView;
             this.adapter = adapter;
             itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
         }
 
 
@@ -82,13 +95,18 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
             } else {
                 adapter.selectedIds.add(track.getId());
             }
+            Log.i("test", "selectedIds " + adapter.selectedIds);
             adapter.notifyItemChanged(position);
         }
 
         @Override
         public boolean onLongClick(View view) {
-            adapter.checkMode = !adapter.checkMode;
+            adapter.checkMode = true;
+            adapter.selectedIds.clear();
+            onClick(view);
             adapter.notifyDataSetChanged();
+            adapter.listActivity.onLongClick();
+
             return true;
         }
     }
