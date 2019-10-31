@@ -6,8 +6,6 @@
     android:layout_height="match_parent">
 
 
-
-
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/tag_selection_toolbar"
         android:layout_width="match_parent"
@@ -23,7 +21,7 @@
 
             <ImageButton
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="?attr/homeAsUpIndicator" />
 
@@ -43,8 +41,6 @@
                 app:srcCompat="@android:drawable/ic_input_add" />
 
         </LinearLayout>
-
-
 
 
     </androidx.appcompat.widget.Toolbar>

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import bogomolov.aa.fitrack.R;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 
@@ -33,14 +34,47 @@ public class DbProvider {
         return realm;
     }
 
-    public List<Track> getFinishedTracks(){
+    public List<Track> getFinishedTracks() {
         return realm.where(Track.class).notEqualTo("endTime", 0).findAll();
     }
 
-    public List<Track> getFinishedTracks(Date[] datesRange){
+    public List<Track> getFinishedTracks(Date[] datesRange) {
         return realm.where(Track.class).greaterThanOrEqualTo("startTime", datesRange[0].getTime()).lessThan("startTime", datesRange[1].getTime()).findAll();
     }
 
+    public List<Tag> getTags() {
+        return realm.where(Tag.class).findAll();
+    }
+
+    public void deleteTag(Tag tag) {
+        List<Track> tracks = realm.where(Track.class).equalTo("tag", tag.getName()).findAll();
+        realm.beginTransaction();
+        for (Track track : tracks) track.setTag(null);
+        realm.commitTransaction();
+        realm.where(Tag.class).equalTo("id",tag.getId()).findAll().deleteAllFromRealm();
+    }
+
+    public List<Track> getTracks(List<Long> ids){
+        return realm.where(Track.class).in("id",ids.toArray(new Long[0])).findAll();
+    }
+
+    public void deleteTracks(List<Long> ids){
+        realm.where(Track.class).in("id",ids.toArray(new Long[0])).findAll().deleteAllFromRealm();
+    }
+
+    public Track getTrack(long id){
+        return realm.where(Track.class).equalTo("id",id).findFirst();
+    }
+
+    public Tag addTag(Tag tag) {
+        realm.beginTransaction();
+        Number maxId = realm.where(Tag.class).max("id");
+        long id = (maxId != null ? maxId.longValue() : 0) + 1;
+        tag.setId(id);
+        tag = realm.copyToRealm(tag);
+        realm.commitTransaction();
+        return tag;
+    }
 
     public Point addPoint(Point point) {
         realm.beginTransaction();
@@ -54,7 +88,7 @@ public class DbProvider {
 
 
     public Track addTrack(Track track) {
-        if(track.getId()==0) {
+        if (track.getId() == 0) {
             Number maxId = realm.where(Track.class).max("id");
             long id = maxId != null ? maxId.longValue() : 0 + 1;
             track.setId(id);
@@ -71,7 +105,8 @@ public class DbProvider {
             if (track.getStartPoint(smoothed) == null) return new ArrayList<>();
             return realm.where(Point.class).equalTo("smoothed", smoothed).greaterThanOrEqualTo("id", track.getStartPoint(smoothed).getId()).findAll();
         } else {
-            if (track.getStartPoint(smoothed) == null || track.getEndPoint(smoothed) == null) return new ArrayList<>();
+            if (track.getStartPoint(smoothed) == null || track.getEndPoint(smoothed) == null)
+                return new ArrayList<>();
             return realm.where(Point.class).equalTo("smoothed", smoothed).between("id", track.getStartPoint(smoothed).getId(), track.getEndPoint(smoothed).getId()).findAll();
         }
     }

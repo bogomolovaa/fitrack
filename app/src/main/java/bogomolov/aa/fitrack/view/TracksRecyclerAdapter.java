@@ -1,5 +1,6 @@
 package bogomolov.aa.fitrack.view;
 
+import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +18,7 @@ import java.util.Set;
 
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.Track;
+import bogomolov.aa.fitrack.view.activities.TrackViewActivity;
 import bogomolov.aa.fitrack.view.activities.TracksListActivity;
 
 public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAdapter.ViewHolder> {
@@ -41,6 +43,10 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
         notifyDataSetChanged();
     }
 
+    public Set<Long> getSelectedIds() {
+        return selectedIds;
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -59,6 +65,8 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
         radioButton.setVisibility(checkMode ? View.VISIBLE : View.GONE);
         radioButton.setChecked(selected);
 
+        ((TextView) cardView.findViewById(R.id.card_text_name)).setText(track.getName());
+        ((TextView) cardView.findViewById(R.id.card_tag_name)).setText(track.getTag() != null ? track.getTag() : tracksListActivity.getResources().getString(R.string.no_tag));
         ((TextView) cardView.findViewById(R.id.card_text_distance)).setText((int) track.getDistance() + " m");
         ((TextView) cardView.findViewById(R.id.card_text_time)).setText(track.getTimeString());
         ((TextView) cardView.findViewById(R.id.card_text_avg_speed)).setText(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
@@ -87,13 +95,19 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
             if (getAdapterPosition() == RecyclerView.NO_POSITION) return;
             int position = getAdapterPosition();
             Track track = adapter.tracks.get(position);
-            if (adapter.selectedIds.contains(track.getId())) {
-                adapter.selectedIds.remove(track.getId());
+            if (adapter.checkMode) {
+                if (adapter.selectedIds.contains(track.getId())) {
+                    adapter.selectedIds.remove(track.getId());
+                } else {
+                    adapter.selectedIds.add(track.getId());
+                }
+                Log.i("test", "selectedIds " + adapter.selectedIds);
+                adapter.notifyItemChanged(position);
             } else {
-                adapter.selectedIds.add(track.getId());
+                Intent intent = new Intent(adapter.tracksListActivity, TrackViewActivity.class);
+                intent.putExtra("track", track.getId());
+                adapter.tracksListActivity.startActivity(intent);
             }
-            Log.i("test", "selectedIds " + adapter.selectedIds);
-            adapter.notifyItemChanged(position);
         }
 
         @Override

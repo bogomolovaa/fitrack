@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ActionMode;
@@ -18,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.DatePicker;
 import android.widget.Spinner;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -25,11 +27,13 @@ import java.util.List;
 
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.DbProvider;
+import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
+import bogomolov.aa.fitrack.view.TagResultListener;
 import bogomolov.aa.fitrack.view.TagSelectionDialog;
 import bogomolov.aa.fitrack.view.TracksRecyclerAdapter;
 
-public class TracksListActivity extends AppCompatActivity {
+public class TracksListActivity extends AppCompatActivity implements TagResultListener {
     private RecyclerView recyclerView;
     private DbProvider dbProvider;
     private TracksRecyclerAdapter adapter;
@@ -81,11 +85,14 @@ public class TracksListActivity extends AppCompatActivity {
         dbProvider = new DbProvider(true);
         for (int i = 0; i < 5; i++) {
             Track track = new Track();
-            track.setId(i+1);
+            track.setId(i + 1000);
             track.setDistance(i * 1000 + 100);
             track.setStartTime(System.currentTimeMillis() - i * 24 * 3600 * 1000);
             track.setEndTime(System.currentTimeMillis());
             dbProvider.addTrack(track);
+
+            Tag tag = new Tag("tag " + (i + 1));
+            dbProvider.addTag(tag);
         }
 
         recyclerView = findViewById(R.id.track_recycler);
@@ -95,7 +102,6 @@ public class TracksListActivity extends AppCompatActivity {
         updateTracksList(getTodayRange());
 
     }
-
 
 
     public void onLongClick() {
@@ -119,10 +125,17 @@ public class TracksListActivity extends AppCompatActivity {
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             Log.d("test", "item " + item.getTitle());
 
-            DialogFragment dialog = new TagSelectionDialog();
-            dialog.show(getSupportFragmentManager(), "dialog");
-
-            return false;
+            switch (item.getItemId()) {
+                case R.id.menu_track_delete:
+                    dbProvider.deleteTracks(new ArrayList<Long>(adapter.getSelectedIds()));
+                    break;
+                case R.id.menu_track_tag:
+                    TagSelectionDialog dialog = new TagSelectionDialog();
+                    dialog.setTagResultListener(TracksListActivity.this);
+                    dialog.show(getSupportFragmentManager(), "dialog");
+                    break;
+            }
+            return true;
         }
 
         public void onDestroyActionMode(ActionMode mode) {
@@ -131,6 +144,18 @@ public class TracksListActivity extends AppCompatActivity {
         }
 
     };
+
+    @Override
+    public void onTagSelectionResult(Tag tag) {
+        if (tag != null) {
+            List<Long> ids = new ArrayList<>(adapter.getSelectedIds());
+            List<Track> tracks = dbProvider.getTracks(ids);
+            dbProvider.getRealm().beginTransaction();
+            for (Track track : tracks) track.setTag(tag.getName());
+            dbProvider.getRealm().commitTransaction();
+        }
+        actionMode.finish();
+    }
 
     private void selectDatesRange(final Date[] dates) {
         new DatePickerFragment(new DatePickerDialog.OnDateSetListener() {
@@ -142,11 +167,11 @@ public class TracksListActivity extends AppCompatActivity {
                 c.set(Calendar.DAY_OF_MONTH, day);
                 if (dates[0] == null) {
                     dates[0] = c.getTime();
-                    Log.i("test","date[0] "+dates[0]);
+                    Log.i("test", "date[0] " + dates[0]);
                     selectDatesRange(dates);
                 } else {
                     dates[1] = c.getTime();
-                    Log.i("test","date[1] "+dates[1]);
+                    Log.i("test", "date[1] " + dates[1]);
                     updateTracksList(dates);
                 }
             }
@@ -217,7 +242,7 @@ public class TracksListActivity extends AppCompatActivity {
 
     }
 
-    public static class DatePickerFragment extends DialogFragment{
+    public static class DatePickerFragment extends DialogFragment {
         private DatePickerDialog.OnDateSetListener listener;
 
         public DatePickerFragment(DatePickerDialog.OnDateSetListener listener) {

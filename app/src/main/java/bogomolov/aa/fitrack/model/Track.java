@@ -1,6 +1,9 @@
 package bogomolov.aa.fitrack.model;
 
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 
@@ -14,6 +17,7 @@ public class Track extends RealmObject {
     private Point endSmoothedPoint;
     private long startTime;
     private long endTime;
+    private String tag;
 
     private double distance;
     private double currentSpeed;
@@ -27,6 +31,18 @@ public class Track extends RealmObject {
         deltaTime = deltaTime % (60 * 1000);
         int seconds = (int) (deltaTime / 1000);
         return hours + ":" + minutes + ":" + seconds;
+    }
+
+    public String getName(){
+        return new SimpleDateFormat("dd.MM.yyyy HH:mm").format(new Date(startTime));
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public void setTag(String tag) {
+        this.tag = tag;
     }
 
     public Point getStartSmoothedPoint() {

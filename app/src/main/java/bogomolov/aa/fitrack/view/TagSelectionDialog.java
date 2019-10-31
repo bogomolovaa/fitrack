@@ -22,19 +22,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.model.DbProvider;
+import bogomolov.aa.fitrack.model.Tag;
+import bogomolov.aa.fitrack.view.activities.TracksListActivity;
 
 public class TagSelectionDialog extends DialogFragment {
     private ActionMode actionMode;
     private Toolbar toolbar;
-
+    private ListView listView;
+    private DbProvider dbProvider;
+    private Tag selectedTag;
+    private TagResultListener tagResultListener;
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         getDialog().setTitle("Title!");
         View view = inflater.inflate(R.layout.fragment_tag_selection, null);
-        final ListView listView = view.findViewById(R.id.tag_list_view);
-        final List<String> tags = new ArrayList<>();
-        for (int i = 1; i <= 3; i++) tags.add("" + i);
-        final ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_single_choice, tags);
+        dbProvider = new DbProvider(false);
+        listView = view.findViewById(R.id.tag_list_view);
+        final List<Tag> tags = dbProvider.getTags();
+        final ArrayAdapter<Tag> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, tags);
         listView.setAdapter(adapter);
         final EditText tagNameEditText = view.findViewById(R.id.tag_name_edit_text);
         AppCompatImageButton addButton = view.findViewById(R.id.tag_add_button);
@@ -43,7 +49,9 @@ public class TagSelectionDialog extends DialogFragment {
             public void onClick(View view) {
                 String tagName = tagNameEditText.getText().toString();
                 Log.i("test", "add tag " + tagName);
-                tags.add(tagName);
+                Tag tag = new Tag(tagName);
+                tag = dbProvider.addTag(tag);
+                tags.add(tag);
                 adapter.notifyDataSetChanged();
             }
         });
@@ -59,10 +67,9 @@ public class TagSelectionDialog extends DialogFragment {
         });
         */
 
-
-        listView.setOnLongClickListener(new View.OnLongClickListener() {
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public boolean onLongClick(View view) {
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 if (actionMode == null) {
                     actionMode = toolbar.startActionMode(callback);
                 } else {
@@ -77,13 +84,24 @@ public class TagSelectionDialog extends DialogFragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                int selected = listView.getSelectedItemPosition();
-                Log.i("test", "selected " + selected);
+                Tag tag = (Tag) listView.getSelectedItem();
+                Log.i("test", "selected " + tag.getName());
+                selectedTag = tag;
                 dismiss();
             }
         });
 
         return view;
+    }
+
+    public void setTagResultListener(TagResultListener tagResultListener) {
+        this.tagResultListener = tagResultListener;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        dbProvider.close();
     }
 
     private ActionMode.Callback callback = new ActionMode.Callback() {
@@ -99,9 +117,9 @@ public class TagSelectionDialog extends DialogFragment {
 
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             Log.d("test", "item " + item.getTitle());
-
-
-            return false;
+            Tag tag = (Tag) listView.getSelectedItem();
+            dbProvider.deleteTag(tag);
+            return true;
         }
 
         public void onDestroyActionMode(ActionMode mode) {
@@ -113,11 +131,13 @@ public class TagSelectionDialog extends DialogFragment {
 
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
+        ((TracksListActivity) getActivity()).onTagSelectionResult(selectedTag);
         Log.d("test", "Dialog 1: onDismiss");
     }
 
     public void onCancel(DialogInterface dialog) {
         super.onCancel(dialog);
+        if (tagResultListener != null) tagResultListener.onTagSelectionResult(null);
         Log.d("test", "Dialog 1: onCancel");
     }
 
