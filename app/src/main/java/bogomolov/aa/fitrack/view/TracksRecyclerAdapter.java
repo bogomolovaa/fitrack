@@ -1,8 +1,6 @@
 package bogomolov.aa.fitrack.view;
 
-import android.graphics.Color;
 import android.util.Log;
-import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,24 +11,23 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.Track;
+import bogomolov.aa.fitrack.view.activities.TracksListActivity;
 
 public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAdapter.ViewHolder> {
 
     private List<Track> tracks;
     private Set<Long> selectedIds;
     private boolean checkMode;
-    private ListActivity listActivity;
+    private TracksListActivity tracksListActivity;
 
-    public TracksRecyclerAdapter(ListActivity listActivity) {
-        this.listActivity = listActivity;
+    public TracksRecyclerAdapter(TracksListActivity tracksListActivity) {
+        this.tracksListActivity = tracksListActivity;
     }
 
     public void setTracks(List<Track> tracks) {
@@ -105,7 +102,7 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
             adapter.selectedIds.clear();
             onClick(view);
             adapter.notifyDataSetChanged();
-            adapter.listActivity.onLongClick();
+            adapter.tracksListActivity.onLongClick();
 
             return true;
         }

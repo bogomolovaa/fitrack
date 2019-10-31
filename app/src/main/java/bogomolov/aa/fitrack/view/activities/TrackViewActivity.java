@@ -1,4 +1,4 @@
-package bogomolov.aa.fitrack.view;
+package bogomolov.aa.fitrack.view.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -6,11 +6,11 @@ import android.os.Bundle;
 
 import bogomolov.aa.fitrack.R;
 
-public class StatsActivity extends AppCompatActivity {
+public class TrackViewActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_stats);
+        setContentView(R.layout.activity_track_view);
     }
 }

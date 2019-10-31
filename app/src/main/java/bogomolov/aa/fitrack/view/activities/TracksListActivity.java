@@ -1,4 +1,4 @@
-package bogomolov.aa.fitrack.view;
+package bogomolov.aa.fitrack.view.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -26,8 +26,9 @@ import java.util.List;
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.DbProvider;
 import bogomolov.aa.fitrack.model.Track;
+import bogomolov.aa.fitrack.view.TracksRecyclerAdapter;
 
-public class ListActivity extends AppCompatActivity {
+public class TracksListActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private DbProvider dbProvider;
     private TracksRecyclerAdapter adapter;
@@ -42,7 +43,7 @@ public class ListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list);
+        setContentView(R.layout.activity_tracks_list);
         toolbar = findViewById(R.id.toolbar_tracks_list);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -116,6 +117,9 @@ public class ListActivity extends AppCompatActivity {
 
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             Log.d("test", "item " + item.getTitle());
+
+
+
             return false;
         }
 

@@ -1,16 +1,14 @@
-package bogomolov.aa.fitrack.view;
+package bogomolov.aa.fitrack.view.activities;
 
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TextView;
 
@@ -186,7 +184,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Intent intent = null;
         switch (menuItem.getItemId()) {
             case R.id.menu_tracks:
-                intent = new Intent(this, ListActivity.class);
+                intent = new Intent(this, TracksListActivity.class);
                 break;
             case R.id.menu_stats:
                 intent = new Intent(this, StatsActivity.class);

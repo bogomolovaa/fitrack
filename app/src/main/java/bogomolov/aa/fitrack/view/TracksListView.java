@@ -1,4 +1,4 @@
 package bogomolov.aa.fitrack.view;
 
-public interface ListView {
+public interface TracksListView {
 }

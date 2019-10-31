@@ -34,6 +34,8 @@
     <string name="nav_open_drawer">open</string>
     <string name="nav_close_drawer">close</string>
 
+    <string name="tag_delete">Delete</string>
+
 
 
 </resources>

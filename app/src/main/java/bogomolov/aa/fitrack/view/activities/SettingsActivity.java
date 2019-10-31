@@ -1,4 +1,4 @@
-package bogomolov.aa.fitrack.view;
+package bogomolov.aa.fitrack.view.activities;
 
 import android.os.Bundle;
 
