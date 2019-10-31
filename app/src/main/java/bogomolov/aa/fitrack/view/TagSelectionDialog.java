@@ -9,11 +9,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.DialogFragment;
 
@@ -36,7 +37,7 @@ public class TagSelectionDialog extends DialogFragment {
         final ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_single_choice, tags);
         listView.setAdapter(adapter);
         final EditText tagNameEditText = view.findViewById(R.id.tag_name_edit_text);
-        Button addButton = view.findViewById(R.id.tag_add_button);
+        AppCompatImageButton addButton = view.findViewById(R.id.tag_add_button);
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -73,14 +74,15 @@ public class TagSelectionDialog extends DialogFragment {
             }
         });
 
-        listView.setOnClickListener(new View.OnClickListener() {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 int selected = listView.getSelectedItemPosition();
                 Log.i("test", "selected " + selected);
                 dismiss();
             }
         });
+
         return view;
     }
 

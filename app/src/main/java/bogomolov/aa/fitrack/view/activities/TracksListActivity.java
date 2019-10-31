@@ -26,6 +26,7 @@ import java.util.List;
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.DbProvider;
 import bogomolov.aa.fitrack.model.Track;
+import bogomolov.aa.fitrack.view.TagSelectionDialog;
 import bogomolov.aa.fitrack.view.TracksRecyclerAdapter;
 
 public class TracksListActivity extends AppCompatActivity {
@@ -118,7 +119,8 @@ public class TracksListActivity extends AppCompatActivity {
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             Log.d("test", "item " + item.getTitle());
 
-
+            DialogFragment dialog = new TagSelectionDialog();
+            dialog.show(getSupportFragmentManager(), "dialog");
 
             return false;
         }
