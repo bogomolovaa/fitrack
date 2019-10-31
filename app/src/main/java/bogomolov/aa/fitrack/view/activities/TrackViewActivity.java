@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -31,7 +32,7 @@ public class TrackViewActivity extends AppCompatActivity implements OnMapReadyCa
         setContentView(R.layout.activity_track_view);
 
         dbProvider = new DbProvider(false);
-        long trackId = getIntent().getLongExtra("track", 0);
+        final long trackId = getIntent().getLongExtra("track", 0);
         track = dbProvider.getTrack(trackId);
 
 
@@ -57,7 +58,13 @@ public class TrackViewActivity extends AppCompatActivity implements OnMapReadyCa
                 dialog.setTagResultListener(new TagResultListener() {
                     @Override
                     public void onTagSelectionResult(Tag tag) {
-                        if (tag != null) textTag.setTag(tag.getName());
+                        Log.i("test","onTagSelectionResult tag "+tag);
+                        if (tag != null){
+                            dbProvider.getRealm().beginTransaction();
+                            textTag.setText(tag.getName());
+                            track.setTag(tag.getName());
+                            dbProvider.getRealm().commitTransaction();
+                        }
                     }
                 });
                 dialog.show(getSupportFragmentManager(), "dialog");
@@ -70,7 +77,7 @@ public class TrackViewActivity extends AppCompatActivity implements OnMapReadyCa
         textSpeed.setText(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
         textTag.setText(track.getTag() != null ? track.getTag() : getResources().getString(R.string.no_tag));
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map_fragment);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map_track_view);
         mapFragment.getMapAsync(this);
 
     }

@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -46,6 +47,16 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
     public Set<Long> getSelectedIds() {
         return selectedIds;
     }
+
+    public void deleteTracks(){
+        List<Track> newList = new ArrayList<>();
+        for(Track track : tracks){
+            if(!selectedIds.contains(track.getId())) newList.add(track);
+        }
+        tracks = newList;
+        notifyDataSetChanged();
+    }
+
 
     @NonNull
     @Override

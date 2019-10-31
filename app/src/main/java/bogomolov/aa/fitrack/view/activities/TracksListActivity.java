@@ -52,6 +52,13 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
         toolbar = findViewById(R.id.toolbar_tracks_list);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
 
         Spinner filterSpinner = findViewById(R.id.tracks_time_spinner);
         filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -111,6 +118,12 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
             actionMode.finish();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        adapter.notifyDataSetChanged();
+    }
+
     private ActionMode.Callback callback = new ActionMode.Callback() {
 
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -127,6 +140,8 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
 
             switch (item.getItemId()) {
                 case R.id.menu_track_delete:
+                    actionMode.finish();
+                    adapter.deleteTracks();
                     dbProvider.deleteTracks(new ArrayList<Long>(adapter.getSelectedIds()));
                     break;
                 case R.id.menu_track_tag:
@@ -231,16 +246,6 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
         dbProvider.close();
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                onBackPressed();
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-
-    }
 
     public static class DatePickerFragment extends DialogFragment {
         private DatePickerDialog.OnDateSetListener listener;

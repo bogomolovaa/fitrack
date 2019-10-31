@@ -9,8 +9,15 @@ public class Tag extends RealmObject {
 
     private String name;
 
+    public Tag() {
+    }
+
     public Tag(String name) {
         this.name = name;
+    }
+
+    public String toString(){
+        return name;
     }
 
     public long getId() {

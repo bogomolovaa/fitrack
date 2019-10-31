@@ -59,7 +59,9 @@ public class DbProvider {
     }
 
     public void deleteTracks(List<Long> ids){
+        realm.beginTransaction();
         realm.where(Track.class).in("id",ids.toArray(new Long[0])).findAll().deleteAllFromRealm();
+        realm.commitTransaction();
     }
 
     public Track getTrack(long id){

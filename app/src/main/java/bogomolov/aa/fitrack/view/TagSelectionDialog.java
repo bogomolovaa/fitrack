@@ -39,7 +39,7 @@ public class TagSelectionDialog extends DialogFragment {
         View view = inflater.inflate(R.layout.fragment_tag_selection, null);
         dbProvider = new DbProvider(false);
         listView = view.findViewById(R.id.tag_list_view);
-        final List<Tag> tags = dbProvider.getTags();
+        final List<Tag> tags = new ArrayList<>(dbProvider.getTags());
         final ArrayAdapter<Tag> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, tags);
         listView.setAdapter(adapter);
         final EditText tagNameEditText = view.findViewById(R.id.tag_name_edit_text);
@@ -57,15 +57,13 @@ public class TagSelectionDialog extends DialogFragment {
         });
         toolbar = view.findViewById(R.id.tag_selection_toolbar);
 
-        /*
-        toolbar.setNavigationIcon(android.R.drawable.);
+        toolbar.setNavigationIcon(R.drawable.arrow_back);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dismiss();
             }
         });
-        */
 
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -83,8 +81,8 @@ public class TagSelectionDialog extends DialogFragment {
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Tag tag = (Tag) listView.getSelectedItem();
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                Tag tag = (Tag) listView.getItemAtPosition(position);
                 Log.i("test", "selected " + tag.getName());
                 selectedTag = tag;
                 dismiss();
@@ -131,7 +129,7 @@ public class TagSelectionDialog extends DialogFragment {
 
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
-        ((TracksListActivity) getActivity()).onTagSelectionResult(selectedTag);
+        if (tagResultListener != null) tagResultListener.onTagSelectionResult(selectedTag);
         Log.d("test", "Dialog 1: onDismiss");
     }
 
