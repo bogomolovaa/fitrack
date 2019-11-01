@@ -16,4 +16,15 @@
         <item>Month</item>
         <item>Select</item>
     </string-array>
+
+    <string-array name="stats_filter_type">
+        <item>Distance</item>
+        <item>Speed</item>
+        <item>Time</item>
+    </string-array>
+
+    <string-array name="stats_filter_time_step">
+        <item>Day</item>
+        <item>Week</item>
+    </string-array>
 </resources>

@@ -3,6 +3,7 @@ package bogomolov.aa.fitrack.model;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
@@ -136,5 +137,19 @@ public class Track extends RealmObject {
 
     public void addDistance(double add) {
         distance += add;
+    }
+
+    public static Track sumTracks(List<Track> tracks){
+        double distance = 0;
+        long time = 0;
+        Track sumTrack = new Track();
+        for(Track track : tracks){
+            distance+=track.distance;
+            time+=track.getEndTime()-track.getEndTime();
+        }
+        sumTrack.setDistance(distance);
+        sumTrack.setEndTime(System.currentTimeMillis());
+        sumTrack.setStartTime(System.currentTimeMillis()-time);
+        return sumTrack;
     }
 }

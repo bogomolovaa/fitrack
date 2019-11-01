@@ -24,7 +24,7 @@
             android:layout_height="34dp"
             android:layout_marginEnd="8dp"
             android:entries="@array/track_time_filter"
-            android:layout_gravity="right"/> />
+            android:layout_gravity="end"/>
 
 
     </androidx.appcompat.widget.Toolbar>

@@ -26,6 +26,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.model.DateUtils;
 import bogomolov.aa.fitrack.model.DbProvider;
 import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
@@ -66,19 +67,24 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 switch (i) {
                     case FILTER_TODAY:
-                        updateTracksList(getTodayRange());
+                        updateTracksList(DateUtils.getTodayRange());
                         break;
                     case FILTER_WEEK:
-                        updateTracksList(getWeekRange());
+                        updateTracksList(DateUtils.getWeekRange());
                         break;
                     case FILTER_MONTH:
-                        updateTracksList(getMonthRange());
+                        updateTracksList(DateUtils.getMonthRange());
                         break;
                     case FILTER_SELECT:
-                        selectDatesRange(new Date[2]);
+                        DateUtils.selectDatesRange(TracksListActivity.this, new DateUtils.DatesSelector() {
+                            @Override
+                            public void onSelect(Date[] dates) {
+                                updateTracksList(dates);
+                            }
+                        });
                         break;
                     default:
-                        updateTracksList(getTodayRange());
+                        updateTracksList(DateUtils.getTodayRange());
                 }
             }
 
@@ -106,7 +112,7 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
         adapter = new TracksRecyclerAdapter(this);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        updateTracksList(getTodayRange());
+        updateTracksList(DateUtils.getTodayRange());
 
     }
 
@@ -172,68 +178,10 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
         actionMode.finish();
     }
 
-    private void selectDatesRange(final Date[] dates) {
-        new DatePickerFragment(new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker view, int year, int month, int day) {
-                Calendar c = Calendar.getInstance();
-                c.set(Calendar.YEAR, year);
-                c.set(Calendar.MONTH, month);
-                c.set(Calendar.DAY_OF_MONTH, day);
-                if (dates[0] == null) {
-                    dates[0] = c.getTime();
-                    Log.i("test", "date[0] " + dates[0]);
-                    selectDatesRange(dates);
-                } else {
-                    dates[1] = c.getTime();
-                    Log.i("test", "date[1] " + dates[1]);
-                    updateTracksList(dates);
-                }
-            }
-        }).show(getSupportFragmentManager(), "datePicker");
+    private void selectDatesRange() {
+
     }
 
-    private Date[] getMonthRange() {
-        Date[] dateRange = new Date[2];
-        Calendar calendar = new GregorianCalendar();
-        calendar.setTime(new Date());
-        calendar.set(Calendar.DAY_OF_MONTH, 1);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        dateRange[0] = calendar.getTime();
-        calendar.add(Calendar.MONTH, 1);
-        dateRange[1] = calendar.getTime();
-        return dateRange;
-    }
-
-    private Date[] getWeekRange() {
-        Date[] dateRange = new Date[2];
-        Calendar calendar = new GregorianCalendar();
-        calendar.setTime(new Date());
-        calendar.set(Calendar.DAY_OF_WEEK, GregorianCalendar.MONDAY);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        dateRange[0] = calendar.getTime();
-        calendar.add(Calendar.DAY_OF_YEAR, 7);
-        dateRange[1] = calendar.getTime();
-        return dateRange;
-    }
-
-    private Date[] getTodayRange() {
-        Date[] dateRange = new Date[2];
-        Calendar calendar = new GregorianCalendar();
-        calendar.setTime(new Date());
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        dateRange[0] = calendar.getTime();
-        calendar.add(Calendar.DAY_OF_YEAR, 1);
-        dateRange[1] = calendar.getTime();
-        return dateRange;
-    }
 
     private void updateTracksList(Date[] dates) {
         List<Track> tracks = dbProvider.getFinishedTracks(dates);
@@ -246,23 +194,5 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
         dbProvider.close();
     }
 
-
-    public static class DatePickerFragment extends DialogFragment {
-        private DatePickerDialog.OnDateSetListener listener;
-
-        public DatePickerFragment(DatePickerDialog.OnDateSetListener listener) {
-            this.listener = listener;
-        }
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            Calendar c = Calendar.getInstance();
-            int year = c.get(Calendar.YEAR);
-            int month = c.get(Calendar.MONTH);
-            int day = c.get(Calendar.DAY_OF_MONTH);
-
-            return new DatePickerDialog(getActivity(), listener, year, month, day);
-        }
-    }
 
 }
