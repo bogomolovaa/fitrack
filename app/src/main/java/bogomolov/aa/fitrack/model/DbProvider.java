@@ -42,6 +42,10 @@ public class DbProvider {
         return realm.where(Track.class).greaterThanOrEqualTo("startTime", datesRange[0].getTime()).lessThan("startTime", datesRange[1].getTime()).findAll();
     }
 
+    public List<Track> getFinishedTracks(Date[] datesRange,String tag) {
+        return realm.where(Track.class).equalTo("tag",tag).greaterThanOrEqualTo("startTime", datesRange[0].getTime()).lessThan("startTime", datesRange[1].getTime()).findAll();
+    }
+
     public List<Tag> getTags() {
         return realm.where(Tag.class).findAll();
     }
@@ -51,21 +55,28 @@ public class DbProvider {
         realm.beginTransaction();
         for (Track track : tracks) track.setTag(null);
         realm.commitTransaction();
-        realm.where(Tag.class).equalTo("id",tag.getId()).findAll().deleteAllFromRealm();
+        realm.where(Tag.class).equalTo("id", tag.getId()).findAll().deleteAllFromRealm();
     }
 
-    public List<Track> getTracks(List<Long> ids){
-        return realm.where(Track.class).in("id",ids.toArray(new Long[0])).findAll();
+    public List<Track> getTracks(List<Long> ids) {
+        return realm.where(Track.class).in("id", ids.toArray(new Long[0])).findAll();
     }
 
-    public void deleteTracks(List<Long> ids){
+    public void deleteTracks(List<Long> ids) {
         realm.beginTransaction();
-        realm.where(Track.class).in("id",ids.toArray(new Long[0])).findAll().deleteAllFromRealm();
+        realm.where(Track.class).in("id", ids.toArray(new Long[0])).findAll().deleteAllFromRealm();
         realm.commitTransaction();
     }
 
-    public Track getTrack(long id){
-        return realm.where(Track.class).equalTo("id",id).findFirst();
+    public void deleteRawPoints(Track track) {
+        realm.beginTransaction();
+        realm.where(Point.class).greaterThan("id", track.getStartPoint().getId()).
+                lessThan("id", track.getEndPoint().getId()).findAll().deleteAllFromRealm();
+        realm.commitTransaction();
+    }
+
+    public Track getTrack(long id) {
+        return realm.where(Track.class).equalTo("id", id).findFirst();
     }
 
     public Tag addTag(Tag tag) {
@@ -112,6 +123,7 @@ public class DbProvider {
             return realm.where(Point.class).equalTo("smoothed", smoothed).between("id", track.getStartPoint(smoothed).getId(), track.getEndPoint(smoothed).getId()).findAll();
         }
     }
+
 
     public Track getLastTrack() {
         List<Track> tracks = realm.where(Track.class).findAll();

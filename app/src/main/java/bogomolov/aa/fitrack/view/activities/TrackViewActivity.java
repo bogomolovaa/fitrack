@@ -9,12 +9,19 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.util.List;
 
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.DbProvider;
+import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.view.TagResultListener;
@@ -24,7 +31,6 @@ public class TrackViewActivity extends AppCompatActivity implements OnMapReadyCa
     private TextView textTag;
     private DbProvider dbProvider;
     private Track track;
-    private GoogleMap googleMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +64,8 @@ public class TrackViewActivity extends AppCompatActivity implements OnMapReadyCa
                 dialog.setTagResultListener(new TagResultListener() {
                     @Override
                     public void onTagSelectionResult(Tag tag) {
-                        Log.i("test","onTagSelectionResult tag "+tag);
-                        if (tag != null){
+                        Log.i("test", "onTagSelectionResult tag " + tag);
+                        if (tag != null) {
                             dbProvider.getRealm().beginTransaction();
                             textTag.setText(tag.getName());
                             track.setTag(tag.getName());
@@ -94,13 +100,10 @@ public class TrackViewActivity extends AppCompatActivity implements OnMapReadyCa
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        this.googleMap = googleMap;
+        List<Point> smoothedPoints = dbProvider.getTrackPoints(track, Point.SMOOTHED);
+        googleMap.addPolyline((new PolylineOptions()).color(0xffffff00).clickable(false).add(Point.toPolylineCoordinates(smoothedPoints)));
+        Point lastPoint = smoothedPoints.get(smoothedPoints.size() - 1);
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastPoint.getLat(), lastPoint.getLng()), 15));
     }
-
-    @Override
-    public void onPointerCaptureChanged(boolean hasCapture) {
-
-    }
-
 
 }

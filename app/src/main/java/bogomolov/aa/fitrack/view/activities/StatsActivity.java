@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -23,14 +24,22 @@ import java.util.List;
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.DateUtils;
 import bogomolov.aa.fitrack.model.DbProvider;
+import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
 
+import static bogomolov.aa.fitrack.model.DateUtils.getMonthRange;
+import static bogomolov.aa.fitrack.model.DateUtils.getTodayRange;
 import static bogomolov.aa.fitrack.model.DateUtils.getWeekRange;
 
 public class StatsActivity extends AppCompatActivity {
+    private static final String NO_TAG = "-";
+
     private LineChart chart;
     private DbProvider dbProvider;
     private List<Track> tracks;
+    private Date[] datesRange;
+    private String selectedTag = NO_TAG;
+
 
     private static final int PARAM_DISTANCE = 0;
     private static final int PARAM_SPEED = 1;
@@ -59,30 +68,34 @@ public class StatsActivity extends AppCompatActivity {
             }
         });
 
-        Spinner filterSpinner = findViewById(R.id.stats_spinner_period);
-        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        final Spinner tagSpinner = findViewById(R.id.stats_spinner_tag);
+
+        Spinner periodSpinner = findViewById(R.id.stats_spinner_period);
+        periodSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 switch (i) {
                     case FILTER_TODAY:
-                        updateView(DateUtils.getTodayRange());
+                        datesRange = getTodayRange();
+                        updateView();
                         break;
                     case FILTER_WEEK:
-                        updateView(getWeekRange());
+                        datesRange = getWeekRange();
+                        updateView();
                         break;
                     case FILTER_MONTH:
-                        updateView(DateUtils.getMonthRange());
+                        datesRange = getMonthRange();
+                        updateView();
                         break;
                     case FILTER_SELECT:
                         DateUtils.selectDatesRange(StatsActivity.this, new DateUtils.DatesSelector() {
                             @Override
                             public void onSelect(Date[] dates) {
-                                updateView(dates);
+                                datesRange = dates;
+                                updateView();
                             }
                         });
                         break;
-                    default:
-                        updateView(DateUtils.getTodayRange());
                 }
             }
 
@@ -91,6 +104,28 @@ public class StatsActivity extends AppCompatActivity {
 
             }
         });
+
+
+        List<Tag> tags = dbProvider.getTags();
+        String[] tagNames = new String[tags.size() + 1];
+        tagNames[0] = NO_TAG;
+        for (int i = 0; i < tags.size(); i++) tagNames[i + 1] = tags.get(i).getName();
+        ArrayAdapter<String> tagsArrayAdapter = new ArrayAdapter<String>(
+                this, android.R.layout.simple_spinner_item, tagNames);
+        tagSpinner.setAdapter(tagsArrayAdapter);
+        tagSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                selectedTag = tagSpinner.getSelectedItem().toString();
+                updateView();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
 
         final Spinner paramSpinner = findViewById(R.id.stats_spinner_param);
         final Spinner timeStepSpinner = findViewById(R.id.stats_spinner_time_step);
@@ -124,13 +159,14 @@ public class StatsActivity extends AppCompatActivity {
         chart = findViewById(R.id.chart);
     }
 
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         dbProvider.close();
     }
 
-    private void updateView(Date[] datesRange) {
+    private void updateView() {
         String startDateString = new SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[0]);
         String endDateString = new SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[1]);
         TextView periodTextView = findViewById(R.id.stats_text_selected_period);
@@ -140,7 +176,7 @@ public class StatsActivity extends AppCompatActivity {
         TextView textTime = findViewById(R.id.stats_text_time);
         TextView textSpeed = findViewById(R.id.stats_text_avg_speed);
 
-        tracks = dbProvider.getFinishedTracks(datesRange);
+        tracks = selectedTag.equals(NO_TAG) ? dbProvider.getFinishedTracks(datesRange) : dbProvider.getFinishedTracks(datesRange, selectedTag);
         Track sumTrack = Track.sumTracks(tracks);
 
         textDistance.setText((int) sumTrack.getDistance() + " m");
@@ -163,6 +199,10 @@ public class StatsActivity extends AppCompatActivity {
         LineData lineData = new LineData(dataSet);
         chart.setData(lineData);
         chart.invalidate();
+
+        //https://weeklycoding.com/mpandroidchart-documentation/
+        //https://weeklycoding.com/mpandroidchart-documentation/getting-started/
+
     }
 
 }

@@ -9,6 +9,7 @@ import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 
 public class Track extends RealmObject {
+    public static final int EPSILON = 20;
 
 
     private long id;

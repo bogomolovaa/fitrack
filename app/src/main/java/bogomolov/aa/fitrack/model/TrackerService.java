@@ -158,7 +158,7 @@ public class TrackerService extends Service
             if (points.size() > 1) {
                 Point firstPoint = points.get(0);
                 Point lastPoint = points.get(points.size() - 1);
-                double distance = GeoUtils.distance(firstPoint, lastPoint);
+                double distance = Point.distance(firstPoint, lastPoint);
                 stringBuffer.append("distance " + distance + "\n");
                 if (distance > 50) {
                     stringBuffer.append("track created\n");
@@ -170,7 +170,7 @@ public class TrackerService extends Service
             }
             trackPoints = points;
         } else {
-            if (location != null){
+            if (location != null) {
                 dbProvider.getRealm().beginTransaction();
                 openedTrack.setCurrentSpeed(location.getSpeed());
                 dbProvider.getRealm().commitTransaction();
@@ -178,23 +178,35 @@ public class TrackerService extends Service
             List<Point> points = new ArrayList<>(dbProvider.getTrackPoints(openedTrack, Point.RAW));
             trackPoints = points;
             Point lastPoint = points.get(points.size() - 1);
-            if (!(GeoUtils.distance(point, lastPoint) > 200 || point.getTime() - lastPoint.getTime() <= 2 * UPDATE_INTERVAL)) {
+            if (!(Point.distance(point, lastPoint) > 200 || point.getTime() - lastPoint.getTime() <= 2 * UPDATE_INTERVAL)) {
                 points.add(point);
                 lastPoint = dbProvider.addPoint(point);
             }
 
             for (int i = points.size() - 1; i >= 0; i--) {
-                if (GeoUtils.distance(lastPoint, points.get(i)) <= 50) {
+                if (Point.distance(lastPoint, points.get(i)) <= 50) {
                     if (lastPoint.getTime() - points.get(i).getTime() > 3 * 60 * 1000) {
-                        dbProvider.getRealm().beginTransaction();
-                        openedTrack.setEndPoint(lastPoint);
-                        openedTrack.setEndTime(points.get(i).getTime());
-                        dbProvider.getRealm().commitTransaction();
-                        stringBuffer.append("track finished\n");
+                        trackPoints = trackPoints.subList(0, i + 1);
+                        trackPoints.add(lastPoint);
+                        finishTrack(trackPoints, openedTrack, points.get(i).getTime());
+                        break;
                     }
                 }
             }
         }
+    }
+
+    private void finishTrack(List<Point> points, Track openedTrack, long time) {
+        Point lastPoint = points.get(points.size() - 1);
+        List<Point> smoothedPoints = RamerDouglasPeucker.douglasPeucker(points, Track.EPSILON);
+        for (Point point : smoothedPoints) dbProvider.addPoint(point);
+        dbProvider.getRealm().beginTransaction();
+        openedTrack.setEndPoint(lastPoint);
+        openedTrack.setEndTime(time);
+        openedTrack.setStartSmoothedPoint(smoothedPoints.get(0));
+        openedTrack.setEndSmoothedPoint(smoothedPoints.get(smoothedPoints.size() - 1));
+        dbProvider.getRealm().commitTransaction();
+        dbProvider.deleteRawPoints(openedTrack);
     }
 
 

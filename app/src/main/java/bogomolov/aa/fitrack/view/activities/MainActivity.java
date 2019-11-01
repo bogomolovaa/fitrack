@@ -42,7 +42,6 @@ import java.util.List;
 
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.DbProvider;
-import bogomolov.aa.fitrack.model.GeoUtils;
 import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.RamerDouglasPeucker;
 import bogomolov.aa.fitrack.model.Track;
@@ -67,7 +66,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private List<Point> tailSmoothedPoints;
     private int windowStartId;
     private static final int WINDOW_MAX_SIZE = 50;
-    private static final int EPSILON = 20;
 
     private static final int ALL_PERMISSIONS_RESULT = 1011;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
@@ -245,25 +243,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                         if (trackRawPolyline == null) {
                             trackRawPolyline = googleMap.addPolyline((new PolylineOptions())
-                                    .clickable(false).add(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.RAW))));
+                                    .clickable(false).add(Point.toPolylineCoordinates(dbProvider.getTrackPoints(track, Point.RAW))));
                         } else {
-                            trackRawPolyline.setPoints(Arrays.asList(pointsToPolylineCoordinates(dbProvider.getTrackPoints(track, Point.RAW))));
+                            trackRawPolyline.setPoints(Arrays.asList(Point.toPolylineCoordinates(dbProvider.getTrackPoints(track, Point.RAW))));
                         }
 
                         List<Point> points = dbProvider.getTrackPoints(track, Point.RAW);
-
-                        //List<Point> smoothedPoints = RamerDouglasPeucker.douglasPeucker(points, EPSILON);
                         List<Point> smoothedPoints = getSmoothedPoints(points);
 
                         if (trackSmoothedPolyline == null) {
                             trackSmoothedPolyline = googleMap.addPolyline((new PolylineOptions()).color(0xffffff00)
-                                    .clickable(false).add(pointsToPolylineCoordinates(smoothedPoints)));
+                                    .clickable(false).add(Point.toPolylineCoordinates(smoothedPoints)));
                         } else {
-                            trackSmoothedPolyline.setPoints(Arrays.asList(pointsToPolylineCoordinates(smoothedPoints)));
+                            trackSmoothedPolyline.setPoints(Arrays.asList(Point.toPolylineCoordinates(smoothedPoints)));
                         }
                         dbProvider.getRealm().beginTransaction();
                         track.setCurrentSpeed(getCurrentSpeed(smoothedPoints));
-                        track.setDistance(GeoUtils.getTrackDistance(smoothedPoints));
+                        track.setDistance(Point.getTrackDistance(smoothedPoints));
                         dbProvider.getRealm().commitTransaction();
 
                     } else {
@@ -298,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private double getCurrentSpeed(List<Point> points) {
-        double distance = points.size() > 1 ? GeoUtils.distance(points.get(points.size() - 1), points.get(points.size() - 2)) : 0;
+        double distance = points.size() > 1 ? Point.distance(points.get(points.size() - 1), points.get(points.size() - 2)) : 0;
         double seconds = points.size() > 1 ? (points.get(points.size() - 1).getTime() - points.get(points.size() - 2).getTime()) / 1000.0 : 0;
         return seconds > 0 ? distance / seconds : 0;
     }
@@ -315,8 +311,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             windowStartId = Math.max(points.size() - windowSize, 0);
             List<Point> windowPointsRaw = getWindowPoints(points, windowSize);
             List<Point> preWindowPointsRaw = getPreWindowPoints(points, windowSize);
-            tailSmoothedPoints = RamerDouglasPeucker.douglasPeucker(preWindowPointsRaw, EPSILON);
-            List<Point> windowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(windowPointsRaw, EPSILON);
+            tailSmoothedPoints = RamerDouglasPeucker.douglasPeucker(preWindowPointsRaw, Track.EPSILON);
+            List<Point> windowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(windowPointsRaw, Track.EPSILON);
             smoothedPoints.addAll(tailSmoothedPoints);
             smoothedPoints.addAll(windowSmoothedPoints);
         } else {
@@ -325,15 +321,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 List<Point> windowPointsRaw = getWindowPoints(points, windowSize);
                 List<Point> secondHalfWindowPointsRaw = getWindowPoints(points, windowSize / 2);
                 List<Point> firstHalfWindowPointsRaw = getPreWindowPoints(windowPointsRaw, windowSize / 2);
-                List<Point> secondHalfWindowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(secondHalfWindowPointsRaw, EPSILON);
-                List<Point> firstHalfWindowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(firstHalfWindowPointsRaw, EPSILON);
+                List<Point> secondHalfWindowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(secondHalfWindowPointsRaw, Track.EPSILON);
+                List<Point> firstHalfWindowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(firstHalfWindowPointsRaw, Track.EPSILON);
                 tailSmoothedPoints.addAll(firstHalfWindowSmoothedPoints);
                 smoothedPoints.addAll(tailSmoothedPoints);
                 smoothedPoints.addAll(secondHalfWindowSmoothedPoints);
                 windowStartId = points.size() - windowSize / 2;
             } else {
                 List<Point> windowPointsRaw = getWindowPoints(points, windowSize);
-                List<Point> windowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(windowPointsRaw, EPSILON);
+                List<Point> windowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(windowPointsRaw, Track.EPSILON);
                 smoothedPoints.addAll(tailSmoothedPoints);
                 smoothedPoints.addAll(windowSmoothedPoints);
             }
@@ -349,12 +345,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return points.size() > windowSize ? points.subList(0, points.size() - windowSize) : new ArrayList<Point>();
     }
 
-    private LatLng[] pointsToPolylineCoordinates(List<Point> points) {
-        LatLng[] latLngs = new LatLng[points.size()];
-        for (int i = 0; i < points.size(); i++)
-            latLngs[i] = new LatLng(points.get(i).getLat(), points.get(i).getLng());
-        return latLngs;
-    }
+
 
     @Override
     protected void onDestroy() {
