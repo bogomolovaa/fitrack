@@ -72,7 +72,6 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
         CardView cardView = holder.cardView;
         RadioButton radioButton = cardView.findViewById(R.id.card_checked_button);
         boolean selected = selectedIds.contains(track.getId());
-        Log.i("test", "position " + position + " id " + track.getId() + " selected " + selected);
         radioButton.setVisibility(checkMode ? View.VISIBLE : View.GONE);
         radioButton.setChecked(selected);
 
@@ -112,7 +111,6 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
                 } else {
                     adapter.selectedIds.add(track.getId());
                 }
-                Log.i("test", "selectedIds " + adapter.selectedIds);
                 adapter.notifyItemChanged(position);
             } else {
                 Intent intent = new Intent(adapter.tracksListActivity, TrackViewActivity.class);

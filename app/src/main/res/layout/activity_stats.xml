@@ -7,7 +7,7 @@
     tools:context=".view.activities.StatsActivity">
 
 
-    <com.github.mikephil.charting.charts.LineChart
+    <com.github.mikephil.charting.charts.BarChart
         android:id="@+id/chart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -46,8 +46,8 @@
 
     <LinearLayout
         android:id="@+id/stats_linear_layout"
-        android:layout_width="383dp"
-        android:layout_height="22dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom|top"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"

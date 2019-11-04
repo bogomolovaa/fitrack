@@ -36,7 +36,6 @@ public class RamerDouglasPeucker {
                 dmax = d;
             }
         }
-        //if (e - s < 5) TrackerService.stringBuffer.append("perpendicularDistance " + dmax + " epsilon " + epsilon + "\n");
         if (dmax > epsilon) {
             douglasPeucker(list, s, index, epsilon, resultList);
             douglasPeucker(list, index, e, epsilon, resultList);

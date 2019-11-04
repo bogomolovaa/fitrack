@@ -27,4 +27,11 @@
         <item>Day</item>
         <item>Week</item>
     </string-array>
+
+    <string-array name="stats_param_units">
+        <item>km</item>
+        <item>km/h</item>
+        <item>hours</item>
+    </string-array>
+
 </resources>

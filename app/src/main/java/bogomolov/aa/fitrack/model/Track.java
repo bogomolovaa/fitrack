@@ -146,7 +146,7 @@ public class Track extends RealmObject {
         Track sumTrack = new Track();
         for(Track track : tracks){
             distance+=track.distance;
-            time+=track.getEndTime()-track.getEndTime();
+            time+=track.getEndTime()-track.getStartTime();
         }
         sumTrack.setDistance(distance);
         sumTrack.setEndTime(System.currentTimeMillis());

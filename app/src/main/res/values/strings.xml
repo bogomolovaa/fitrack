@@ -38,4 +38,17 @@
 
     <string name="no_tag">No tag</string>
 
+    <string name="title_stats">Statistics</string>
+    <string name="title_tracks">Tracks</string>
+
+    <string name="notification_title">Fitrack</string>
+    <string name="notification_text">Tracking enabled</string>
+
+    <string name="settings_tracking">Tracking</string>
+    <string name="settings_tracking_time_enabled">Tracking time enabled</string>
+    <string name="settings_start_tracking_time">Start tracking time</string>
+    <string name="settings_end_tracking_time">End tracking time</string>
+
+
+
 </resources>

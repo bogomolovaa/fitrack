@@ -30,13 +30,15 @@ public class DateUtils {
                 c.set(Calendar.YEAR, year);
                 c.set(Calendar.MONTH, month);
                 c.set(Calendar.DAY_OF_MONTH, day);
+                c.set(Calendar.HOUR_OF_DAY, 0);
+                c.set(Calendar.MINUTE, 0);
+                c.set(Calendar.SECOND, 0);
+                c.set(Calendar.MILLISECOND, 0);
                 if (dates[0] == null) {
                     dates[0] = c.getTime();
-                    Log.i("test", "date[0] " + dates[0]);
                     selectDatesRange(activity,dates,datesSelector);
                 } else {
                     dates[1] = c.getTime();
-                    Log.i("test", "date[1] " + dates[1]);
                     datesSelector.onSelect(dates);
                 }
             }
@@ -48,12 +50,13 @@ public class DateUtils {
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(new Date());
         calendar.set(Calendar.DAY_OF_MONTH, 1);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         dateRange[0] = calendar.getTime();
         calendar.add(Calendar.MONTH, 1);
-        dateRange[1] = calendar.getTime();
+        dateRange[1] = new Date(calendar.getTime().getTime()-1);
         return dateRange;
     }
 
@@ -62,12 +65,13 @@ public class DateUtils {
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(new Date());
         calendar.set(Calendar.DAY_OF_WEEK, GregorianCalendar.MONDAY);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         dateRange[0] = calendar.getTime();
         calendar.add(Calendar.DAY_OF_YEAR, 7);
-        dateRange[1] = calendar.getTime();
+        dateRange[1] = new Date(calendar.getTime().getTime()-1);
         return dateRange;
     }
 
@@ -81,7 +85,7 @@ public class DateUtils {
         calendar.set(Calendar.MILLISECOND, 0);
         dateRange[0] = calendar.getTime();
         calendar.add(Calendar.DAY_OF_YEAR, 1);
-        dateRange[1] = calendar.getTime();
+        dateRange[1] = new Date(calendar.getTime().getTime()-1);
         return dateRange;
     }
 

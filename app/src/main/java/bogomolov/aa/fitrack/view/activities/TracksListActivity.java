@@ -19,27 +19,32 @@ import android.widget.AdapterView;
 import android.widget.DatePicker;
 import android.widget.Spinner;
 
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.dagger.AppComponent;
+import bogomolov.aa.fitrack.dagger.AppModule;
+import bogomolov.aa.fitrack.dagger.DaggerAppComponent;
 import bogomolov.aa.fitrack.model.DateUtils;
 import bogomolov.aa.fitrack.model.DbProvider;
 import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
+import bogomolov.aa.fitrack.presenter.TracksListPresenter;
 import bogomolov.aa.fitrack.view.TagResultListener;
 import bogomolov.aa.fitrack.view.TagSelectionDialog;
+import bogomolov.aa.fitrack.view.TracksListView;
 import bogomolov.aa.fitrack.view.TracksRecyclerAdapter;
 
-public class TracksListActivity extends AppCompatActivity implements TagResultListener {
-    private RecyclerView recyclerView;
-    private DbProvider dbProvider;
+public class TracksListActivity extends AppCompatActivity implements TagResultListener, TracksListView {
     private TracksRecyclerAdapter adapter;
     private ActionMode actionMode;
     private Toolbar toolbar;
+
+    @Inject
+    TracksListPresenter tracksListPresenter;
 
     private static final int FILTER_TODAY = 0;
     private static final int FILTER_WEEK = 1;
@@ -52,6 +57,7 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
         setContentView(R.layout.activity_tracks_list);
         toolbar = findViewById(R.id.toolbar_tracks_list);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(R.string.title_tracks);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,24 +73,24 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 switch (i) {
                     case FILTER_TODAY:
-                        updateTracksList(DateUtils.getTodayRange());
+                        tracksListPresenter.onTimeFilterSelect(DateUtils.getTodayRange());
                         break;
                     case FILTER_WEEK:
-                        updateTracksList(DateUtils.getWeekRange());
+                        tracksListPresenter.onTimeFilterSelect(DateUtils.getWeekRange());
                         break;
                     case FILTER_MONTH:
-                        updateTracksList(DateUtils.getMonthRange());
+                        tracksListPresenter.onTimeFilterSelect(DateUtils.getMonthRange());
                         break;
                     case FILTER_SELECT:
                         DateUtils.selectDatesRange(TracksListActivity.this, new DateUtils.DatesSelector() {
                             @Override
                             public void onSelect(Date[] dates) {
-                                updateTracksList(dates);
+                                tracksListPresenter.onTimeFilterSelect(dates);
                             }
                         });
                         break;
                     default:
-                        updateTracksList(DateUtils.getTodayRange());
+                        tracksListPresenter.onTimeFilterSelect(DateUtils.getTodayRange());
                 }
             }
 
@@ -94,25 +100,15 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
             }
         });
 
+        AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
+        appComponent.injectsTracksListActivity(this);
 
-        dbProvider = new DbProvider(true);
-        for (int i = 0; i < 5; i++) {
-            Track track = new Track();
-            track.setId(i + 1000);
-            track.setDistance(i * 1000 + 100);
-            track.setStartTime(System.currentTimeMillis() - i * 24 * 3600 * 1000);
-            track.setEndTime(System.currentTimeMillis());
-            dbProvider.addTrack(track);
 
-            Tag tag = new Tag("tag " + (i + 1));
-            dbProvider.addTag(tag);
-        }
-
-        recyclerView = findViewById(R.id.track_recycler);
+        RecyclerView recyclerView = findViewById(R.id.track_recycler);
         adapter = new TracksRecyclerAdapter(this);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        updateTracksList(DateUtils.getTodayRange());
+        tracksListPresenter.onTimeFilterSelect(DateUtils.getTodayRange());
 
     }
 
@@ -148,7 +144,7 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
                 case R.id.menu_track_delete:
                     actionMode.finish();
                     adapter.deleteTracks();
-                    dbProvider.deleteTracks(new ArrayList<Long>(adapter.getSelectedIds()));
+                    tracksListPresenter.deleteTracks(adapter.getSelectedIds());
                     break;
                 case R.id.menu_track_tag:
                     TagSelectionDialog dialog = new TagSelectionDialog();
@@ -168,30 +164,19 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
 
     @Override
     public void onTagSelectionResult(Tag tag) {
-        if (tag != null) {
-            List<Long> ids = new ArrayList<>(adapter.getSelectedIds());
-            List<Track> tracks = dbProvider.getTracks(ids);
-            dbProvider.getRealm().beginTransaction();
-            for (Track track : tracks) track.setTag(tag.getName());
-            dbProvider.getRealm().commitTransaction();
-        }
+        tracksListPresenter.setTag(tag, adapter.getSelectedIds());
         actionMode.finish();
     }
 
-    private void selectDatesRange() {
-
-    }
-
-
-    private void updateTracksList(Date[] dates) {
-        List<Track> tracks = dbProvider.getFinishedTracks(dates);
+    @Override
+    public void updateTracksList(List<Track> tracks) {
         adapter.setTracks(tracks);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        dbProvider.close();
+        tracksListPresenter.onDestroy();
     }
 
 

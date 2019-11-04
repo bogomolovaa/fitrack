@@ -18,6 +18,15 @@ public class Point extends RealmObject {
     private double lng;
     private int smoothed;
 
+    public Point clone(){
+        Point point = new Point();
+        point.time = time;
+        point.lat = lat;
+        point.lng = lng;
+        point.smoothed = smoothed;
+        return point;
+    }
+
     public Point() {
     }
 

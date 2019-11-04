@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.view.activities.SettingsActivity;
 
 
 public class TrackerService extends Service
@@ -45,17 +47,11 @@ public class TrackerService extends Service
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private DbProvider dbProvider;
-    private long lastTime;
-    private double[] lastLatLng;
-    private int smoothedPointCounter = 0;
 
-    public static StringBuffer stringBuffer = new StringBuffer();
 
-    public static final int STARTED_MODE = 1;
-    public static final int ENDED_MODE = 2;
-
+    public static final String START_SERVICE_ACTION = "start";
+    public static final String STOP_SERVICE_ACTION = "stop";
     private static final long UPDATE_INTERVAL = 1000, FASTEST_INTERVAL = 1000;
-    private static final String TRACKER_SERVICE = "TrackerService";
 
     @Override
     public void onCreate() {
@@ -64,24 +60,26 @@ public class TrackerService extends Service
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         String NOTIFICATION_CHANNEL_ID = "channel_1";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            @SuppressLint("WrongConstant") NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "My Notifications", NotificationManager.IMPORTANCE_MAX);
-            // Configure the notification channel.
-            notificationChannel.setDescription("Sample Channel description");
+            @SuppressLint("WrongConstant") NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "My Notifications", NotificationManager.IMPORTANCE_LOW);
+            notificationChannel.setDescription("Fitrack");
             notificationChannel.enableLights(true);
             notificationChannel.setLightColor(Color.RED);
-            //notificationChannel.setVibrationPattern(new long[]{0, 1000, 500, 1000});
             notificationChannel.enableVibration(false);
+            notificationChannel.setImportance(NotificationManager.IMPORTANCE_LOW);
             notificationManager.createNotificationChannel(notificationChannel);
         }
+        Intent resultIntent = new Intent(this, SettingsActivity.class);
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
         notificationBuilder.setAutoCancel(true)
-                .setDefaults(Notification.DEFAULT_ALL)
+                .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND)
                 .setWhen(System.currentTimeMillis())
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setTicker("Tutorialspoint")
-                .setContentTitle("sample notification")
-                .setContentText("This is sample notification")
-                .setContentInfo("Information");
+                .setContentTitle(getResources().getString(R.string.notification_title))
+                .setContentText(getResources().getString(R.string.notification_text))
+                .setVibrate(new long[]{0L})
+                .setContentIntent(resultPendingIntent);
         startForeground(1, notificationBuilder.build());
 
         googleApiClient = new GoogleApiClient.Builder(this).
@@ -91,12 +89,18 @@ public class TrackerService extends Service
 
         dbProvider = new DbProvider(true);
 
-        Log.i(TRACKER_SERVICE, "onCreate");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (googleApiClient != null) googleApiClient.connect();
+        Log.i("test", "onStartCommand action " + intent.getAction());
+        if (intent.getAction().equals(START_SERVICE_ACTION)) {
+            if (googleApiClient != null) googleApiClient.connect();
+            return START_STICKY;
+        } else if (intent.getAction().equals(STOP_SERVICE_ACTION)) {
+            stopForeground(true);
+            stopSelf();
+        }
         return START_STICKY;
     }
 
@@ -138,11 +142,7 @@ public class TrackerService extends Service
                 if (!(locationResult.getLastLocation().getLongitude() == location.getLongitude() && locationResult.getLastLocation().getLatitude() == location.getLatitude())) {
                     location = locationResult.getLastLocation();
                     Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
-                    //location.getAccuracy()
                     checkTrack(point);
-                    lastTime = location.getTime();
-                } else {
-                    //stringBuffer.append("same location\n");
                 }
             }
         };
@@ -159,9 +159,7 @@ public class TrackerService extends Service
                 Point firstPoint = points.get(0);
                 Point lastPoint = points.get(points.size() - 1);
                 double distance = Point.distance(firstPoint, lastPoint);
-                stringBuffer.append("distance " + distance + "\n");
                 if (distance > 50) {
-                    stringBuffer.append("track created\n");
                     Track track = new Track();
                     track.setStartPoint(lastPoint);
                     track.setStartTime(lastPoint.getTime());
@@ -178,7 +176,7 @@ public class TrackerService extends Service
             List<Point> points = new ArrayList<>(dbProvider.getTrackPoints(openedTrack, Point.RAW));
             trackPoints = points;
             Point lastPoint = points.get(points.size() - 1);
-            if (!(Point.distance(point, lastPoint) > 200 || point.getTime() - lastPoint.getTime() <= 2 * UPDATE_INTERVAL)) {
+            if (!(Point.distance(point, lastPoint) > 200 || System.currentTimeMillis() - lastPoint.getTime() <= 2 * UPDATE_INTERVAL)) {
                 points.add(point);
                 lastPoint = dbProvider.addPoint(point);
             }
@@ -197,14 +195,25 @@ public class TrackerService extends Service
     }
 
     private void finishTrack(List<Point> points, Track openedTrack, long time) {
+        finishTrack(dbProvider, points, openedTrack, time);
+    }
+
+    public static void finishTrack(DbProvider dbProvider, List<Point> points, Track openedTrack, long time) {
+        if (points.size() == 0) return;
         Point lastPoint = points.get(points.size() - 1);
         List<Point> smoothedPoints = RamerDouglasPeucker.douglasPeucker(points, Track.EPSILON);
-        for (Point point : smoothedPoints) dbProvider.addPoint(point);
+        List<Point> smoothedPointsManaged = new ArrayList<>();
+        for (Point point : smoothedPoints) {
+            Point smoothedPoint = point.clone();
+            smoothedPoint.setSmoothed(Point.SMOOTHED);
+            smoothedPointsManaged.add(dbProvider.addPoint(smoothedPoint));
+        }
         dbProvider.getRealm().beginTransaction();
         openedTrack.setEndPoint(lastPoint);
         openedTrack.setEndTime(time);
-        openedTrack.setStartSmoothedPoint(smoothedPoints.get(0));
-        openedTrack.setEndSmoothedPoint(smoothedPoints.get(smoothedPoints.size() - 1));
+        openedTrack.setStartSmoothedPoint(smoothedPointsManaged.get(0));
+        openedTrack.setEndSmoothedPoint(smoothedPointsManaged.get(smoothedPointsManaged.size() - 1));
+        openedTrack.setDistance(Point.getTrackDistance(smoothedPointsManaged));
         dbProvider.getRealm().commitTransaction();
         dbProvider.deleteRawPoints(openedTrack);
     }
@@ -220,9 +229,7 @@ public class TrackerService extends Service
 
     @Override
     public void onLocationChanged(Location location) {
-        if (location != null) {
-            Log.i(TRACKER_SERVICE, "Latitude : " + location.getLatitude() + "\nLongitude : " + location.getLongitude());
-        }
+
     }
 
     @Override

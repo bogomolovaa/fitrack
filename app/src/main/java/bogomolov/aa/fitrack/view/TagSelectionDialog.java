@@ -24,7 +24,6 @@ import java.util.List;
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.DbProvider;
 import bogomolov.aa.fitrack.model.Tag;
-import bogomolov.aa.fitrack.view.activities.TracksListActivity;
 
 public class TagSelectionDialog extends DialogFragment {
     private ActionMode actionMode;
@@ -35,7 +34,6 @@ public class TagSelectionDialog extends DialogFragment {
     private TagResultListener tagResultListener;
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        getDialog().setTitle("Title!");
         View view = inflater.inflate(R.layout.fragment_tag_selection, null);
         dbProvider = new DbProvider(false);
         listView = view.findViewById(R.id.tag_list_view);
@@ -48,7 +46,6 @@ public class TagSelectionDialog extends DialogFragment {
             @Override
             public void onClick(View view) {
                 String tagName = tagNameEditText.getText().toString();
-                Log.i("test", "add tag " + tagName);
                 Tag tag = new Tag(tagName);
                 tag = dbProvider.addTag(tag);
                 tags.add(tag);
@@ -73,8 +70,6 @@ public class TagSelectionDialog extends DialogFragment {
                 } else {
                     actionMode.finish();
                 }
-                int selected = listView.getSelectedItemPosition();
-                Log.i("test", "long selected " + selected);
                 return true;
             }
         });
@@ -82,9 +77,7 @@ public class TagSelectionDialog extends DialogFragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                Tag tag = (Tag) listView.getItemAtPosition(position);
-                Log.i("test", "selected " + tag.getName());
-                selectedTag = tag;
+                selectedTag = (Tag) listView.getItemAtPosition(position);
                 dismiss();
             }
         });
@@ -114,7 +107,6 @@ public class TagSelectionDialog extends DialogFragment {
         }
 
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            Log.d("test", "item " + item.getTitle());
             Tag tag = (Tag) listView.getSelectedItem();
             dbProvider.deleteTag(tag);
             return true;
@@ -130,13 +122,11 @@ public class TagSelectionDialog extends DialogFragment {
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
         if (tagResultListener != null) tagResultListener.onTagSelectionResult(selectedTag);
-        Log.d("test", "Dialog 1: onDismiss");
     }
 
     public void onCancel(DialogInterface dialog) {
         super.onCancel(dialog);
         if (tagResultListener != null) tagResultListener.onTagSelectionResult(null);
-        Log.d("test", "Dialog 1: onCancel");
     }
 
 }
