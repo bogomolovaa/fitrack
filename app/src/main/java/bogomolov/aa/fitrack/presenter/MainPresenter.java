@@ -1,5 +1,6 @@
 package bogomolov.aa.fitrack.presenter;
 
+import android.app.Activity;
 import android.content.Context;
 
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ public class MainPresenter {
     public MainPresenter(MainView mainView) {
         this.mainView = mainView;
         dbProvider = new DbProvider(false);
+
     }
 
     public void onDestroy() {
@@ -33,13 +35,17 @@ public class MainPresenter {
 
 
     public void startTrack() {
-        Point lastPoint = dbProvider.getLastPoint();
-        if (lastPoint != null) {
-            Track track = new Track();
-            track.setStartPoint(lastPoint);
-            track.setStartTime(lastPoint.getTime());
-            dbProvider.addTrack(track);
-            mainView.showStartStopButtons(true);
+        if (TrackerService.working) {
+            Point lastPoint = dbProvider.getLastPoint();
+            if (lastPoint != null) {
+                Track track = new Track();
+                track.setStartPoint(lastPoint);
+                track.setStartTime(lastPoint.getTime());
+                dbProvider.addTrack(track);
+                mainView.showStartStopButtons(false);
+            }
+        } else {
+            TrackerService.startTrackerService(TrackerService.START_SERVICE_ACTION, (Activity) mainView);
         }
     }
 
@@ -47,8 +53,8 @@ public class MainPresenter {
         Track openedTrack = dbProvider.getLastTrack();
         if (openedTrack != null) {
             TrackerService.finishTrack(dbProvider, dbProvider.getTrackPoints(openedTrack, Point.RAW), openedTrack, System.currentTimeMillis());
-            mainView.showStartStopButtons(false);
         }
+        mainView.showStartStopButtons(true);
     }
 
     public void onStartStopButtonsCreated() {

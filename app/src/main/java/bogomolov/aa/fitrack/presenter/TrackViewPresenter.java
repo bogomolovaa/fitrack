@@ -1,5 +1,7 @@
 package bogomolov.aa.fitrack.presenter;
 
+import android.util.Log;
+
 import java.util.List;
 
 import bogomolov.aa.fitrack.model.DbProvider;
@@ -32,6 +34,8 @@ public class TrackViewPresenter implements TagResultListener {
     public List<Point> getTrackPoints(){
         return dbProvider.getTrackPoints(track, Point.SMOOTHED);
     }
+
+
 
     @Override
     public void onTagSelectionResult(Tag tag) {

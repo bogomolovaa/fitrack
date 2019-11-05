@@ -50,8 +50,10 @@ public class TrackerService extends Service
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private DbProvider dbProvider;
+    public static boolean working;
 
 
+    private static final double MIN_TRACK_DISTANCE = 150;
     public static final String START_SERVICE_ACTION = "start";
     public static final String STOP_SERVICE_ACTION = "stop";
     private static final long UPDATE_INTERVAL = 1000, FASTEST_INTERVAL = 1000;
@@ -95,6 +97,9 @@ public class TrackerService extends Service
     }
 
     public static void startTrackerService(String action, Context context) {
+        SharedPreferences.Editor prefs = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        prefs.putBoolean(SettingsActivity.KEY_TRACKING, action.equals(START_SERVICE_ACTION));
+        prefs.apply();
         Intent intent = new Intent(context, TrackerService.class);
         intent.setAction(action);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -106,13 +111,14 @@ public class TrackerService extends Service
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i("test", "onStartCommand action " + intent.getAction());
         if (intent.getAction().equals(START_SERVICE_ACTION)) {
             if (googleApiClient != null) googleApiClient.connect();
+            working = true;
             return START_STICKY;
         } else if (intent.getAction().equals(STOP_SERVICE_ACTION)) {
             stopForeground(true);
             stopSelf();
+            working = false;
         }
         return START_STICKY;
     }
@@ -229,6 +235,10 @@ public class TrackerService extends Service
         openedTrack.setDistance(Point.getTrackDistance(smoothedPointsManaged));
         dbProvider.getRealm().commitTransaction();
         dbProvider.deleteRawPoints(openedTrack);
+
+        if (openedTrack.getDistance() < MIN_TRACK_DISTANCE) {
+            dbProvider.deleteTrack(openedTrack.getId());
+        }
     }
 
 

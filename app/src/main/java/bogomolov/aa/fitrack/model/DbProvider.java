@@ -10,6 +10,7 @@ import java.util.List;
 import bogomolov.aa.fitrack.R;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import io.realm.Sort;
 
 public class DbProvider {
     private Realm realm;
@@ -60,6 +61,12 @@ public class DbProvider {
 
     public List<Track> getTracks(List<Long> ids) {
         return realm.where(Track.class).in("id", ids.toArray(new Long[0])).findAll();
+    }
+
+    public void deleteTrack(long id) {
+        realm.beginTransaction();
+        realm.where(Track.class).equalTo("id", id).findAll().deleteAllFromRealm();
+        realm.commitTransaction();
     }
 
     public void deleteTracks(List<Long> ids) {
@@ -116,11 +123,11 @@ public class DbProvider {
     public List<Point> getTrackPoints(Track track, int smoothed) {
         if (track.isOpened()) {
             if (track.getStartPoint(smoothed) == null) return new ArrayList<>();
-            return realm.where(Point.class).equalTo("smoothed", smoothed).greaterThanOrEqualTo("id", track.getStartPoint(smoothed).getId()).findAll();
+            return realm.where(Point.class).equalTo("smoothed", smoothed).greaterThanOrEqualTo("id", track.getStartPoint(smoothed).getId()).findAll().sort("id", Sort.ASCENDING);
         } else {
             if (track.getStartPoint(smoothed) == null || track.getEndPoint(smoothed) == null)
                 return new ArrayList<>();
-            return realm.where(Point.class).equalTo("smoothed", smoothed).between("id", track.getStartPoint(smoothed).getId(), track.getEndPoint(smoothed).getId()).findAll();
+            return realm.where(Point.class).equalTo("smoothed", smoothed).between("id", track.getStartPoint(smoothed).getId(), track.getEndPoint(smoothed).getId()).findAll().sort("id", Sort.ASCENDING);
         }
     }
 

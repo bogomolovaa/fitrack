@@ -7,7 +7,7 @@ import bogomolov.aa.fitrack.model.Track;
 
 public interface MainView {
 
-    void showStartStopButtons(boolean started);
+    void showStartStopButtons(boolean canStart);
 
     void updateView(Track track, Point point, List<Point> rawTrackPoints, List<Point> smoothedPoints);
 

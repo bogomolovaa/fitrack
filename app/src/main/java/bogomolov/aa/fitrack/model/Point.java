@@ -7,8 +7,16 @@ import java.util.List;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
-public class Point extends RealmObject {
+public class Point extends RealmObject implements Comparable<Point>{
     public static final int SMOOTHED = 1;
+
+    @Override
+    public int compareTo(Point point) {
+        if(id > point.id) return 1;
+        if(id < point.id) return -1;
+        return 0;
+    }
+
     public static final int RAW = 0;
 
     @PrimaryKey
@@ -25,6 +33,10 @@ public class Point extends RealmObject {
         point.lng = lng;
         point.smoothed = smoothed;
         return point;
+    }
+
+    public String toString(){
+        return id+" ["+lat+";"+lng+"] smoothed "+smoothed;
     }
 
     public Point() {

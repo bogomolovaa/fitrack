@@ -5,8 +5,10 @@ import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -27,8 +29,10 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.model.BootReceiver;
 import bogomolov.aa.fitrack.model.StartupReceiver;
 import bogomolov.aa.fitrack.model.TrackerService;
+import bogomolov.aa.fitrack.model.TrackingScheduler;
 
 public class SettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     public static final String KEY_TRACKING = "tracking";
@@ -84,7 +88,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
                         prefs.putString(KEY, hoursMinutesToString(hours, minutes));
                         prefs.apply();
 
-                        chargeAlarm(KEY, hours, minutes);
+                        TrackingScheduler.chargeAlarm(SettingsActivity.this,KEY, hours, minutes);
                     }
                 }, hm[0], hm[1], true).show();
                 return false;
@@ -92,36 +96,11 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         });
     }
 
-    private void chargeAlarm(String KEY, int hours, int minutes) {
-        Calendar calendar = new GregorianCalendar();
-        calendar.set(Calendar.HOUR_OF_DAY, hours);
-        calendar.set(Calendar.MINUTE, minutes);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        Intent intent = new Intent(this, StartupReceiver.class);
-        int requestCode = 0;
-        if (KEY.equals(KEY_START_TRACKING_TIME)) {
-            intent.setAction(TrackerService.START_SERVICE_ACTION);
-            requestCode = 1;
-        } else if (KEY.equals(KEY_END_TRACKING_TIME)) {
-            intent.setAction(TrackerService.STOP_SERVICE_ACTION);
-            requestCode = 2;
-        }
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, requestCode, intent, 0);
-        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 24 * 3600 * 1000, pendingIntent);
-    }
 
-    private void stopAlarms() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        for (int i = 1; i <= 2; i++) {
-            Intent intent = new Intent(this, StartupReceiver.class);
-            intent.setAction(i == 1 ? TrackerService.START_SERVICE_ACTION : TrackerService.STOP_SERVICE_ACTION);
-            alarmManager.cancel(PendingIntent.getBroadcast(this, i, intent, 0));
-        }
-    }
 
-    private int[] parseHoursMinutes(String value) {
+
+
+    public static int[] parseHoursMinutes(String value) {
         if (value == null || value.equals("")) return null;
         String[] strArray = value.split(":");
         return new int[]{Integer.parseInt(strArray[0]), Integer.parseInt(strArray[1])};
@@ -156,14 +135,11 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             }
         }
         if (key.equals(KEY_TRACKING_TIME_ENABLED)) {
-            boolean isEnabled = sharedPreferences.getBoolean(key, true);
+            boolean isEnabled = sharedPreferences.getBoolean(KEY_TRACKING_TIME_ENABLED, true);
             if (isEnabled) {
-                int[] startHM = parseHoursMinutes(sharedPreferences.getString(KEY_START_TRACKING_TIME, "00:00"));
-                int[] endHM = parseHoursMinutes(sharedPreferences.getString(KEY_END_TRACKING_TIME, "00:00"));
-                if (startHM != null) chargeAlarm(KEY_START_TRACKING_TIME, startHM[0], startHM[1]);
-                if (endHM != null) chargeAlarm(KEY_END_TRACKING_TIME, endHM[0], endHM[1]);
+                TrackingScheduler.schedule(this);
             } else {
-                stopAlarms();
+                TrackingScheduler.stopAlarms(this);
             }
         }
     }

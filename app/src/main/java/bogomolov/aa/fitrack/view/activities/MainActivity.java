@@ -51,6 +51,7 @@ import bogomolov.aa.fitrack.dagger.DaggerAppComponent;
 import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.model.TrackerService;
+import bogomolov.aa.fitrack.model.TrackingScheduler;
 import bogomolov.aa.fitrack.presenter.MainPresenter;
 import bogomolov.aa.fitrack.view.MainView;
 
@@ -125,6 +126,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
         appComponent.injectsMainActivity(this);
 
+        TrackingScheduler.schedule(this);
+
     }
 
     private void startTrackerService() {
@@ -134,10 +137,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
-    public void showStartStopButtons(boolean started) {
+    public void showStartStopButtons(boolean canStart) {
         if (startStopMenu != null) {
-            startStopMenu.findItem(R.id.menu_track_start).setVisible(started);
-            startStopMenu.findItem(R.id.menu_track_stop).setVisible(!started);
+            startStopMenu.findItem(R.id.menu_track_start).setVisible(canStart);
+            startStopMenu.findItem(R.id.menu_track_stop).setVisible(!canStart);
         }
     }
 
