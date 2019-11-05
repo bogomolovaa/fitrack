@@ -261,8 +261,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mainPresenter.onDestroy();
         handler.removeCallbacks(runnable);
+        mainPresenter.onDestroy();
     }
 
     private ArrayList<String> permissionsToRequest(ArrayList<String> wantedPermissions) {
