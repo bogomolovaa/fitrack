@@ -163,11 +163,6 @@ public class StatsActivity extends AppCompatActivity implements StatsView {
             }
         });
 
-
-
-
-
-
     }
 
 

@@ -66,7 +66,7 @@ public class MainPresenter {
         List<Point> rawPoints = null;
         List<Point> smoothedPoints = null;
 
-        if (track != null) {
+        if (track != null && track.isOpened()) {
             rawPoints = dbProvider.getTrackPoints(track, Point.RAW);
             smoothedPoints = getSmoothedPoints(track, rawPoints);
         }

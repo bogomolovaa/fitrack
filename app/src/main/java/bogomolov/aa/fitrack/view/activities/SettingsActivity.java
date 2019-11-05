@@ -24,8 +24,10 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.model.StartupReceiver;
 import bogomolov.aa.fitrack.model.TrackerService;
 
 public class SettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -66,7 +68,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         setTimePreference(KEY_END_TRACKING_TIME);
     }
 
-    private void setTimePreference(final String KEY){
+    private void setTimePreference(final String KEY) {
         final Preference trackingTimePreference = settingsFragment.findPreference(KEY);
         trackingTimePreference.setSummary(trackingTimePreference.getSharedPreferences().getString(KEY, "00:00"));
         trackingTimePreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -77,14 +79,12 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
                 new TimePickerDialog(SettingsActivity.this, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker timePicker, int hours, int minutes) {
-                        trackingTimePreference.setSummary(hoursMinutesToString(hours,minutes));
+                        trackingTimePreference.setSummary(hoursMinutesToString(hours, minutes));
                         SharedPreferences.Editor prefs = PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this).edit();
-                        prefs.putString(KEY, hoursMinutesToString(hours,minutes));
+                        prefs.putString(KEY, hoursMinutesToString(hours, minutes));
                         prefs.apply();
 
-                        //PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, trackingServiceIntent(START_SERVICE_ACTION), 0);
-                        //AlarmManager alarmManager = (AlarmManager) SettingsActivity.this.getSystemService(ALARM_SERVICE);
-                        //alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 10000, 5000, pendingIntent);
+                        chargeAlarm(KEY, hours, minutes);
                     }
                 }, hm[0], hm[1], true).show();
                 return false;
@@ -92,7 +92,37 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         });
     }
 
+    private void chargeAlarm(String KEY, int hours, int minutes) {
+        Calendar calendar = new GregorianCalendar();
+        calendar.set(Calendar.HOUR_OF_DAY, hours);
+        calendar.set(Calendar.MINUTE, minutes);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Intent intent = new Intent(this, StartupReceiver.class);
+        int requestCode = 0;
+        if (KEY.equals(KEY_START_TRACKING_TIME)) {
+            intent.setAction(TrackerService.START_SERVICE_ACTION);
+            requestCode = 1;
+        } else if (KEY.equals(KEY_END_TRACKING_TIME)) {
+            intent.setAction(TrackerService.STOP_SERVICE_ACTION);
+            requestCode = 2;
+        }
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, requestCode, intent, 0);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        alarmManager.setRepeating(AlarmManager.RTC, calendar.getTimeInMillis(), 24 * 3600 * 1000, pendingIntent);
+    }
+
+    private void stopAlarms() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        for (int i = 1; i <= 2; i++) {
+            Intent intent = new Intent(this, StartupReceiver.class);
+            intent.setAction(i == 1 ? TrackerService.START_SERVICE_ACTION : TrackerService.STOP_SERVICE_ACTION);
+            alarmManager.cancel(PendingIntent.getBroadcast(this, i, intent, 0));
+        }
+    }
+
     private int[] parseHoursMinutes(String value) {
+        if (value == null || value.equals("")) return null;
         String[] strArray = value.split(":");
         return new int[]{Integer.parseInt(strArray[0]), Integer.parseInt(strArray[1])};
     }
@@ -119,17 +149,21 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals(KEY_TRACKING)) {
             boolean isTracking = sharedPreferences.getBoolean(key, true);
-            Intent intent = new Intent(this, TrackerService.class);
             if (isTracking) {
-                intent.setAction(TrackerService.START_SERVICE_ACTION);
+                TrackerService.startTrackerService(TrackerService.START_SERVICE_ACTION, this);
             } else {
-                intent.setAction(TrackerService.STOP_SERVICE_ACTION);
+                TrackerService.startTrackerService(TrackerService.STOP_SERVICE_ACTION, this);
             }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent);
+        }
+        if (key.equals(KEY_TRACKING_TIME_ENABLED)) {
+            boolean isEnabled = sharedPreferences.getBoolean(key, true);
+            if (isEnabled) {
+                int[] startHM = parseHoursMinutes(sharedPreferences.getString(KEY_START_TRACKING_TIME, "00:00"));
+                int[] endHM = parseHoursMinutes(sharedPreferences.getString(KEY_END_TRACKING_TIME, "00:00"));
+                if (startHM != null) chargeAlarm(KEY_START_TRACKING_TIME, startHM[0], startHM[1]);
+                if (endHM != null) chargeAlarm(KEY_END_TRACKING_TIME, endHM[0], endHM[1]);
             } else {
-                ContextCompat.startForegroundService(this, intent);
+                stopAlarms();
             }
         }
     }

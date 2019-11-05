@@ -1,6 +1,7 @@
 package bogomolov.aa.fitrack.view.activities;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -109,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if (!checkPlayServices()) finish();
 
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (permissionsToRequest.size() > 0) {
                 requestPermissions(permissionsToRequest.toArray(
@@ -123,6 +125,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
         appComponent.injectsMainActivity(this);
 
+    }
+
+    private void startTrackerService() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        if (preferences.getBoolean(SettingsActivity.KEY_TRACKING, true))
+            TrackerService.startTrackerService(TrackerService.START_SERVICE_ACTION, this);
     }
 
     @Override
@@ -182,18 +190,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return true;
     }
 
-    private void startTrackerService() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if (preferences.getBoolean(SettingsActivity.KEY_TRACKING, true)) {
-            Intent intent = new Intent(this, TrackerService.class);
-            intent.setAction(TrackerService.START_SERVICE_ACTION);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent);
-            } else {
-                ContextCompat.startForegroundService(this, intent);
-            }
-        }
-    }
 
     public void updateView(Track track, Point point, List<Point> rawTrackPoints, List<Point> smoothedPoints) {
         if (googleMap != null) {
@@ -211,9 +207,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
 
-            if (track != null) {
-                showStartStopButtons(!track.isOpened());
-
+            if (track != null) showStartStopButtons(!track.isOpened());
+            if (track != null && track.isOpened()) {
                 if (trackRawPolyline == null) {
                     trackRawPolyline = googleMap.addPolyline((new PolylineOptions())
                             .clickable(false).add(Point.toPolylineCoordinates(rawTrackPoints)));
@@ -229,6 +224,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             } else {
                 if (trackRawPolyline != null) trackRawPolyline.remove();
+                if (trackSmoothedPolyline != null) trackSmoothedPolyline.remove();
             }
         }
 

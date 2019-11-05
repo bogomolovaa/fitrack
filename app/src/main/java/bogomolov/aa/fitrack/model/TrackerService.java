@@ -9,6 +9,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -22,6 +23,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -89,6 +92,16 @@ public class TrackerService extends Service
 
         dbProvider = new DbProvider(true);
 
+    }
+
+    public static void startTrackerService(String action, Context context) {
+        Intent intent = new Intent(context, TrackerService.class);
+        intent.setAction(action);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent);
+        } else {
+            ContextCompat.startForegroundService(context, intent);
+        }
     }
 
     @Override
