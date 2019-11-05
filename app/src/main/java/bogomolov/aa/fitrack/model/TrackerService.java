@@ -90,7 +90,7 @@ public class TrackerService extends Service
                 addConnectionCallbacks(this).
                 addOnConnectionFailedListener(this).build();
 
-        dbProvider = new DbProvider(true);
+        dbProvider = new DbProvider(false);
 
     }
 

@@ -109,7 +109,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
         }
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, requestCode, intent, 0);
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        alarmManager.setRepeating(AlarmManager.RTC, calendar.getTimeInMillis(), 24 * 3600 * 1000, pendingIntent);
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 24 * 3600 * 1000, pendingIntent);
     }
 
     private void stopAlarms() {
