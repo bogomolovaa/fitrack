@@ -55,6 +55,7 @@ public class TrackerService extends Service
     private LocationCallback locationCallback;
     private DbProvider dbProvider;
     public static boolean working;
+    public static boolean updating = true;
     private TriggerEventListener wakeUpListener;
     private SensorManager mSensorManager;
     private Sensor sensor;
@@ -107,21 +108,29 @@ public class TrackerService extends Service
             public void onTrigger(TriggerEvent triggerEvent) {
                 Log.i("test", "WAKE UP EVENT");
                 startLocationUpdates();
+                updating = true;
             }
         };
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         sensor = mSensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
 
+        chargeWakeUpTrigger();
     }
 
     private void chargeWakeUpTrigger() {
-        mSensorManager.requestTriggerSensor(wakeUpListener, sensor);
+        /*
+        boolean requested = mSensorManager.requestTriggerSensor(wakeUpListener, sensor);
+        Log.i("test","requested "+requested);
+        */
     }
 
     private void pauseTracking() {
+        /*
         Log.i("test", "PAUSE TRACKING");
         stopLocationUpdates();
         chargeWakeUpTrigger();
+        updating = false;
+        */
     }
 
     public static void startTrackerService(String action, Context context) {
@@ -167,7 +176,7 @@ public class TrackerService extends Service
                 location = theLocation;
             }
         });
-        //startLocationUpdates();
+        startLocationUpdates();
     }
 
     private void startLocationUpdates() {
@@ -289,6 +298,7 @@ public class TrackerService extends Service
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.i("test","cancelTriggerSensor");
         mSensorManager.cancelTriggerSensor(wakeUpListener, sensor);
         stopLocationUpdates();
         dbProvider.close();
@@ -296,8 +306,10 @@ public class TrackerService extends Service
 
     public void stopLocationUpdates() {
         if (googleApiClient != null && googleApiClient.isConnected()) {
-            LocationServices.getFusedLocationProviderClient(this).removeLocationUpdates(locationCallback);
-            googleApiClient.disconnect();
+            if(locationCallback!=null) {
+                LocationServices.getFusedLocationProviderClient(this).removeLocationUpdates(locationCallback);
+                googleApiClient.disconnect();
+            }
         }
     }
 

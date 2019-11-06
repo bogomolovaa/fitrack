@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
         appComponent.injectsMainActivity(this);
 
-        TrackingScheduler.schedule(this);
+        //TrackingScheduler.schedule(this);
 
     }
 
@@ -254,7 +254,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void run() {
                 mainPresenter.onViewUpdate();
 
-                handler.postDelayed(this, 4000);
+                ((TextView)MainActivity.this.findViewById(R.id.text_view_updating)).setText(""+TrackerService.updating);
+
+
+                handler.postDelayed(this, 1000);
             }
         };
         runnable.run();
