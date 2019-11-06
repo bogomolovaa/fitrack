@@ -54,7 +54,7 @@ public class TagSelectionDialog extends DialogFragment {
         });
         toolbar = view.findViewById(R.id.tag_selection_toolbar);
 
-        toolbar.setNavigationIcon(R.drawable.arrow_back);
+        //toolbar.setNavigationIcon(R.drawable.arrow_back);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

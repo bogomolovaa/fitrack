@@ -12,6 +12,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+import android.hardware.TriggerEvent;
+import android.hardware.TriggerEventListener;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -51,6 +55,10 @@ public class TrackerService extends Service
     private LocationCallback locationCallback;
     private DbProvider dbProvider;
     public static boolean working;
+    private TriggerEventListener wakeUpListener;
+    private SensorManager mSensorManager;
+    private Sensor sensor;
+    private long startLocationUpdateTime;
 
 
     private static final double MIN_TRACK_DISTANCE = 150;
@@ -94,6 +102,26 @@ public class TrackerService extends Service
 
         dbProvider = new DbProvider(false);
 
+        wakeUpListener = new TriggerEventListener() {
+            @Override
+            public void onTrigger(TriggerEvent triggerEvent) {
+                Log.i("test", "WAKE UP EVENT");
+                startLocationUpdates();
+            }
+        };
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensor = mSensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
+
+    }
+
+    private void chargeWakeUpTrigger() {
+        mSensorManager.requestTriggerSensor(wakeUpListener, sensor);
+    }
+
+    private void pauseTracking() {
+        Log.i("test", "PAUSE TRACKING");
+        stopLocationUpdates();
+        chargeWakeUpTrigger();
     }
 
     public static void startTrackerService(String action, Context context) {
@@ -139,10 +167,11 @@ public class TrackerService extends Service
                 location = theLocation;
             }
         });
-        startLocationUpdates();
+        //startLocationUpdates();
     }
 
     private void startLocationUpdates() {
+        startLocationUpdateTime = System.currentTimeMillis();
         locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(UPDATE_INTERVAL);
@@ -183,6 +212,8 @@ public class TrackerService extends Service
                     track.setStartPoint(lastPoint);
                     track.setStartTime(lastPoint.getTime());
                     openedTrack = dbProvider.addTrack(track);
+                } else if (System.currentTimeMillis() - startLocationUpdateTime > 3 * 60 * 1000) {
+                    pauseTracking();
                 }
             }
             trackPoints = points;
@@ -199,13 +230,13 @@ public class TrackerService extends Service
                 points.add(point);
                 lastPoint = dbProvider.addPoint(point);
             }
-
             for (int i = points.size() - 1; i >= 0; i--) {
                 if (Point.distance(lastPoint, points.get(i)) <= 50) {
                     if (lastPoint.getTime() - points.get(i).getTime() > 3 * 60 * 1000) {
                         trackPoints = trackPoints.subList(0, i + 1);
                         trackPoints.add(lastPoint);
                         finishTrack(trackPoints, openedTrack, points.get(i).getTime());
+                        pauseTracking();
                         break;
                     }
                 }
@@ -258,6 +289,7 @@ public class TrackerService extends Service
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mSensorManager.cancelTriggerSensor(wakeUpListener, sensor);
         stopLocationUpdates();
         dbProvider.close();
     }
