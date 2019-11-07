@@ -22,6 +22,7 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -42,6 +43,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import bogomolov.aa.fitrack.R;
@@ -57,7 +59,7 @@ public class TrackerService extends Service
     private LocationCallback locationCallback;
     private DbProvider dbProvider;
     public static boolean working;
-    public static boolean updating = true;
+    public static boolean updating = false;
     private TriggerEventListener wakeUpListener;
     private SensorManager sensorManager;
     private Sensor sMotionSensor;
@@ -109,6 +111,8 @@ public class TrackerService extends Service
 
         dbProvider = new DbProvider(false);
 
+
+        /*
         wakeUpListener = new TriggerEventListener() {
             @Override
             public void onTrigger(TriggerEvent triggerEvent) {
@@ -125,7 +129,7 @@ public class TrackerService extends Service
                 float y = sensorEvent.values[1];
                 float z = sensorEvent.values[2];
                 double mod = Math.sqrt(x * x + y * y + z * z);
-                Log.i("test", "mode " + mod + " (" + x + "," + y + "," + z + ")");
+                Log.i("test", "mod " + mod + " (" + x + "," + y + "," + z + ") " + new Date());
                 if (mod / G > WAKEUP_MOTION_A) {
                     Log.i("test", "WAKE UP EVENT");
                     startLocationUpdates();
@@ -142,17 +146,20 @@ public class TrackerService extends Service
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         sMotionSensor = sensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
-        accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
 
-        chargeWakeUpTrigger();
+        pauseTracking();
+
+         */
     }
 
     private void chargeWakeUpTrigger() {
         //boolean requested = sensorManager.requestTriggerSensor(wakeUpListener, sMotionSensor);
-        boolean requested = sensorManager.registerListener(accelerometerListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
+        boolean requested = sensorManager.registerListener(accelerometerListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
         Log.i("test", "chargeWakeUpTrigger requested " + requested);
     }
+
 
     private void pauseTracking() {
         Log.i("test", "PAUSE TRACKING");
@@ -204,7 +211,7 @@ public class TrackerService extends Service
                 location = theLocation;
             }
         });
-        //startLocationUpdates();
+        startLocationUpdates();
     }
 
     private void startLocationUpdates() {
@@ -242,6 +249,11 @@ public class TrackerService extends Service
             List<Point> points = dbProvider.getLastPoints();
             if (points.size() > 1) {
                 Point firstPoint = points.get(0);
+                for (int i = 0; i < points.size() - 1; i++)
+                    if (System.currentTimeMillis() - points.get(i).getTime() < 10 * 60 * 1000) {
+                        firstPoint = points.get(i);
+                        break;
+                    }
                 Point lastPoint = points.get(points.size() - 1);
                 double distance = Point.distance(firstPoint, lastPoint);
                 if (distance > 50) {
@@ -249,8 +261,8 @@ public class TrackerService extends Service
                     track.setStartPoint(lastPoint);
                     track.setStartTime(lastPoint.getTime());
                     openedTrack = dbProvider.addTrack(track);
-                } else if (System.currentTimeMillis() - startLocationUpdateTime > 3 * 60 * 1000) {
-                    pauseTracking();
+                } else if (System.currentTimeMillis() - startLocationUpdateTime > 1 * 60 * 1000) {
+                    //pauseTracking();
                 }
             }
             trackPoints = points;
@@ -273,7 +285,7 @@ public class TrackerService extends Service
                         trackPoints = trackPoints.subList(0, i + 1);
                         trackPoints.add(lastPoint);
                         finishTrack(trackPoints, openedTrack, points.get(i).getTime());
-                        pauseTracking();
+                        //pauseTracking();
                         break;
                     }
                 }
@@ -326,9 +338,9 @@ public class TrackerService extends Service
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.i("test", "cancelTriggerSensor");
-        sensorManager.cancelTriggerSensor(wakeUpListener, sMotionSensor);
-        sensorManager.unregisterListener(accelerometerListener);
+        //Log.i("test", "cancelTriggerSensor");
+        //sensorManager.cancelTriggerSensor(wakeUpListener, sMotionSensor);
+        //sensorManager.unregisterListener(accelerometerListener);
         stopLocationUpdates();
         dbProvider.close();
     }
