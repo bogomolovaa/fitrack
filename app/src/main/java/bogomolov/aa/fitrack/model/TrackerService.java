@@ -13,6 +13,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.TriggerEvent;
 import android.hardware.TriggerEventListener;
@@ -57,11 +59,15 @@ public class TrackerService extends Service
     public static boolean working;
     public static boolean updating = true;
     private TriggerEventListener wakeUpListener;
-    private SensorManager mSensorManager;
-    private Sensor sensor;
+    private SensorManager sensorManager;
+    private Sensor sMotionSensor;
+    private Sensor accelerometerSensor;
     private long startLocationUpdateTime;
+    private SensorEventListener accelerometerListener;
 
 
+    private static final double WAKEUP_MOTION_A = 0.1;
+    private static final double G = 9.8;
     private static final double MIN_TRACK_DISTANCE = 150;
     public static final String START_SERVICE_ACTION = "start";
     public static final String STOP_SERVICE_ACTION = "stop";
@@ -111,26 +117,48 @@ public class TrackerService extends Service
                 updating = true;
             }
         };
-        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        sensor = mSensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
+
+        accelerometerListener = new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent sensorEvent) {
+                float x = sensorEvent.values[0];
+                float y = sensorEvent.values[1];
+                float z = sensorEvent.values[2];
+                double mod = Math.sqrt(x * x + y * y + z * z);
+                Log.i("test", "mode " + mod + " (" + x + "," + y + "," + z + ")");
+                if (mod / G > WAKEUP_MOTION_A) {
+                    Log.i("test", "WAKE UP EVENT");
+                    startLocationUpdates();
+                    updating = true;
+                    sensorManager.unregisterListener(accelerometerListener);
+                }
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int i) {
+
+            }
+        };
+
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sMotionSensor = sensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
+        accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
 
         chargeWakeUpTrigger();
     }
 
     private void chargeWakeUpTrigger() {
-        /*
-        boolean requested = mSensorManager.requestTriggerSensor(wakeUpListener, sensor);
-        Log.i("test","requested "+requested);
-        */
+        //boolean requested = sensorManager.requestTriggerSensor(wakeUpListener, sMotionSensor);
+        boolean requested = sensorManager.registerListener(accelerometerListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
+        Log.i("test", "chargeWakeUpTrigger requested " + requested);
     }
 
     private void pauseTracking() {
-        /*
         Log.i("test", "PAUSE TRACKING");
         stopLocationUpdates();
         chargeWakeUpTrigger();
         updating = false;
-        */
     }
 
     public static void startTrackerService(String action, Context context) {
@@ -176,7 +204,7 @@ public class TrackerService extends Service
                 location = theLocation;
             }
         });
-        startLocationUpdates();
+        //startLocationUpdates();
     }
 
     private void startLocationUpdates() {
@@ -298,15 +326,16 @@ public class TrackerService extends Service
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.i("test","cancelTriggerSensor");
-        mSensorManager.cancelTriggerSensor(wakeUpListener, sensor);
+        Log.i("test", "cancelTriggerSensor");
+        sensorManager.cancelTriggerSensor(wakeUpListener, sMotionSensor);
+        sensorManager.unregisterListener(accelerometerListener);
         stopLocationUpdates();
         dbProvider.close();
     }
 
     public void stopLocationUpdates() {
         if (googleApiClient != null && googleApiClient.isConnected()) {
-            if(locationCallback!=null) {
+            if (locationCallback != null) {
                 LocationServices.getFusedLocationProviderClient(this).removeLocationUpdates(locationCallback);
                 googleApiClient.disconnect();
             }

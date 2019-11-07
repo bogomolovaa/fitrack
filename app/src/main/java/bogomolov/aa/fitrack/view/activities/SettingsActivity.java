@@ -54,7 +54,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
         Toolbar toolbar = findViewById(R.id.toolbar_settings);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(R.string.title_tracks);
+        getSupportActionBar().setTitle(R.string.title_settings);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
