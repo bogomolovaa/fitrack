@@ -68,6 +68,7 @@ public class TrackerService extends Service
     private SensorEventListener accelerometerListener;
 
 
+    private static final double MAX_LOCATION_ACCURACY = 50;
     private static final double WAKEUP_MOTION_A = 0.1;
     private static final double G = 9.8;
     private static final double MIN_TRACK_DISTANCE = 150;
@@ -233,8 +234,10 @@ public class TrackerService extends Service
             public void onLocationResult(LocationResult locationResult) {
                 if (!(locationResult.getLastLocation().getLongitude() == location.getLongitude() && locationResult.getLastLocation().getLatitude() == location.getLatitude())) {
                     location = locationResult.getLastLocation();
-                    Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
-                    checkTrack(point);
+                    if (location.getAccuracy() < MAX_LOCATION_ACCURACY) {
+                        Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
+                        checkTrack(point);
+                    }
                 }
             }
         };
@@ -250,7 +253,7 @@ public class TrackerService extends Service
             if (points.size() > 1) {
                 Point firstPoint = points.get(0);
                 for (int i = 0; i < points.size() - 1; i++)
-                    if (System.currentTimeMillis() - points.get(i).getTime() < 10 * 60 * 1000) {
+                    if (System.currentTimeMillis() - points.get(i).getTime() < 3 * 60 * 1000) {
                         firstPoint = points.get(i);
                         break;
                     }
@@ -267,11 +270,6 @@ public class TrackerService extends Service
             }
             trackPoints = points;
         } else {
-            if (location != null) {
-                dbProvider.getRealm().beginTransaction();
-                openedTrack.setCurrentSpeed(location.getSpeed());
-                dbProvider.getRealm().commitTransaction();
-            }
             List<Point> points = new ArrayList<>(dbProvider.getTrackPoints(openedTrack, Point.RAW));
             trackPoints = points;
             Point lastPoint = points.get(points.size() - 1);
@@ -318,6 +316,7 @@ public class TrackerService extends Service
 
         if (openedTrack.getDistance() < MIN_TRACK_DISTANCE) {
             dbProvider.deleteTrack(openedTrack.getId());
+            dbProvider.deleteLastPoints();
         }
     }
 

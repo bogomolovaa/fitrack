@@ -22,7 +22,11 @@ public class Track extends RealmObject {
     private String tag;
 
     private double distance;
+
+    @Ignore
     private double currentSpeed;
+    @Ignore
+    private double currentDistance;
 
     public String getTimeString() {
         long time = isOpened() ? System.currentTimeMillis() : endTime;
@@ -33,6 +37,14 @@ public class Track extends RealmObject {
         deltaTime = deltaTime % (60 * 1000);
         int seconds = (int) (deltaTime / 1000);
         return hours + ":" + minutes + ":" + seconds;
+    }
+
+    public double getCurrentDistance() {
+        return currentDistance;
+    }
+
+    public void setCurrentDistance(double currentDistance) {
+        this.currentDistance = currentDistance;
     }
 
     public String getName(){
@@ -134,10 +146,6 @@ public class Track extends RealmObject {
 
     public boolean isOpened() {
         return endTime == 0;
-    }
-
-    public void addDistance(double add) {
-        distance += add;
     }
 
     public static Track sumTracks(List<Track> tracks){

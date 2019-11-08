@@ -226,13 +226,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     trackSmoothedPolyline.setPoints(Arrays.asList(Point.toPolylineCoordinates(smoothedPoints)));
                 }
             } else {
-                if (trackRawPolyline != null) trackRawPolyline.remove();
-                if (trackSmoothedPolyline != null) trackSmoothedPolyline.remove();
+                if (trackRawPolyline != null){
+                    trackRawPolyline.remove();
+                    trackRawPolyline = null;
+                }
+                if (trackSmoothedPolyline != null){
+                    trackSmoothedPolyline.remove();
+                    trackSmoothedPolyline = null;
+                }
             }
         }
 
         if (track != null && track.isOpened()) {
-            textDistance.setText((int) track.getDistance() + " m");
+            textDistance.setText((int) track.getCurrentDistance() + " m");
             textTime.setText(track.getTimeString());
             textSpeed.setText(String.format("%.1f", 3.6 * track.getCurrentSpeed()) + " km/h");
             textAvgSpeed.setText(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");

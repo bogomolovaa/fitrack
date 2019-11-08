@@ -114,10 +114,8 @@ public class MainPresenter {
                 smoothedPoints.addAll(windowSmoothedPoints);
             }
         }
-        dbProvider.getRealm().beginTransaction();
         track.setCurrentSpeed(getCurrentSpeed(smoothedPoints));
-        track.setDistance(Point.getTrackDistance(smoothedPoints));
-        dbProvider.getRealm().commitTransaction();
+        track.setCurrentDistance(Point.getTrackDistance(smoothedPoints));
         return smoothedPoints;
     }
 

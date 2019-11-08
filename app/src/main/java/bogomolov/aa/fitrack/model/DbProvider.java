@@ -133,7 +133,7 @@ public class DbProvider {
 
 
     public Track getLastTrack() {
-        List<Track> tracks = realm.where(Track.class).findAll();
+        List<Track> tracks = realm.where(Track.class).findAll().sort("id", Sort.ASCENDING);
         return tracks.size() > 0 ? tracks.get(tracks.size() - 1) : null;
     }
 
@@ -143,7 +143,7 @@ public class DbProvider {
     }
 
     public Point getLastPoint() {
-        List<Point> points = realm.where(Point.class).equalTo("smoothed", Point.RAW).findAll();
+        List<Point> points = realm.where(Point.class).equalTo("smoothed", Point.RAW).sort("id", Sort.ASCENDING).findAll();
         if (points.size() > 0) return points.get(points.size() - 1);
         return null;
     }
@@ -155,6 +155,17 @@ public class DbProvider {
         } else {
             return realm.where(Point.class).equalTo("smoothed", Point.RAW).greaterThan("id", lastTrack.getEndPoint().getId()).findAll();
         }
+    }
+
+    public void deleteLastPoints() {
+        Track lastTrack = getLastTrack();
+        realm.beginTransaction();
+        if (lastTrack == null || lastTrack.getEndPoint() == null) {
+            realm.where(Point.class).equalTo("smoothed", Point.RAW).findAll().deleteAllFromRealm();
+        } else {
+            realm.where(Point.class).equalTo("smoothed", Point.RAW).greaterThan("id", lastTrack.getEndPoint().getId()).findAll().deleteAllFromRealm();
+        }
+        realm.commitTransaction();
     }
 
     public void close() {
