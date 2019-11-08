@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -226,11 +227,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     trackSmoothedPolyline.setPoints(Arrays.asList(Point.toPolylineCoordinates(smoothedPoints)));
                 }
             } else {
-                if (trackRawPolyline != null){
+                if (trackRawPolyline != null) {
                     trackRawPolyline.remove();
                     trackRawPolyline = null;
                 }
-                if (trackSmoothedPolyline != null){
+                if (trackSmoothedPolyline != null) {
                     trackSmoothedPolyline.remove();
                     trackSmoothedPolyline = null;
                 }
@@ -260,7 +261,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void run() {
                 mainPresenter.onViewUpdate();
 
-                ((TextView)MainActivity.this.findViewById(R.id.text_view_updating)).setText(""+TrackerService.updating);
+                ((TextView) MainActivity.this.findViewById(R.id.text_view_updating)).setText("" + TrackerService.updating);
 
 
                 handler.postDelayed(this, 1000);
