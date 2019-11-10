@@ -92,6 +92,11 @@ public class Track extends RealmObject {
         return distance / ((time-startTime) / 1000.0);
     }
 
+    public double getSpeedForCurrentDistance() {
+        long time = isOpened() ? System.currentTimeMillis() : endTime;
+        return currentDistance / ((time-startTime) / 1000.0);
+    }
+
     public void setCurrentSpeed(double currentSpeed) {
         this.currentSpeed = currentSpeed;
     }

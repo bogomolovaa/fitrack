@@ -153,8 +153,6 @@ public class TrackerService extends Service
         pauseTracking();
 
          */
-
-
     }
 
     private void chargeWakeUpTrigger() {

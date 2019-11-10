@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 } else {
                     currentPositionMarker.setPosition(latLng);
                 }
-                if (track == null) {
+                if (track == null || !track.isOpened()) {
                     googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18));
                 } else {
                     googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
@@ -242,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             textDistance.setText((int) track.getCurrentDistance() + " m");
             textTime.setText(track.getTimeString());
             textSpeed.setText(String.format("%.1f", 3.6 * track.getCurrentSpeed()) + " km/h");
-            textAvgSpeed.setText(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
+            textAvgSpeed.setText(String.format("%.1f", 3.6 * track.getSpeedForCurrentDistance()) + " km/h");
         } else {
             textDistance.setText("");
             textTime.setText("");
