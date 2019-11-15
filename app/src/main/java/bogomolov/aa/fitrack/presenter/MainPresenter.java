@@ -2,6 +2,8 @@ package bogomolov.aa.fitrack.presenter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Handler;
+import android.os.HandlerThread;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +15,14 @@ import bogomolov.aa.fitrack.model.RamerDouglasPeucker;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.model.TrackerService;
 import bogomolov.aa.fitrack.view.MainView;
+import bogomolov.aa.fitrack.view.activities.MainActivity;
 
 public class MainPresenter {
     private MainView mainView;
     private DbProvider dbProvider;
+    private Handler handler;
+    private Handler backgroundHandler;
+    private HandlerThread handlerThread;
 
     private List<Point> tailSmoothedPoints;
     private int windowStartId;
@@ -26,15 +32,22 @@ public class MainPresenter {
     public MainPresenter(MainView mainView) {
         this.mainView = mainView;
         dbProvider = new DbProvider(false);
+        handler = new Handler();
 
+
+        handlerThread = new HandlerThread("MainPresenter background");
+        handlerThread.start();
+        backgroundHandler = new Handler(handlerThread.getLooper());
     }
 
     public void onDestroy() {
         dbProvider.close();
+        handlerThread.quitSafely();
     }
 
 
     public void startTrack() {
+
         if (TrackerService.working) {
             Point lastPoint = dbProvider.getLastPoint();
             if (lastPoint != null) {
@@ -66,17 +79,28 @@ public class MainPresenter {
         }
     }
 
-    public void onViewUpdate() {
-        Track track = dbProvider.getLastTrack();
-        Point point = dbProvider.getLastPoint();
-        List<Point> rawPoints = null;
-        List<Point> smoothedPoints = null;
+    public void startUpdating() {
+        backgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                DbProvider dbProvider = new DbProvider(false);
+                Track track = dbProvider.getRealm().copyFromRealm(dbProvider.getLastTrack());
+                Point point = dbProvider.getRealm().copyFromRealm(dbProvider.getLastPoint());
+                List<Point> rawPoints = new ArrayList<>();
+                List<Point> smoothedPoints = new ArrayList<>();
 
-        if (track != null && track.isOpened()) {
-            rawPoints = dbProvider.getTrackPoints(track, Point.RAW);
-            smoothedPoints = getSmoothedPoints(track, rawPoints);
-        }
-        mainView.updateView(track, point, rawPoints, smoothedPoints);
+                if (track != null && track.isOpened()) {
+                    rawPoints.addAll(dbProvider.getRealm().copyFromRealm(dbProvider.getTrackPoints(track, Point.RAW)));
+                    smoothedPoints.addAll(getSmoothedPoints(track, rawPoints));
+                }
+                handler.post(() -> {
+                    mainView.updateView(track, point, rawPoints, smoothedPoints);
+                });
+                backgroundHandler.postDelayed(this, 1000);
+                dbProvider.close();
+            }
+        });
+
     }
 
     private List<Point> getSmoothedPoints(Track track, List<Point> points) {

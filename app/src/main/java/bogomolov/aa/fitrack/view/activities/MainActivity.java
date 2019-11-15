@@ -69,8 +69,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Polyline trackSmoothedPolyline;
     private Marker currentPositionMarker;
     private Menu startStopMenu;
-    private Handler handler;
-    private Runnable runnable;
 
     @Inject
     MainPresenter mainPresenter;
@@ -254,27 +252,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onStart() {
         super.onStart();
-
-        handler = new Handler();
-        runnable = new Runnable() {
-            @Override
-            public void run() {
-                mainPresenter.onViewUpdate();
-
-                ((TextView) MainActivity.this.findViewById(R.id.text_view_updating)).setText("" + TrackerService.updating);
-
-
-                handler.postDelayed(this, 1000);
-            }
-        };
-        runnable.run();
+        mainPresenter.startUpdating();
     }
 
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        handler.removeCallbacks(runnable);
         mainPresenter.onDestroy();
     }
 
