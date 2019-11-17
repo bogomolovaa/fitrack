@@ -50,6 +50,6 @@
     <string name="settings_start_tracking_time">Start tracking time</string>
     <string name="settings_end_tracking_time">End tracking time</string>
 
-
+    <string name="need_autostart_string">The app must be in autostart white list. Please, do it manually in settings.</string>
 
 </resources>

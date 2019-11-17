@@ -53,6 +53,7 @@ import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.model.TrackerService;
 import bogomolov.aa.fitrack.model.TrackingScheduler;
+import bogomolov.aa.fitrack.model.Workarounds;
 import bogomolov.aa.fitrack.presenter.MainPresenter;
 import bogomolov.aa.fitrack.view.MainView;
 
@@ -126,6 +127,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         appComponent.injectsMainActivity(this);
 
         //TrackingScheduler.schedule(this);
+
+        if (!Workarounds.isAutostartRequested(this)) {
+            new AlertDialog.Builder(this).setMessage(R.string.need_autostart_string).setPositiveButton("OK", (d, i) -> {
+                Workarounds.autostart(this);
+            }).setNegativeButton("DISMISS", (d, i) -> {
+                d.dismiss();
+            }).show();
+        }
 
     }
 
