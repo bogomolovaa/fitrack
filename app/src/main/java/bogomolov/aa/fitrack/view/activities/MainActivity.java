@@ -1,6 +1,7 @@
 package bogomolov.aa.fitrack.view.activities;
 
 import android.Manifest;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -27,6 +28,10 @@ import androidx.preference.PreferenceManager;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.ActivityTransition;
+import com.google.android.gms.location.ActivityTransitionRequest;
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -36,6 +41,9 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
 
 
@@ -50,6 +58,7 @@ import bogomolov.aa.fitrack.dagger.AppComponent;
 import bogomolov.aa.fitrack.dagger.AppModule;
 import bogomolov.aa.fitrack.dagger.DaggerAppComponent;
 import bogomolov.aa.fitrack.model.Point;
+import bogomolov.aa.fitrack.model.StartupReceiver;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.model.TrackerService;
 import bogomolov.aa.fitrack.model.TrackingScheduler;
@@ -126,7 +135,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
         appComponent.injectsMainActivity(this);
 
-        //TrackingScheduler.schedule(this);
 
         if (!Workarounds.isAutostartRequested(this)) {
             new AlertDialog.Builder(this).setMessage(R.string.need_autostart_string).setPositiveButton("OK", (d, i) -> {
@@ -135,6 +143,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 d.dismiss();
             }).show();
         }
+
+        TrackingScheduler.startActivityRecognition(this);
+
 
     }
 
@@ -262,6 +273,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onStart() {
         super.onStart();
         mainPresenter.startUpdating();
+
+
     }
 
 

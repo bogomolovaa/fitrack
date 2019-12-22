@@ -8,6 +8,6 @@ public class BootReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        TrackingScheduler.schedule(context);
+        TrackingScheduler.startActivityRecognition(context);
     }
 }

@@ -189,11 +189,15 @@ public class TrackerService extends Service
             working = true;
             return START_STICKY;
         } else if (intent.getAction().equals(STOP_SERVICE_ACTION)) {
-            stopForeground(true);
-            stopSelf();
-            working = false;
+            stopTrackingService();
         }
         return START_STICKY;
+    }
+
+    private void stopTrackingService() {
+        stopForeground(true);
+        stopSelf();
+        working = false;
     }
 
     @Override
@@ -264,8 +268,8 @@ public class TrackerService extends Service
                     track.setStartPoint(lastPoint);
                     track.setStartTime(lastPoint.getTime());
                     openedTrack = dbProvider.addTrack(track);
-                } else if (System.currentTimeMillis() - startLocationUpdateTime > 1 * 60 * 1000) {
-                    //pauseTracking();
+                } else if (System.currentTimeMillis() - startLocationUpdateTime > 5 * 60 * 1000) {
+                    stopServiceAndStartActivityRecognition();
                 }
             }
             trackPoints = points;
@@ -284,11 +288,17 @@ public class TrackerService extends Service
                         trackPoints.add(lastPoint);
                         finishTrack(trackPoints, openedTrack, points.get(i).getTime());
                         //pauseTracking();
+                        stopServiceAndStartActivityRecognition();
                         break;
                     }
                 }
             }
         }
+    }
+
+    private void stopServiceAndStartActivityRecognition(){
+        stopTrackingService();
+        TrackingScheduler.startActivityRecognition(this);
     }
 
     private void finishTrack(List<Point> points, Track openedTrack, long time) {
