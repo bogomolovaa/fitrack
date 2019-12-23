@@ -3,8 +3,12 @@ package bogomolov.aa.fitrack.view.fragments;
 
 import android.os.Bundle;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.NavigationUI;
 
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -28,6 +32,7 @@ import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.dagger.AppComponent;
 import bogomolov.aa.fitrack.dagger.AppModule;
 import bogomolov.aa.fitrack.dagger.DaggerAppComponent;
+import bogomolov.aa.fitrack.model.DateUtils;
 import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
@@ -45,10 +50,6 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback, T
     //@Inject
     TrackViewPresenter trackViewPresenter;
 
-    public TrackViewFragment() {
-        // Required empty public constructor
-    }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -56,26 +57,18 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback, T
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_track_view, container, false);
 
-        //AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
-        //appComponent.injectsTrackViewActivity(this);
-
         trackViewPresenter = new TrackViewPresenter(this);
 
         long trackId = (Long) getArguments().get("trackId");
         Track track = trackViewPresenter.setTrack(trackId);
 
 
-        /*
-        Toolbar toolbar = findViewById(R.id.toolbar_track_view);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
-        */
+        Toolbar toolbar = view.findViewById(R.id.toolbar_track_view);
+        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+
+        NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
+        NavigationUI.setupWithNavController(toolbar, navController);
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(track.getName());
 
         TextView textDistance = view.findViewById(R.id.track_text_distance);
         TextView textTime = view.findViewById(R.id.track_text_time);
@@ -91,7 +84,6 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback, T
             }
         });
 
-        //setTitle(track.getName());
         textDistance.setText((int) track.getDistance() + " m");
         textTime.setText(track.getTimeString());
         textSpeed.setText(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
@@ -114,15 +106,7 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback, T
         trackViewPresenter.onDestroy();
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                //onBackPressed();
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+
 
     @Override
     public void onMapReady(final GoogleMap googleMap) {

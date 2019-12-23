@@ -39,6 +39,7 @@
 
     <string name="no_tag">No tag</string>
 
+    <string name="title_tracking">Tracking</string>
     <string name="title_stats">Statistics</string>
     <string name="title_tracks">Tracks</string>
     <string name="title_settings">Settings</string>

@@ -69,12 +69,15 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
                              Bundle savedInstanceState) {
 
         viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
-        FragmentMainBinding binding = FragmentMainBinding.inflate(inflater, container, false);
+        FragmentMainBinding binding = DataBindingUtil.inflate(inflater, R.layout.fragment_main, container, false);
         View view = binding.getRoot();
         binding.setViewModel(viewModel);
 
         Toolbar toolbar = view.findViewById(R.id.toolbar);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_tracking);
+        setHasOptionsMenu(true);
+
 
         textDistance = view.findViewById(R.id.text_distance);
         textTime = view.findViewById(R.id.text_time);
@@ -85,6 +88,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
         mapFragment.getMapAsync(this);
 
         mainPresenter = new MainPresenter(this);
+
 
         return view;
     }
@@ -102,6 +106,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
         inflater.inflate(R.menu.start_stop, menu);
         startStopMenu = menu;
         mainPresenter.onStartStopButtonsCreated();
+        super.onCreateOptionsMenu(menu,inflater);
     }
 
 
@@ -163,16 +168,19 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
             }
         }
 
+
         if (track != null && track.isOpened()) {
             textDistance.setText((int) track.getCurrentDistance() + " m");
             textTime.setText(track.getTimeString());
             textSpeed.setText(String.format("%.1f", 3.6 * track.getCurrentSpeed()) + " km/h");
             textAvgSpeed.setText(String.format("%.1f", 3.6 * track.getSpeedForCurrentDistance()) + " km/h");
         } else {
+            /*
             textDistance.setText("");
             textTime.setText("");
             textSpeed.setText("");
             textAvgSpeed.setText("");
+             */
         }
     }
 

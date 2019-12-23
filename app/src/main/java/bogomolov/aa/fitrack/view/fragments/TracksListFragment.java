@@ -3,8 +3,12 @@ package bogomolov.aa.fitrack.view.fragments;
 
 import android.os.Bundle;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -56,17 +60,12 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
         View view = inflater.inflate(R.layout.fragment_tracks_list, container, false);
 
         toolbar = view.findViewById(R.id.toolbar_tracks_list);
-        /*
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(R.string.title_tracks);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
-        */
+        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+
+        NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
+        NavigationUI.setupWithNavController(toolbar, navController);
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_tracks);
+
 
 
         Spinner filterSpinner = view.findViewById(R.id.tracks_time_spinner);

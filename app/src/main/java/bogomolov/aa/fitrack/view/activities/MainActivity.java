@@ -107,32 +107,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    /*
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        Intent intent = null;
-        switch (menuItem.getItemId()) {
-            case R.id.menu_tracks:
-                intent = new Intent(this, TracksListActivity.class);
-                break;
-            case R.id.menu_stats:
-                intent = new Intent(this, StatsActivity.class);
-                break;
-            case R.id.menu_settings:
-                intent = new Intent(this, SettingsActivity.class);
-                break;
-            default:
-                return super.onOptionsItemSelected(menuItem);
-        }
-        startActivity(intent);
-
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-
-        return true;
-    }
-    */
-
 
 
 

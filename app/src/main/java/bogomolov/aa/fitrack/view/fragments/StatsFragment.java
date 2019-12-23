@@ -3,7 +3,12 @@ package bogomolov.aa.fitrack.view.fragments;
 
 import android.os.Bundle;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.NavigationUI;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -48,11 +53,6 @@ public class StatsFragment extends Fragment implements StatsView {
     //@Inject
     StatsPresenter statsPresenter;
 
-    public StatsFragment() {
-        // Required empty public constructor
-    }
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -61,24 +61,15 @@ public class StatsFragment extends Fragment implements StatsView {
 
         chart = view.findViewById(R.id.chart);
 
-        //AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
-        //appComponent.injectsStatsActivity(this);
-
         statsPresenter = new StatsPresenter(this);
 
 
-        /*
-        Toolbar toolbar = findViewById(R.id.toolbar_stats);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(R.string.title_stats);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
-        */
+        Toolbar toolbar = view.findViewById(R.id.toolbar_stats);
+        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+
+        NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
+        NavigationUI.setupWithNavController(toolbar, navController);
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_stats);
 
         final Spinner tagSpinner = view.findViewById(R.id.stats_spinner_tag);
 
