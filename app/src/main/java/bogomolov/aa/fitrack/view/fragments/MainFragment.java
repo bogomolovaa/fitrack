@@ -4,8 +4,11 @@ package bogomolov.aa.fitrack.view.fragments;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,15 +36,17 @@ import java.util.List;
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.databinding.FragmentMainBinding;
 import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.presenter.MainPresenter;
 import bogomolov.aa.fitrack.view.MainView;
+import bogomolov.aa.fitrack.viewmodels.MainViewModel;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class MainFragment extends Fragment implements OnMapReadyCallback,  MainView {
+public class MainFragment extends Fragment implements OnMapReadyCallback, MainView {
     private TextView textDistance;
     private TextView textTime;
     private TextView textSpeed;
@@ -56,15 +61,20 @@ public class MainFragment extends Fragment implements OnMapReadyCallback,  MainV
     //@Inject
     MainPresenter mainPresenter;
 
+    private MainViewModel viewModel;
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_main, container, false);
+
+        viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        FragmentMainBinding binding = FragmentMainBinding.inflate(inflater, container, false);
+        View view = binding.getRoot();
+        binding.setViewModel(viewModel);
 
         Toolbar toolbar = view.findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
+        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
 
         textDistance = view.findViewById(R.id.text_distance);
         textTime = view.findViewById(R.id.text_time);

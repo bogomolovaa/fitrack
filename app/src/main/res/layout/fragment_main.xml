@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable name="viewModel" type="bogomolov.aa.fitrack.viewmodels.MainViewModel"/>
+    </data>
+
+<androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".view.fragments.MainFragment">
 
     <androidx.appcompat.widget.Toolbar
@@ -36,7 +41,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="distance"
+            android:text="@{viewModel.distance}"
             tools:layout_editor_absoluteX="31dp"
             tools:layout_editor_absoluteY="61dp" />
 
@@ -45,7 +50,7 @@
             android:layout_width="0dip"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="time"
+            android:text="@{viewModel.time}"
             tools:layout_editor_absoluteX="176dp"
             tools:layout_editor_absoluteY="61dp" />
 
@@ -54,7 +59,7 @@
             android:layout_width="0dip"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="speed"
+            android:text="@{viewModel.avgSpeed}"
             tools:layout_editor_absoluteX="320dp"
             tools:layout_editor_absoluteY="61dp" />
 
@@ -67,7 +72,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="8dp"
-        android:text="speed"
+        android:text="@{viewModel.speed}"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
@@ -88,3 +93,5 @@
         app:layout_constraintTop_toBottomOf="@+id/text_speed" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

@@ -66,9 +66,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        //NavigationView navigationView = findViewById(R.id.nav_view);
-        //navigationView.setNavigationItemSelectedListener(this);
-
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
         permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         permissionsToRequest = permissionsToRequest(permissions);
@@ -87,9 +84,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             startTrackerService();
         }
-
-        //AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
-        //appComponent.injectsMainActivity(this);
 
 
         if (!Workarounds.isAutostartRequested(this)) {

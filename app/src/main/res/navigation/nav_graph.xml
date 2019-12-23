@@ -46,7 +46,6 @@
         tools:layout="@layout/fragment_track_view" >
         <argument
             android:name="trackId"
-            app:argType="integer"
-            android:defaultValue="0" />
+            app:argType="long" />
     </fragment>
 </navigation>
