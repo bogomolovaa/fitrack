@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/mainFragment">
+
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="bogomolov.aa.fitrack.view.fragments.MainFragment"
+        android:label="fragment_main"
+        tools:layout="@layout/fragment_main" >
+        <action
+            android:id="@+id/action_mainFragment_to_tracksListFragment"
+            app:destination="@id/tracksListFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_statsFragment"
+            app:destination="@id/statsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/tracksListFragment"
+        android:name="bogomolov.aa.fitrack.view.fragments.TracksListFragment"
+        android:label="fragment_tracks_list"
+        tools:layout="@layout/fragment_tracks_list" >
+        <action
+            android:id="@+id/action_tracksListFragment_to_trackViewFragment"
+            app:destination="@id/trackViewFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/statsFragment"
+        android:name="bogomolov.aa.fitrack.view.fragments.StatsFragment"
+        android:label="fragment_stats"
+        tools:layout="@layout/fragment_stats" />
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="bogomolov.aa.fitrack.view.fragments.SettingsFragment"
+        android:label="fragment_settings"
+        tools:layout="@layout/fragment_settings" />
+    <fragment
+        android:id="@+id/trackViewFragment"
+        android:name="bogomolov.aa.fitrack.view.fragments.TrackViewFragment"
+        android:label="fragment_track_view"
+        tools:layout="@layout/fragment_track_view" >
+        <argument
+            android:name="trackId"
+            app:argType="integer"
+            android:defaultValue="0" />
+    </fragment>
+</navigation>

@@ -1,29 +1,26 @@
 package bogomolov.aa.fitrack.model;
 
-import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.DatePicker;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import bogomolov.aa.fitrack.view.activities.TracksListActivity;
-
 public class DateUtils {
 
-    public static void selectDatesRange(AppCompatActivity activity, DatesSelector datesSelector) {
-        selectDatesRange(activity, new Date[2], datesSelector);
+    public static void selectDatesRange(FragmentManager fragmentManager, Context context, DatesSelector datesSelector) {
+        selectDatesRange(fragmentManager, context, new Date[2], datesSelector);
     }
 
-    private static void selectDatesRange(final AppCompatActivity activity, final Date[] dates, final DatesSelector datesSelector) {
-        new DatePickerFragment(activity, new DatePickerDialog.OnDateSetListener() {
+    private static void selectDatesRange(FragmentManager fragmentManager, Context context, final Date[] dates, final DatesSelector datesSelector) {
+        new DatePickerFragment(context, new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker view, int year, int month, int day) {
                 Calendar c = Calendar.getInstance();
@@ -36,13 +33,13 @@ public class DateUtils {
                 c.set(Calendar.MILLISECOND, 0);
                 if (dates[0] == null) {
                     dates[0] = c.getTime();
-                    selectDatesRange(activity,dates,datesSelector);
+                    selectDatesRange(fragmentManager, context, dates, datesSelector);
                 } else {
                     dates[1] = c.getTime();
                     datesSelector.onSelect(dates);
                 }
             }
-        }).show(activity.getSupportFragmentManager(), "datePicker");
+        }).show(fragmentManager, "datePicker");
     }
 
     public static Date[] getMonthRange() {
@@ -56,7 +53,7 @@ public class DateUtils {
         calendar.set(Calendar.MILLISECOND, 0);
         dateRange[0] = calendar.getTime();
         calendar.add(Calendar.MONTH, 1);
-        dateRange[1] = new Date(calendar.getTime().getTime()-1);
+        dateRange[1] = new Date(calendar.getTime().getTime() - 1);
         return dateRange;
     }
 
@@ -71,7 +68,7 @@ public class DateUtils {
         calendar.set(Calendar.MILLISECOND, 0);
         dateRange[0] = calendar.getTime();
         calendar.add(Calendar.DAY_OF_YEAR, 7);
-        dateRange[1] = new Date(calendar.getTime().getTime()-1);
+        dateRange[1] = new Date(calendar.getTime().getTime() - 1);
         return dateRange;
     }
 
@@ -85,16 +82,16 @@ public class DateUtils {
         calendar.set(Calendar.MILLISECOND, 0);
         dateRange[0] = calendar.getTime();
         calendar.add(Calendar.DAY_OF_YEAR, 1);
-        dateRange[1] = new Date(calendar.getTime().getTime()-1);
+        dateRange[1] = new Date(calendar.getTime().getTime() - 1);
         return dateRange;
     }
 
     public static class DatePickerFragment extends DialogFragment {
         private DatePickerDialog.OnDateSetListener listener;
-        private Activity activity;
+        private Context context;
 
-        public DatePickerFragment(Activity activity, DatePickerDialog.OnDateSetListener listener) {
-            this.activity = activity;
+        public DatePickerFragment(Context context, DatePickerDialog.OnDateSetListener listener) {
+            this.context = context;
             this.listener = listener;
         }
 
@@ -105,11 +102,11 @@ public class DateUtils {
             int month = c.get(Calendar.MONTH);
             int day = c.get(Calendar.DAY_OF_MONTH);
 
-            return new DatePickerDialog(activity, listener, year, month, day);
+            return new DatePickerDialog(context, listener, year, month, day);
         }
     }
 
-    public interface DatesSelector{
+    public interface DatesSelector {
         void onSelect(Date[] dates);
     }
 }

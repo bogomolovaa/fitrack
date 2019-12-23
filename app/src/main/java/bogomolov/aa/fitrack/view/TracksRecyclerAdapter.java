@@ -1,7 +1,8 @@
 package bogomolov.aa.fitrack.view;
 
+import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -19,18 +21,20 @@ import java.util.Set;
 
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.Track;
-import bogomolov.aa.fitrack.view.activities.TrackViewActivity;
-import bogomolov.aa.fitrack.view.activities.TracksListActivity;
+import bogomolov.aa.fitrack.view.fragments.TracksListFragment;
 
 public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAdapter.ViewHolder> {
 
     private List<Track> tracks;
     private Set<Long> selectedIds;
     private boolean checkMode;
-    private TracksListActivity tracksListActivity;
+    private Context context;
+    private TracksListFragment tracksListFragment;
 
-    public TracksRecyclerAdapter(TracksListActivity tracksListActivity) {
-        this.tracksListActivity = tracksListActivity;
+
+    public TracksRecyclerAdapter(TracksListFragment tracksListFragment, Context context) {
+        this.context = context;
+        this.tracksListFragment = tracksListFragment;
     }
 
     public void setTracks(List<Track> tracks) {
@@ -76,7 +80,7 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
         radioButton.setChecked(selected);
 
         ((TextView) cardView.findViewById(R.id.card_text_name)).setText(track.getName());
-        ((TextView) cardView.findViewById(R.id.card_tag_name)).setText(track.getTag() != null ? track.getTag() : tracksListActivity.getResources().getString(R.string.no_tag));
+        ((TextView) cardView.findViewById(R.id.card_tag_name)).setText(track.getTag() != null ? track.getTag() : context.getResources().getString(R.string.no_tag));
         ((TextView) cardView.findViewById(R.id.card_text_distance)).setText((int) track.getDistance() + " m");
         ((TextView) cardView.findViewById(R.id.card_text_time)).setText(track.getTimeString());
         ((TextView) cardView.findViewById(R.id.card_text_avg_speed)).setText(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
@@ -113,9 +117,9 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
                 }
                 adapter.notifyItemChanged(position);
             } else {
-                Intent intent = new Intent(adapter.tracksListActivity, TrackViewActivity.class);
-                intent.putExtra("track", track.getId());
-                adapter.tracksListActivity.startActivity(intent);
+                Bundle bundle = new Bundle();
+                bundle.putLong("trackId", track.getId());
+                Navigation.findNavController(v).navigate(R.id.action_tracksListFragment_to_trackViewFragment,bundle);
             }
         }
 
@@ -125,7 +129,7 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
             adapter.selectedIds.clear();
             onClick(view);
             adapter.notifyDataSetChanged();
-            adapter.tracksListActivity.onLongClick();
+            adapter.tracksListFragment.onLongClick();
 
             return true;
         }

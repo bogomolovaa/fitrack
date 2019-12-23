@@ -13,16 +13,13 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.hardware.TriggerEvent;
 import android.hardware.TriggerEventListener;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.PowerManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -43,11 +40,10 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.view.activities.SettingsActivity;
+import bogomolov.aa.fitrack.view.fragments.SettingsFragment;
 
 
 public class TrackerService extends Service
@@ -171,7 +167,7 @@ public class TrackerService extends Service
 
     public static void startTrackerService(String action, Context context) {
         SharedPreferences.Editor prefs = PreferenceManager.getDefaultSharedPreferences(context).edit();
-        prefs.putBoolean(SettingsActivity.KEY_TRACKING, action.equals(START_SERVICE_ACTION));
+        prefs.putBoolean(SettingsFragment.KEY_TRACKING, action.equals(START_SERVICE_ACTION));
         prefs.apply();
         Intent intent = new Intent(context, TrackerService.class);
         intent.setAction(action);

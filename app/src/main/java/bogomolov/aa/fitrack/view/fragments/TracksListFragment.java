@@ -1,35 +1,28 @@
-package bogomolov.aa.fitrack.view.activities;
+package bogomolov.aa.fitrack.view.fragments;
 
-import androidx.appcompat.app.AppCompatActivity;
+
+import android.os.Bundle;
+
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.app.DatePickerDialog;
-import android.app.Dialog;
-import android.content.DialogInterface;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.ActionMode;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.DatePicker;
 import android.widget.Spinner;
 
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
-
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.dagger.AppComponent;
-import bogomolov.aa.fitrack.dagger.AppModule;
-import bogomolov.aa.fitrack.dagger.DaggerAppComponent;
 import bogomolov.aa.fitrack.model.DateUtils;
-import bogomolov.aa.fitrack.model.DbProvider;
 import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.presenter.TracksListPresenter;
@@ -38,12 +31,16 @@ import bogomolov.aa.fitrack.view.TagSelectionDialog;
 import bogomolov.aa.fitrack.view.TracksListView;
 import bogomolov.aa.fitrack.view.TracksRecyclerAdapter;
 
-public class TracksListActivity extends AppCompatActivity implements TagResultListener, TracksListView {
+
+/**
+ * A simple {@link Fragment} subclass.
+ */
+public class TracksListFragment extends Fragment implements TagResultListener, TracksListView {
     private TracksRecyclerAdapter adapter;
     private ActionMode actionMode;
     private Toolbar toolbar;
 
-    @Inject
+    //@Inject
     TracksListPresenter tracksListPresenter;
 
     private static final int FILTER_TODAY = 0;
@@ -51,11 +48,15 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
     private static final int FILTER_MONTH = 2;
     private static final int FILTER_SELECT = 3;
 
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tracks_list);
-        toolbar = findViewById(R.id.toolbar_tracks_list);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View view = inflater.inflate(R.layout.fragment_tracks_list, container, false);
+
+        toolbar = view.findViewById(R.id.toolbar_tracks_list);
+        /*
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(R.string.title_tracks);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -65,9 +66,10 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
                 onBackPressed();
             }
         });
+        */
 
 
-        Spinner filterSpinner = findViewById(R.id.tracks_time_spinner);
+        Spinner filterSpinner = view.findViewById(R.id.tracks_time_spinner);
         filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -82,7 +84,7 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
                         tracksListPresenter.onTimeFilterSelect(DateUtils.getMonthRange());
                         break;
                     case FILTER_SELECT:
-                        DateUtils.selectDatesRange(TracksListActivity.this, new DateUtils.DatesSelector() {
+                        DateUtils.selectDatesRange(getChildFragmentManager(),getContext(), new DateUtils.DatesSelector() {
                             @Override
                             public void onSelect(Date[] dates) {
                                 tracksListPresenter.onTimeFilterSelect(dates);
@@ -100,18 +102,19 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
             }
         });
 
-        AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
-        appComponent.injectsTracksListActivity(this);
+        //AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
+        //appComponent.injectsTracksListActivity(this);
 
+        tracksListPresenter = new TracksListPresenter(this);
 
-        RecyclerView recyclerView = findViewById(R.id.track_recycler);
-        adapter = new TracksRecyclerAdapter(this);
+        RecyclerView recyclerView = view.findViewById(R.id.track_recycler);
+        adapter = new TracksRecyclerAdapter(this,getContext());
         recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         tracksListPresenter.onTimeFilterSelect(DateUtils.getTodayRange());
 
+        return view;
     }
-
 
     public void onLongClick() {
         if (actionMode == null)
@@ -121,7 +124,7 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         adapter.notifyDataSetChanged();
     }
@@ -148,8 +151,8 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
                     break;
                 case R.id.menu_track_tag:
                     TagSelectionDialog dialog = new TagSelectionDialog();
-                    dialog.setTagResultListener(TracksListActivity.this);
-                    dialog.show(getSupportFragmentManager(), "dialog");
+                    dialog.setTagResultListener(TracksListFragment.this);
+                    dialog.show(getChildFragmentManager(), "dialog");
                     break;
             }
             return true;
@@ -174,10 +177,9 @@ public class TracksListActivity extends AppCompatActivity implements TagResultLi
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         tracksListPresenter.onDestroy();
     }
-
 
 }

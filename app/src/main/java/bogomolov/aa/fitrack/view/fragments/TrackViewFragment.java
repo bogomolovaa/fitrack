@@ -1,27 +1,25 @@
-package bogomolov.aa.fitrack.view.activities;
+package bogomolov.aa.fitrack.view.fragments;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 import android.os.Bundle;
-import android.util.Log;
+
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -30,33 +28,44 @@ import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.dagger.AppComponent;
 import bogomolov.aa.fitrack.dagger.AppModule;
 import bogomolov.aa.fitrack.dagger.DaggerAppComponent;
-import bogomolov.aa.fitrack.model.DbProvider;
 import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.presenter.TrackViewPresenter;
-import bogomolov.aa.fitrack.view.TagResultListener;
 import bogomolov.aa.fitrack.view.TagSelectionDialog;
 import bogomolov.aa.fitrack.view.TrackViewView;
 
-public class TrackViewActivity extends AppCompatActivity implements OnMapReadyCallback, TrackViewView {
+
+/**
+ * A simple {@link Fragment} subclass.
+ */
+public class TrackViewFragment extends Fragment implements OnMapReadyCallback, TrackViewView {
     private TextView textTag;
 
-    @Inject
+    //@Inject
     TrackViewPresenter trackViewPresenter;
 
+    public TrackViewFragment() {
+        // Required empty public constructor
+    }
+
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_track_view);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View view = inflater.inflate(R.layout.fragment_track_view, container, false);
 
-        AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
-        appComponent.injectsTrackViewActivity(this);
+        //AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
+        //appComponent.injectsTrackViewActivity(this);
 
-        long trackId = getIntent().getLongExtra("track", 0);
+        trackViewPresenter = new TrackViewPresenter(this);
+
+        long trackId = (Long) getArguments().get("trackId");
         Track track = trackViewPresenter.setTrack(trackId);
 
 
+        /*
         Toolbar toolbar = findViewById(R.id.toolbar_track_view);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -66,39 +75,41 @@ public class TrackViewActivity extends AppCompatActivity implements OnMapReadyCa
                 onBackPressed();
             }
         });
+        */
 
-        TextView textDistance = findViewById(R.id.track_text_distance);
-        TextView textTime = findViewById(R.id.track_text_time);
-        TextView textSpeed = findViewById(R.id.track_text_avg_speed);
-        textTag = findViewById(R.id.track_text_tag);
+        TextView textDistance = view.findViewById(R.id.track_text_distance);
+        TextView textTime = view.findViewById(R.id.track_text_time);
+        TextView textSpeed = view.findViewById(R.id.track_text_avg_speed);
+        textTag = view.findViewById(R.id.track_text_tag);
 
         textTag.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 TagSelectionDialog dialog = new TagSelectionDialog();
                 dialog.setTagResultListener(trackViewPresenter);
-                dialog.show(getSupportFragmentManager(), "dialog");
+                dialog.show(getChildFragmentManager(), "dialog");
             }
         });
 
-        setTitle(track.getName());
+        //setTitle(track.getName());
         textDistance.setText((int) track.getDistance() + " m");
         textTime.setText(track.getTimeString());
         textSpeed.setText(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
         textTag.setText(track.getTag() != null ? track.getTag() : getResources().getString(R.string.no_tag));
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map_track_view);
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_track_view);
         mapFragment.getMapAsync(this);
 
+        return view;
     }
 
     @Override
-    public void updateTag(Tag tag){
+    public void updateTag(Tag tag) {
         textTag.setText(tag.getName());
     }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
         super.onDestroy();
         trackViewPresenter.onDestroy();
     }
@@ -107,7 +118,7 @@ public class TrackViewActivity extends AppCompatActivity implements OnMapReadyCa
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                onBackPressed();
+                //onBackPressed();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -136,7 +147,7 @@ public class TrackViewActivity extends AppCompatActivity implements OnMapReadyCa
             LatLngBounds bounds = builder.build();
             try {
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
-            }catch (Exception e){
+            } catch (Exception e) {
                 Point lastPoint = smoothedPoints.get(smoothedPoints.size() - 1);
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastPoint.getLat(), lastPoint.getLng()), 15));
             }
