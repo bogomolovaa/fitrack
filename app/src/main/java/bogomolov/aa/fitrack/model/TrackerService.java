@@ -23,6 +23,8 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.navigation.NavDeepLinkBuilder;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -43,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.view.activities.MainActivity;
 import bogomolov.aa.fitrack.view.fragments.SettingsFragment;
 
 
@@ -87,8 +90,12 @@ public class TrackerService extends Service
             notificationChannel.setImportance(NotificationManager.IMPORTANCE_LOW);
             notificationManager.createNotificationChannel(notificationChannel);
         }
-        Intent resultIntent = new Intent(this, SettingsActivity.class);
-        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent resultPendingIntent = new NavDeepLinkBuilder(this).setComponentName(MainActivity.class)
+                     .setGraph(R.navigation.nav_graph)
+                .setDestination(R.id.settingsFragment)
+                .createPendingIntent();
+        //Intent resultIntent = new Intent(this, MainActivity.class);
+        //PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
         notificationBuilder.setAutoCancel(true)
@@ -292,7 +299,7 @@ public class TrackerService extends Service
         }
     }
 
-    private void stopServiceAndStartActivityRecognition(){
+    private void stopServiceAndStartActivityRecognition() {
         stopTrackingService();
         TrackingScheduler.startActivityRecognition(this);
     }

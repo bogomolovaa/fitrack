@@ -77,7 +77,7 @@ public class SettingsFragment extends Fragment implements SharedPreferences.OnSh
         }
     }
 
-    private static class SettingsFragmentView extends PreferenceFragmentCompat{
+    public static class SettingsFragmentView extends PreferenceFragmentCompat{
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);

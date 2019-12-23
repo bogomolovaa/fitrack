@@ -84,8 +84,10 @@ public class MainPresenter {
             @Override
             public void run() {
                 DbProvider dbProvider = new DbProvider(false);
-                Track track = dbProvider.getRealm().copyFromRealm(dbProvider.getLastTrack());
-                Point point = dbProvider.getRealm().copyFromRealm(dbProvider.getLastPoint());
+                Track track = dbProvider.getLastTrack();
+                if (track != null) track = dbProvider.getRealm().copyFromRealm(track);
+                Point point = dbProvider.getLastPoint();
+                if (point != null) point = dbProvider.getRealm().copyFromRealm(point);
                 List<Point> rawPoints = new ArrayList<>();
                 List<Point> smoothedPoints = new ArrayList<>();
 
@@ -93,8 +95,10 @@ public class MainPresenter {
                     rawPoints.addAll(dbProvider.getRealm().copyFromRealm(dbProvider.getTrackPoints(track, Point.RAW)));
                     smoothedPoints.addAll(getSmoothedPoints(track, rawPoints));
                 }
+                Point updatePoint = point;
+                Track updateTrack = track;
                 handler.post(() -> {
-                    mainView.updateView(track, point, rawPoints, smoothedPoints);
+                    mainView.updateView(updateTrack, updatePoint, rawPoints, smoothedPoints);
                 });
                 backgroundHandler.postDelayed(this, 1000);
                 dbProvider.close();

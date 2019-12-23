@@ -71,7 +71,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback,  MainV
         textSpeed = view.findViewById(R.id.text_speed);
         textAvgSpeed = view.findViewById(R.id.text_avg_speed);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getFragmentManager().findFragmentById(R.id.map_fragment);
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_fragment);
         mapFragment.getMapAsync(this);
 
         mainPresenter = new MainPresenter(this);

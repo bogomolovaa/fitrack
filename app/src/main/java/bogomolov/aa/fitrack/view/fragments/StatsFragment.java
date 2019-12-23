@@ -171,6 +171,7 @@ public class StatsFragment extends Fragment implements StatsView {
 
     @Override
     public void updateView(Date[] datesRange, List<Track> tracks, int selectedParam, int selectedTimeStep, int selectedTimeFilter) {
+        if(getView()==null) return;
         String startDateString = new SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[0]);
         String endDateString = new SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[1]);
         TextView periodTextView = getView().findViewById(R.id.stats_text_selected_period);

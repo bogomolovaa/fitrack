@@ -6,20 +6,6 @@
         app:defaultValue="true"
         app:title="@string/settings_tracking" />
 
-    <SwitchPreferenceCompat
-        app:key="trackingTimeEnabled"
-        app:defaultValue="false"
-        app:title="@string/settings_tracking_time_enabled" />
-
-    <Preference
-        android:key="startTrackingTime"
-        android:dependency="trackingTimeEnabled"
-        android:title="@string/settings_start_tracking_time" />
-
-    <Preference
-        android:key="endTrackingTime"
-        android:dependency="trackingTimeEnabled"
-        android:title="@string/settings_end_tracking_time" />
 
 
 </androidx.preference.PreferenceScreen>
