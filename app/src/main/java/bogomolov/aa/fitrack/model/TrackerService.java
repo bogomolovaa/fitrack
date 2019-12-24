@@ -44,32 +44,41 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.view.activities.MainActivity;
 import bogomolov.aa.fitrack.view.fragments.SettingsFragment;
+import dagger.android.AndroidInjection;
+import dagger.android.AndroidInjector;
+import dagger.android.DispatchingAndroidInjector;
+import dagger.android.HasAndroidInjector;
 
 
 public class TrackerService extends Service
         implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener {
+        GoogleApiClient.OnConnectionFailedListener, LocationListener, HasAndroidInjector {
     private GoogleApiClient googleApiClient;
     private Location location;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
-    private DbProvider dbProvider;
     public static boolean working;
     public static boolean updating = false;
-    private TriggerEventListener wakeUpListener;
-    private SensorManager sensorManager;
-    private Sensor sMotionSensor;
-    private Sensor accelerometerSensor;
     private long startLocationUpdateTime;
-    private SensorEventListener accelerometerListener;
+
+
+    @Inject
+    DbProvider dbProvider;
+
+    @Inject
+    DispatchingAndroidInjector<Object> androidInjector;
+    @Override
+    public AndroidInjector<Object> androidInjector() {
+        return androidInjector;
+    }
 
 
     private static final double MAX_LOCATION_ACCURACY = 50;
-    private static final double WAKEUP_MOTION_A = 0.1;
-    private static final double G = 9.8;
     private static final double MIN_TRACK_DISTANCE = 150;
     public static final String START_SERVICE_ACTION = "start";
     public static final String STOP_SERVICE_ACTION = "stop";
@@ -77,6 +86,7 @@ public class TrackerService extends Service
 
     @Override
     public void onCreate() {
+        AndroidInjection.inject(this);
         super.onCreate();
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -94,8 +104,7 @@ public class TrackerService extends Service
                      .setGraph(R.navigation.nav_graph)
                 .setDestination(R.id.settingsFragment)
                 .createPendingIntent();
-        //Intent resultIntent = new Intent(this, MainActivity.class);
-        //PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
         notificationBuilder.setAutoCancel(true)
@@ -113,64 +122,9 @@ public class TrackerService extends Service
                 addConnectionCallbacks(this).
                 addOnConnectionFailedListener(this).build();
 
-        dbProvider = new DbProvider(false);
 
-
-        /*
-        wakeUpListener = new TriggerEventListener() {
-            @Override
-            public void onTrigger(TriggerEvent triggerEvent) {
-                Log.i("test", "WAKE UP EVENT");
-                startLocationUpdates();
-                updating = true;
-            }
-        };
-
-        accelerometerListener = new SensorEventListener() {
-            @Override
-            public void onSensorChanged(SensorEvent sensorEvent) {
-                float x = sensorEvent.values[0];
-                float y = sensorEvent.values[1];
-                float z = sensorEvent.values[2];
-                double mod = Math.sqrt(x * x + y * y + z * z);
-                Log.i("test", "mod " + mod + " (" + x + "," + y + "," + z + ") " + new Date());
-                if (mod / G > WAKEUP_MOTION_A) {
-                    Log.i("test", "WAKE UP EVENT");
-                    startLocationUpdates();
-                    updating = true;
-                    sensorManager.unregisterListener(accelerometerListener);
-                }
-            }
-
-            @Override
-            public void onAccuracyChanged(Sensor sensor, int i) {
-
-            }
-        };
-
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        sMotionSensor = sensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
-        accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-
-
-        pauseTracking();
-
-         */
     }
 
-    private void chargeWakeUpTrigger() {
-        //boolean requested = sensorManager.requestTriggerSensor(wakeUpListener, sMotionSensor);
-        boolean requested = sensorManager.registerListener(accelerometerListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        Log.i("test", "chargeWakeUpTrigger requested " + requested);
-    }
-
-
-    private void pauseTracking() {
-        Log.i("test", "PAUSE TRACKING");
-        stopLocationUpdates();
-        chargeWakeUpTrigger();
-        updating = false;
-    }
 
     public static void startTrackerService(String action, Context context) {
         SharedPreferences.Editor prefs = PreferenceManager.getDefaultSharedPreferences(context).edit();
@@ -178,11 +132,16 @@ public class TrackerService extends Service
         prefs.apply();
         Intent intent = new Intent(context, TrackerService.class);
         intent.setAction(action);
+
+        /*
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent);
         } else {
             ContextCompat.startForegroundService(context, intent);
         }
+         */
+
+        ContextCompat.startForegroundService(context, intent);
     }
 
     @Override
@@ -212,7 +171,6 @@ public class TrackerService extends Service
             return;
         }
 
-        // Permissions ok, we get last location
         LocationServices.getFusedLocationProviderClient(this).getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(Location theLocation) {
@@ -350,9 +308,6 @@ public class TrackerService extends Service
     @Override
     public void onDestroy() {
         super.onDestroy();
-        //Log.i("test", "cancelTriggerSensor");
-        //sensorManager.cancelTriggerSensor(wakeUpListener, sMotionSensor);
-        //sensorManager.unregisterListener(accelerometerListener);
         stopLocationUpdates();
         dbProvider.close();
     }

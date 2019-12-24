@@ -1,6 +1,7 @@
 package bogomolov.aa.fitrack.view.fragments;
 
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,7 +28,10 @@ import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentTrackViewBinding;
 import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.Tag;
@@ -35,21 +39,31 @@ import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.view.TagResultListener;
 import bogomolov.aa.fitrack.view.TagSelectionDialog;
 import bogomolov.aa.fitrack.viewmodels.TrackViewModel;
+import dagger.android.support.AndroidSupportInjection;
 
 
 public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
     private TrackViewModel viewModel;
 
+    @Inject
+    ViewModelFactory viewModelFactory;
+
+    @Override
+    public void onAttach(Context context) {
+        AndroidSupportInjection.inject(this);
+        super.onAttach(context);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        viewModel = ViewModelProviders.of(this).get(TrackViewModel.class);
+        viewModel = ViewModelProviders.of(this,viewModelFactory).get(TrackViewModel.class);
         FragmentTrackViewBinding viewBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_track_view, container, false);
         viewBinding.setViewModel(viewModel);
         viewBinding.setLifecycleOwner(this);
         View view = viewBinding.getRoot();
 
         long trackId = (Long) getArguments().get("trackId");
-        Track track = viewModel.setTrack(trackId);
+        Track track = viewModel.setTrack(trackId,getContext());
 
 
         Toolbar toolbar = view.findViewById(R.id.toolbar_track_view);

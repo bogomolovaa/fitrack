@@ -23,13 +23,19 @@ import com.google.android.material.navigation.NavigationView;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.TrackerService;
 import bogomolov.aa.fitrack.model.TrackingScheduler;
 import bogomolov.aa.fitrack.model.Workarounds;
 import bogomolov.aa.fitrack.view.fragments.SettingsFragment;
+import dagger.android.AndroidInjection;
+import dagger.android.AndroidInjector;
+import dagger.android.DispatchingAndroidInjector;
+import dagger.android.HasAndroidInjector;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements HasAndroidInjector {
     private ArrayList<String> permissionsToRequest;
     private ArrayList<String> permissionsRejected = new ArrayList<>();
     private ArrayList<String> permissions = new ArrayList<>();
@@ -38,24 +44,22 @@ public class MainActivity extends AppCompatActivity {
     private static final int ALL_PERMISSIONS_RESULT = 1011;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 
+    @Inject
+    DispatchingAndroidInjector<Object> androidInjector;
+    @Override
+    public AndroidInjector<Object> androidInjector() {
+        return androidInjector;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
 
-        /*
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
-                R.string.nav_open_drawer,
-                R.string.nav_close_drawer);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-        */
-
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        NavigationView navView = findViewById(R.id.nav_view);
-        NavigationUI.setupWithNavController(navView, navController);
+
 
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
         AppBarConfiguration appBarConfiguration =
@@ -63,7 +67,8 @@ public class MainActivity extends AppCompatActivity {
                         .setDrawerLayout(drawerLayout)
                         .build();
 
-
+        NavigationView navView = findViewById(R.id.nav_view);
+        NavigationUI.setupWithNavController(navView, navController);
 
 
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);

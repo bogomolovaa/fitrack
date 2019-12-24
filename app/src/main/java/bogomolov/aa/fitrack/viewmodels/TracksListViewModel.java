@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 import bogomolov.aa.fitrack.model.DbProvider;
 import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
@@ -15,8 +17,9 @@ import bogomolov.aa.fitrack.view.TracksListView;
 public class TracksListViewModel extends ViewModel {
     private DbProvider dbProvider;
 
-    public TracksListViewModel() {
-        dbProvider = new DbProvider(false);
+    @Inject
+    public TracksListViewModel(DbProvider dbProvider) {
+        this.dbProvider = dbProvider;
     }
 
     @Override

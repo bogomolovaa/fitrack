@@ -1,6 +1,7 @@
 package bogomolov.aa.fitrack.view.fragments;
 
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,7 +28,10 @@ import android.widget.Spinner;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentTracksListBinding;
 import bogomolov.aa.fitrack.model.DateUtils;
 import bogomolov.aa.fitrack.model.Tag;
@@ -37,12 +41,16 @@ import bogomolov.aa.fitrack.view.TagSelectionDialog;
 import bogomolov.aa.fitrack.view.TracksListView;
 import bogomolov.aa.fitrack.view.TracksRecyclerAdapter;
 import bogomolov.aa.fitrack.viewmodels.TracksListViewModel;
+import dagger.android.support.AndroidSupportInjection;
 
 
 public class TracksListFragment extends Fragment implements TagResultListener, TracksListView {
     private TracksRecyclerAdapter adapter;
     private ActionMode actionMode;
     private Toolbar toolbar;
+
+    @Inject
+    ViewModelFactory viewModelFactory;
 
     private TracksListViewModel viewModel;
 
@@ -51,11 +59,16 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
     private static final int FILTER_MONTH = 2;
     private static final int FILTER_SELECT = 3;
 
+    @Override
+    public void onAttach(Context context) {
+        AndroidSupportInjection.inject(this);
+        super.onAttach(context);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        viewModel = ViewModelProviders.of(this).get(TracksListViewModel.class);
+        viewModel = ViewModelProviders.of(this,viewModelFactory).get(TracksListViewModel.class);
         FragmentTracksListBinding fragmentTracksListBinding = DataBindingUtil.inflate(inflater,R.layout.fragment_tracks_list,container,false);
         fragmentTracksListBinding.setViewModel(viewModel);
         fragmentTracksListBinding.setLifecycleOwner(this);

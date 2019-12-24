@@ -17,13 +17,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import javax.inject.Inject;
+
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.model.TrackerService;
 
 
 public class SettingsFragment extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     public static final String KEY_TRACKING = "tracking";
-    private SettingsFragmentView settingsFragment;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -36,7 +38,7 @@ public class SettingsFragment extends Fragment implements SharedPreferences.OnSh
         NavigationUI.setupWithNavController(toolbar, navController);
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_settings);
 
-        settingsFragment = new SettingsFragmentView();
+        SettingsFragmentView settingsFragment = new SettingsFragmentView();
         getChildFragmentManager()
                 .beginTransaction()
                 .replace(R.id.settings, settingsFragment)

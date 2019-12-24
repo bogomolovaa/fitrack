@@ -1,6 +1,7 @@
 package bogomolov.aa.fitrack.view.fragments;
 
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,12 +35,16 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentStatsBinding;
 import bogomolov.aa.fitrack.model.DateUtils;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.view.StatsView;
 import bogomolov.aa.fitrack.viewmodels.StatsViewModel;
+import dagger.android.support.AndroidSupportInjection;
 
 import static bogomolov.aa.fitrack.model.DateUtils.getMonthRange;
 import static bogomolov.aa.fitrack.model.DateUtils.getTodayRange;
@@ -50,12 +55,21 @@ public class StatsFragment extends Fragment implements StatsView {
     private BarChart chart;
     private StatsViewModel viewModel;
 
+    @Inject
+    ViewModelFactory viewModelFactory;
+
+    @Override
+    public void onAttach(Context context) {
+        AndroidSupportInjection.inject(this);
+        super.onAttach(context);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
 
-        viewModel = ViewModelProviders.of(this).get(StatsViewModel.class);
+        viewModel = ViewModelProviders.of(this,viewModelFactory).get(StatsViewModel.class);
         FragmentStatsBinding binding = DataBindingUtil.inflate(inflater, R.layout.fragment_stats, container, false);
         binding.setLifecycleOwner(this);
         View view = binding.getRoot();

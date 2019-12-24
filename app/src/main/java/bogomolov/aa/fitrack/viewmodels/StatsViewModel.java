@@ -7,6 +7,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import bogomolov.aa.fitrack.model.DbProvider;
 import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
@@ -33,8 +35,9 @@ public class StatsViewModel extends ViewModel {
     private int selectedTimeStep;
 
 
-    public StatsViewModel() {
-        dbProvider = new DbProvider(false);
+    @Inject
+    public StatsViewModel(DbProvider dbProvider) {
+        this.dbProvider = dbProvider;
 
         datesRange = getTodayRange();
         selectedParam = PARAM_DISTANCE;

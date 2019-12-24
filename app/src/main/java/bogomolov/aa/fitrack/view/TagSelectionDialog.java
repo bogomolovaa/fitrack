@@ -35,7 +35,7 @@ public class TagSelectionDialog extends DialogFragment {
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_tag_selection, null);
-        dbProvider = new DbProvider(false);
+        dbProvider = new DbProvider();
         listView = view.findViewById(R.id.tag_list_view);
         List<Tag> tags = new ArrayList<>(dbProvider.getTags());
         ArrayAdapter<Tag> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, tags);

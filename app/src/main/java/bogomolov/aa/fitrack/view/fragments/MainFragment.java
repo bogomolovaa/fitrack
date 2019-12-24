@@ -1,6 +1,7 @@
 package bogomolov.aa.fitrack.view.fragments;
 
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 
@@ -8,9 +9,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.NavigationUI;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,12 +38,20 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentMainBinding;
 import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.view.MainView;
 import bogomolov.aa.fitrack.viewmodels.MainViewModel;
+import dagger.android.AndroidInjection;
+import dagger.android.AndroidInjector;
+import dagger.android.DispatchingAndroidInjector;
+import dagger.android.HasAndroidInjector;
+import dagger.android.support.AndroidSupportInjection;
 
 
 public class MainFragment extends Fragment implements OnMapReadyCallback, MainView {
@@ -47,12 +61,21 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
     private Marker currentPositionMarker;
     private Menu startStopMenu;
 
+    @Inject
+    ViewModelFactory viewModelFactory;
+
     private MainViewModel viewModel;
 
+    @Override
+    public void onAttach(Context context) {
+        AndroidSupportInjection.inject(this);
+        super.onAttach(context);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+
+        viewModel = ViewModelProviders.of(this,viewModelFactory).get(MainViewModel.class);
         FragmentMainBinding binding = DataBindingUtil.inflate(inflater, R.layout.fragment_main, container, false);
         binding.setLifecycleOwner(this);
         View view = binding.getRoot();
@@ -60,8 +83,13 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
 
         Toolbar toolbar = view.findViewById(R.id.toolbar);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_tracking);
         setHasOptionsMenu(true);
+
+        NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
+        DrawerLayout drawerLayout = getActivity().findViewById(R.id.drawer_layout);
+        NavigationUI.setupWithNavController(toolbar, navController, drawerLayout);
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_tracking);
+
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_fragment);
         mapFragment.getMapAsync(this);

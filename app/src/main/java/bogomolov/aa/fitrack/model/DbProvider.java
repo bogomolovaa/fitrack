@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import bogomolov.aa.fitrack.R;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -17,7 +19,9 @@ public class DbProvider {
 
     private static final String DB_PROVIDER = "DbProvider";
 
-    public DbProvider(boolean delete) {
+    @Inject
+    public DbProvider() {
+        boolean delete = false;
         RealmConfiguration config = new RealmConfiguration.Builder()
                 .deleteRealmIfMigrationNeeded()
                 .build();

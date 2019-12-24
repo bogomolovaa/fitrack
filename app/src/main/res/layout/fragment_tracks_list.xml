@@ -29,7 +29,6 @@
             android:layout_height="34dp"
             android:layout_marginEnd="8dp"
             android:entries="@array/track_time_filter"
-            android:onItemSelected="@{(parent,view,pos,id) -> viewModel.onSelectItem(pos)}"
             android:layout_gravity="end"/>
 
 

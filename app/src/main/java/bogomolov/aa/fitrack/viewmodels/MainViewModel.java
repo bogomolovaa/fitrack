@@ -15,6 +15,8 @@ import androidx.lifecycle.ViewModel;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import bogomolov.aa.fitrack.model.DbProvider;
 import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.RamerDouglasPeucker;
@@ -40,13 +42,12 @@ public class MainViewModel extends ViewModel {
 
     private static final int WINDOW_MAX_SIZE = 50;
 
-    public MainViewModel() {
+    @Inject
+    public MainViewModel(DbProvider dbProvider) {
         super();
+        this.dbProvider = dbProvider;
 
-        dbProvider = new DbProvider(false);
         handler = new Handler();
-
-
         handlerThread = new HandlerThread("MainViewModel background");
         handlerThread.start();
         backgroundHandler = new Handler(handlerThread.getLooper());
@@ -96,7 +97,7 @@ public class MainViewModel extends ViewModel {
         updateRunnable = new Runnable() {
             @Override
             public void run() {
-                DbProvider dbProvider = new DbProvider(false);
+                DbProvider dbProvider = new DbProvider();
                 Track track = dbProvider.getLastTrack();
                 if (track != null) track = dbProvider.getRealm().copyFromRealm(track);
                 Point point = dbProvider.getLastPoint();
@@ -111,19 +112,20 @@ public class MainViewModel extends ViewModel {
                 Point updatePoint = point;
                 Track updateTrack = track;
                 handler.post(() -> {
+                    if (updateTrack != null && updateTrack.isOpened()) {
+                        distance.setValue((int) updateTrack.getCurrentDistance() + " m");
+                        time.setValue(updateTrack.getTimeString());
+                        speed.setValue(String.format("%.1f", 3.6 * updateTrack.getCurrentSpeed()) + " km/h");
+                        avgSpeed.setValue(String.format("%.1f", 3.6 * updateTrack.getSpeedForCurrentDistance()) + " km/h");
+                    } else {
+                        distance.setValue("");
+                        time.setValue("");
+                        speed.setValue("");
+                        avgSpeed.setValue("");
+                    }
                     mainView.updateView(updateTrack, updatePoint, rawPoints, smoothedPoints);
                 });
-                if (track != null && track.isOpened()) {
-                    distance.setValue((int) track.getCurrentDistance() + " m");
-                    time.setValue(track.getTimeString());
-                    speed.setValue(String.format("%.1f", 3.6 * track.getCurrentSpeed()) + " km/h");
-                    avgSpeed.setValue(String.format("%.1f", 3.6 * track.getSpeedForCurrentDistance()) + " km/h");
-                } else {
-                    distance.setValue("");
-                    time.setValue("");
-                    speed.setValue("");
-                    avgSpeed.setValue("");
-                }
+
                 backgroundHandler.postDelayed(this, 1000);
                 dbProvider.close();
             }
