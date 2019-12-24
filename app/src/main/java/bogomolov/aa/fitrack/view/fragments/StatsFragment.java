@@ -5,7 +5,9 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
@@ -26,7 +28,6 @@ import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 
 import java.text.DateFormatSymbols;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -34,35 +35,33 @@ import java.util.GregorianCalendar;
 import java.util.List;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.databinding.FragmentStatsBinding;
 import bogomolov.aa.fitrack.model.DateUtils;
 import bogomolov.aa.fitrack.model.Track;
-import bogomolov.aa.fitrack.presenter.StatsPresenter;
 import bogomolov.aa.fitrack.view.StatsView;
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel;
 
 import static bogomolov.aa.fitrack.model.DateUtils.getMonthRange;
 import static bogomolov.aa.fitrack.model.DateUtils.getTodayRange;
 import static bogomolov.aa.fitrack.model.DateUtils.getWeekRange;
 
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class StatsFragment extends Fragment implements StatsView {
     private BarChart chart;
-
-    //@Inject
-    StatsPresenter statsPresenter;
+    private StatsViewModel viewModel;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_stats, container, false);
+
+
+        viewModel = ViewModelProviders.of(this).get(StatsViewModel.class);
+        FragmentStatsBinding binding = DataBindingUtil.inflate(inflater, R.layout.fragment_stats, container, false);
+        binding.setLifecycleOwner(this);
+        View view = binding.getRoot();
+        binding.setViewModel(viewModel);
 
         chart = view.findViewById(R.id.chart);
-
-        statsPresenter = new StatsPresenter(this);
-
 
         Toolbar toolbar = view.findViewById(R.id.toolbar_stats);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
@@ -71,27 +70,27 @@ public class StatsFragment extends Fragment implements StatsView {
         NavigationUI.setupWithNavController(toolbar, navController);
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_stats);
 
-        final Spinner tagSpinner = view.findViewById(R.id.stats_spinner_tag);
+        Spinner tagSpinner = view.findViewById(R.id.stats_spinner_tag);
 
-        final Spinner periodSpinner = view.findViewById(R.id.stats_spinner_period);
+        Spinner periodSpinner = view.findViewById(R.id.stats_spinner_period);
         periodSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, final int i, long l) {
                 switch (i) {
                     case FILTER_TODAY:
-                        statsPresenter.setTimeFilter(getTodayRange(),i);
+                        viewModel.setTimeFilter(getTodayRange(), i,StatsFragment.this);
                         break;
                     case FILTER_WEEK:
-                        statsPresenter.setTimeFilter(getWeekRange(),i);
+                        viewModel.setTimeFilter(getWeekRange(), i,StatsFragment.this);
                         break;
                     case FILTER_MONTH:
-                        statsPresenter.setTimeFilter(getMonthRange(),i);
+                        viewModel.setTimeFilter(getMonthRange(), i,StatsFragment.this);
                         break;
                     case FILTER_SELECT:
                         DateUtils.selectDatesRange(getChildFragmentManager(), getContext(), new DateUtils.DatesSelector() {
                             @Override
                             public void onSelect(Date[] dates) {
-                                statsPresenter.setTimeFilter(dates,i);
+                                viewModel.setTimeFilter(dates, i,StatsFragment.this);
                             }
                         });
                         break;
@@ -105,12 +104,12 @@ public class StatsFragment extends Fragment implements StatsView {
         });
 
         ArrayAdapter<String> tagsArrayAdapter = new ArrayAdapter<String>(
-                getContext(), android.R.layout.simple_spinner_item, statsPresenter.getTagNames());
+                getContext(), android.R.layout.simple_spinner_item, viewModel.getTagNames());
         tagSpinner.setAdapter(tagsArrayAdapter);
         tagSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                statsPresenter.setTagFilter(tagSpinner.getSelectedItem().toString());
+                viewModel.setTagFilter(tagSpinner.getSelectedItem().toString(), StatsFragment.this);
             }
 
             @Override
@@ -126,7 +125,7 @@ public class StatsFragment extends Fragment implements StatsView {
         paramSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                statsPresenter.setParam(i);
+                viewModel.setParam(i,StatsFragment.this);
             }
 
             @Override
@@ -148,7 +147,7 @@ public class StatsFragment extends Fragment implements StatsView {
         timeStepSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                statsPresenter.setTimeStep(i);
+                viewModel.setTimeStep(i, StatsFragment.this);
             }
 
             @Override
@@ -161,24 +160,9 @@ public class StatsFragment extends Fragment implements StatsView {
     }
 
     @Override
-    public void updateView(Date[] datesRange, List<Track> tracks, int selectedParam, int selectedTimeStep, int selectedTimeFilter) {
-        if(getView()==null) return;
-        String startDateString = new SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[0]);
-        String endDateString = new SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[1]);
-        TextView periodTextView = getView().findViewById(R.id.stats_text_selected_period);
-        periodTextView.setText(startDateString + " - " + endDateString);
-
-        TextView textDistance = getView().findViewById(R.id.stats_text_distance);
-        TextView textTime = getView().findViewById(R.id.stats_text_time);
-        TextView textSpeed = getView().findViewById(R.id.stats_text_avg_speed);
-
-        Track sumTrack = Track.sumTracks(tracks);
-
-        textDistance.setText((int) sumTrack.getDistance() + " m");
-        textTime.setText(sumTrack.getTimeString());
-        textSpeed.setText(String.format("%.1f", 3.6 * sumTrack.getSpeed()) + " km/h");
-
-        updateChart(datesRange, tracks, selectedParam, selectedTimeStep, selectedTimeFilter);
+    public void onStart() {
+        super.onStart();
+        viewModel.updateView(this);
     }
 
     private double getParamValue(Track track, int param) {
@@ -194,7 +178,8 @@ public class StatsFragment extends Fragment implements StatsView {
         return 0;
     }
 
-    private void updateChart(Date[] datesRange, List<Track> tracks, int selectedParam, int selectedTimeStep, int selectedTimeFilter) {
+    @Override
+    public void updateView(Date[] datesRange, List<Track> tracks, int selectedParam, int selectedTimeStep, int selectedTimeFilter) {
         List<Track> sumTracks = new ArrayList<>();
         List<Date> dates = new ArrayList<>();
         Calendar calendar = new GregorianCalendar();
@@ -250,12 +235,6 @@ public class StatsFragment extends Fragment implements StatsView {
         chart.setFitBars(true);
         chart.invalidate();
 
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        statsPresenter.onDestroy();
     }
 
 

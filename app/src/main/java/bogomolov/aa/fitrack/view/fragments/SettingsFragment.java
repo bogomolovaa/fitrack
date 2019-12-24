@@ -21,17 +21,12 @@ import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.model.TrackerService;
 
 
-/**
- * A simple {@link Fragment} subclass.
- */
-public class SettingsFragment extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener{
+public class SettingsFragment extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     public static final String KEY_TRACKING = "tracking";
     private SettingsFragmentView settingsFragment;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
         Toolbar toolbar = view.findViewById(R.id.toolbar_settings);
@@ -76,7 +71,7 @@ public class SettingsFragment extends Fragment implements SharedPreferences.OnSh
         }
     }
 
-    public static class SettingsFragmentView extends PreferenceFragmentCompat{
+    public static class SettingsFragmentView extends PreferenceFragmentCompat {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);

@@ -1,4 +1,6 @@
-package bogomolov.aa.fitrack.presenter;
+package bogomolov.aa.fitrack.viewmodels;
+
+import androidx.lifecycle.ViewModel;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -10,16 +12,19 @@ import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
 import bogomolov.aa.fitrack.view.TracksListView;
 
-public class TracksListPresenter {
-    private TracksListView tracksListView;
+public class TracksListViewModel extends ViewModel {
     private DbProvider dbProvider;
 
-    public TracksListPresenter(TracksListView tracksListView) {
-        this.tracksListView = tracksListView;
+    public TracksListViewModel() {
         dbProvider = new DbProvider(false);
     }
 
-    public void onTimeFilterSelect(Date[] dates){
+    @Override
+    protected void onCleared(){
+        dbProvider.close();
+    }
+
+    public void onTimeFilterSelect(Date[] dates, TracksListView tracksListView){
         List<Track> tracks = dbProvider.getFinishedTracks(dates);
         tracksListView.updateTracksList(tracks);
     }
@@ -38,8 +43,6 @@ public class TracksListPresenter {
         dbProvider.deleteTracks(new ArrayList<>(selectedIds));
     }
 
-    public void onDestroy(){
-        dbProvider.close();
-    }
+
 
 }

@@ -5,13 +5,14 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -26,41 +27,29 @@ import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.dagger.AppComponent;
-import bogomolov.aa.fitrack.dagger.AppModule;
-import bogomolov.aa.fitrack.dagger.DaggerAppComponent;
-import bogomolov.aa.fitrack.model.DateUtils;
+import bogomolov.aa.fitrack.databinding.FragmentTrackViewBinding;
 import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
-import bogomolov.aa.fitrack.presenter.TrackViewPresenter;
+import bogomolov.aa.fitrack.view.TagResultListener;
 import bogomolov.aa.fitrack.view.TagSelectionDialog;
-import bogomolov.aa.fitrack.view.TrackViewView;
+import bogomolov.aa.fitrack.viewmodels.TrackViewModel;
 
 
-/**
- * A simple {@link Fragment} subclass.
- */
-public class TrackViewFragment extends Fragment implements OnMapReadyCallback, TrackViewView {
-    private TextView textTag;
-
-    //@Inject
-    TrackViewPresenter trackViewPresenter;
-
+public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
+    private TrackViewModel viewModel;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_track_view, container, false);
-
-        trackViewPresenter = new TrackViewPresenter(this);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        viewModel = ViewModelProviders.of(this).get(TrackViewModel.class);
+        FragmentTrackViewBinding viewBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_track_view, container, false);
+        viewBinding.setViewModel(viewModel);
+        viewBinding.setLifecycleOwner(this);
+        View view = viewBinding.getRoot();
 
         long trackId = (Long) getArguments().get("trackId");
-        Track track = trackViewPresenter.setTrack(trackId);
+        Track track = viewModel.setTrack(trackId);
 
 
         Toolbar toolbar = view.findViewById(R.id.toolbar_track_view);
@@ -70,24 +59,16 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback, T
         NavigationUI.setupWithNavController(toolbar, navController);
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(track.getName());
 
-        TextView textDistance = view.findViewById(R.id.track_text_distance);
-        TextView textTime = view.findViewById(R.id.track_text_time);
-        TextView textSpeed = view.findViewById(R.id.track_text_avg_speed);
-        textTag = view.findViewById(R.id.track_text_tag);
-
-        textTag.setOnClickListener(new View.OnClickListener() {
+        view.findViewById(R.id.track_text_tag).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 TagSelectionDialog dialog = new TagSelectionDialog();
-                dialog.setTagResultListener(trackViewPresenter);
+                dialog.setTagResultListener(viewModel);
                 dialog.show(getChildFragmentManager(), "dialog");
             }
         });
 
-        textDistance.setText((int) track.getDistance() + " m");
-        textTime.setText(track.getTimeString());
-        textSpeed.setText(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
-        textTag.setText(track.getTag() != null ? track.getTag() : getResources().getString(R.string.no_tag));
+
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_track_view);
         mapFragment.getMapAsync(this);
@@ -96,21 +77,8 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback, T
     }
 
     @Override
-    public void updateTag(Tag tag) {
-        textTag.setText(tag.getName());
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        trackViewPresenter.onDestroy();
-    }
-
-
-
-    @Override
     public void onMapReady(final GoogleMap googleMap) {
-        List<Point> smoothedPoints = trackViewPresenter.getTrackPoints();
+        List<Point> smoothedPoints = viewModel.getTrackPoints();
         if (smoothedPoints.size() > 0) {
             double minLat = 1000;
             double maxLat = 0;

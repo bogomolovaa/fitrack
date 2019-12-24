@@ -1,6 +1,7 @@
 package bogomolov.aa.fitrack.view.fragments;
 
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -27,49 +28,33 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.material.navigation.NavigationView;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.databinding.FragmentMainBinding;
 import bogomolov.aa.fitrack.model.Point;
 import bogomolov.aa.fitrack.model.Track;
-import bogomolov.aa.fitrack.presenter.MainPresenter;
 import bogomolov.aa.fitrack.view.MainView;
 import bogomolov.aa.fitrack.viewmodels.MainViewModel;
 
-/**
- * A simple {@link Fragment} subclass.
- */
-public class MainFragment extends Fragment implements OnMapReadyCallback, MainView {
-    private TextView textDistance;
-    private TextView textTime;
-    private TextView textSpeed;
-    private TextView textAvgSpeed;
 
+public class MainFragment extends Fragment implements OnMapReadyCallback, MainView {
     private GoogleMap googleMap;
     private Polyline trackRawPolyline;
     private Polyline trackSmoothedPolyline;
     private Marker currentPositionMarker;
     private Menu startStopMenu;
 
-    //@Inject
-    MainPresenter mainPresenter;
-
     private MainViewModel viewModel;
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         FragmentMainBinding binding = DataBindingUtil.inflate(inflater, R.layout.fragment_main, container, false);
+        binding.setLifecycleOwner(this);
         View view = binding.getRoot();
         binding.setViewModel(viewModel);
 
@@ -78,17 +63,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_tracking);
         setHasOptionsMenu(true);
 
-
-        textDistance = view.findViewById(R.id.text_distance);
-        textTime = view.findViewById(R.id.text_time);
-        textSpeed = view.findViewById(R.id.text_speed);
-        textAvgSpeed = view.findViewById(R.id.text_avg_speed);
-
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_fragment);
         mapFragment.getMapAsync(this);
-
-        mainPresenter = new MainPresenter(this);
-
 
         return view;
     }
@@ -105,8 +81,12 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.start_stop, menu);
         startStopMenu = menu;
-        mainPresenter.onStartStopButtonsCreated();
-        super.onCreateOptionsMenu(menu,inflater);
+        viewModel.onStartStopButtonsCreated(this);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    public Context getViewContext() {
+        return getContext();
     }
 
 
@@ -114,10 +94,10 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_track_start:
-                mainPresenter.startTrack();
+                viewModel.startTrack(this);
                 break;
             case R.id.menu_track_stop:
-                mainPresenter.stopTrack();
+                viewModel.stopTrack(this);
                 break;
             default:
                 break;
@@ -167,21 +147,6 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
                 }
             }
         }
-
-
-        if (track != null && track.isOpened()) {
-            textDistance.setText((int) track.getCurrentDistance() + " m");
-            textTime.setText(track.getTimeString());
-            textSpeed.setText(String.format("%.1f", 3.6 * track.getCurrentSpeed()) + " km/h");
-            textAvgSpeed.setText(String.format("%.1f", 3.6 * track.getSpeedForCurrentDistance()) + " km/h");
-        } else {
-            /*
-            textDistance.setText("");
-            textTime.setText("");
-            textSpeed.setText("");
-            textAvgSpeed.setText("");
-             */
-        }
     }
 
     @Override
@@ -192,13 +157,13 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
     @Override
     public void onStart() {
         super.onStart();
-        mainPresenter.startUpdating();
+        viewModel.startUpdating(this);
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        mainPresenter.onDestroy();
+    public void onStop() {
+        super.onStop();
+        viewModel.stopUpdating();
     }
 
 }

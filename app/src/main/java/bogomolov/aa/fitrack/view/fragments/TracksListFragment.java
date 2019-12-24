@@ -5,7 +5,9 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
@@ -26,26 +28,23 @@ import java.util.Date;
 import java.util.List;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.databinding.FragmentTracksListBinding;
 import bogomolov.aa.fitrack.model.DateUtils;
 import bogomolov.aa.fitrack.model.Tag;
 import bogomolov.aa.fitrack.model.Track;
-import bogomolov.aa.fitrack.presenter.TracksListPresenter;
 import bogomolov.aa.fitrack.view.TagResultListener;
 import bogomolov.aa.fitrack.view.TagSelectionDialog;
 import bogomolov.aa.fitrack.view.TracksListView;
 import bogomolov.aa.fitrack.view.TracksRecyclerAdapter;
+import bogomolov.aa.fitrack.viewmodels.TracksListViewModel;
 
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class TracksListFragment extends Fragment implements TagResultListener, TracksListView {
     private TracksRecyclerAdapter adapter;
     private ActionMode actionMode;
     private Toolbar toolbar;
 
-    //@Inject
-    TracksListPresenter tracksListPresenter;
+    private TracksListViewModel viewModel;
 
     private static final int FILTER_TODAY = 0;
     private static final int FILTER_WEEK = 1;
@@ -56,8 +55,11 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_tracks_list, container, false);
+        viewModel = ViewModelProviders.of(this).get(TracksListViewModel.class);
+        FragmentTracksListBinding fragmentTracksListBinding = DataBindingUtil.inflate(inflater,R.layout.fragment_tracks_list,container,false);
+        fragmentTracksListBinding.setViewModel(viewModel);
+        fragmentTracksListBinding.setLifecycleOwner(this);
+        View view = fragmentTracksListBinding.getRoot();
 
         toolbar = view.findViewById(R.id.toolbar_tracks_list);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
@@ -74,24 +76,24 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 switch (i) {
                     case FILTER_TODAY:
-                        tracksListPresenter.onTimeFilterSelect(DateUtils.getTodayRange());
+                        viewModel.onTimeFilterSelect(DateUtils.getTodayRange(),TracksListFragment.this);
                         break;
                     case FILTER_WEEK:
-                        tracksListPresenter.onTimeFilterSelect(DateUtils.getWeekRange());
+                        viewModel.onTimeFilterSelect(DateUtils.getWeekRange(),TracksListFragment.this);
                         break;
                     case FILTER_MONTH:
-                        tracksListPresenter.onTimeFilterSelect(DateUtils.getMonthRange());
+                        viewModel.onTimeFilterSelect(DateUtils.getMonthRange(),TracksListFragment.this);
                         break;
                     case FILTER_SELECT:
                         DateUtils.selectDatesRange(getChildFragmentManager(),getContext(), new DateUtils.DatesSelector() {
                             @Override
                             public void onSelect(Date[] dates) {
-                                tracksListPresenter.onTimeFilterSelect(dates);
+                                viewModel.onTimeFilterSelect(dates,TracksListFragment.this);
                             }
                         });
                         break;
                     default:
-                        tracksListPresenter.onTimeFilterSelect(DateUtils.getTodayRange());
+                        viewModel.onTimeFilterSelect(DateUtils.getTodayRange(),TracksListFragment.this);
                 }
             }
 
@@ -101,16 +103,13 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
             }
         });
 
-        //AppComponent appComponent = DaggerAppComponent.builder().appModule(new AppModule(this)).build();
-        //appComponent.injectsTracksListActivity(this);
 
-        tracksListPresenter = new TracksListPresenter(this);
 
         RecyclerView recyclerView = view.findViewById(R.id.track_recycler);
         adapter = new TracksRecyclerAdapter(this,getContext());
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        tracksListPresenter.onTimeFilterSelect(DateUtils.getTodayRange());
+        viewModel.onTimeFilterSelect(DateUtils.getTodayRange(), this);
 
         return view;
     }
@@ -146,7 +145,7 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
                 case R.id.menu_track_delete:
                     actionMode.finish();
                     adapter.deleteTracks();
-                    tracksListPresenter.deleteTracks(adapter.getSelectedIds());
+                    viewModel.deleteTracks(adapter.getSelectedIds());
                     break;
                 case R.id.menu_track_tag:
                     TagSelectionDialog dialog = new TagSelectionDialog();
@@ -166,19 +165,13 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
 
     @Override
     public void onTagSelectionResult(Tag tag) {
-        tracksListPresenter.setTag(tag, adapter.getSelectedIds());
+        viewModel.setTag(tag, adapter.getSelectedIds());
         actionMode.finish();
     }
 
     @Override
     public void updateTracksList(List<Track> tracks) {
         adapter.setTracks(tracks);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        tracksListPresenter.onDestroy();
     }
 
 }

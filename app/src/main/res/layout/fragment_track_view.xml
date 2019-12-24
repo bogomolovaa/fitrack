@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable name="viewModel" type="bogomolov.aa.fitrack.viewmodels.TrackViewModel"/>
+    </data>
+
+<androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".view.fragments.TrackViewFragment">
 
     <androidx.appcompat.widget.Toolbar
@@ -24,7 +29,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
-        android:text="Set tag >"
+        android:text='@{viewModel.selectedTag ?? @string/set_tag}'
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/track_linear_layout" />
 
@@ -47,21 +52,21 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="distance" />
+            android:text="@{viewModel.distance}" />
 
         <TextView
             android:id="@+id/track_text_time"
             android:layout_width="0dip"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="time" />
+            android:text="@{viewModel.time}" />
 
         <TextView
             android:id="@+id/track_text_avg_speed"
             android:layout_width="0dip"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="speed" />
+            android:text="@{viewModel.avgSpeed}" />
 
     </LinearLayout>
 
@@ -79,3 +84,4 @@
         app:layout_constraintTop_toBottomOf="@+id/track_text_tag" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

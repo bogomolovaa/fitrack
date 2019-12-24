@@ -1,5 +1,7 @@
 package bogomolov.aa.fitrack.view;
 
+import android.content.Context;
+
 import java.util.List;
 
 import bogomolov.aa.fitrack.model.Point;
@@ -11,4 +13,5 @@ public interface MainView {
 
     void updateView(Track track, Point point, List<Point> rawTrackPoints, List<Point> smoothedPoints);
 
+    Context getViewContext();
 }
