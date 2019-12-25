@@ -163,7 +163,7 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
                 case R.id.menu_track_tag:
                     TagSelectionDialog dialog = new TagSelectionDialog();
                     dialog.setTagResultListener(TracksListFragment.this);
-                    dialog.show(getChildFragmentManager(), "dialog");
+                    dialog.show(getChildFragmentManager(), "TagSelectionDialog");
                     break;
             }
             return true;

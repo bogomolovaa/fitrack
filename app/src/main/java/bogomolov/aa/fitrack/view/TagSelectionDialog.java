@@ -1,8 +1,8 @@
 package bogomolov.aa.fitrack.view;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -11,49 +11,56 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.ListView;
 
-import androidx.appcompat.widget.AppCompatImageButton;
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
+import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModelProviders;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.model.DbProvider;
+import bogomolov.aa.fitrack.dagger.ViewModelFactory;
+import bogomolov.aa.fitrack.databinding.FragmentTagSelectionBinding;
 import bogomolov.aa.fitrack.model.Tag;
+import bogomolov.aa.fitrack.viewmodels.TagSelectionViewModel;
+import dagger.android.support.AndroidSupportInjection;
 
 public class TagSelectionDialog extends DialogFragment {
     private ActionMode actionMode;
     private Toolbar toolbar;
     private ListView listView;
-    private DbProvider dbProvider;
+
     private Tag selectedTag;
     private TagResultListener tagResultListener;
 
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_tag_selection, null);
-        dbProvider = new DbProvider();
-        listView = view.findViewById(R.id.tag_list_view);
-        List<Tag> tags = new ArrayList<>(dbProvider.getTags());
-        ArrayAdapter<Tag> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, tags);
-        listView.setAdapter(adapter);
-        EditText tagNameEditText = view.findViewById(R.id.tag_name_edit_text);
-        AppCompatImageButton addButton = view.findViewById(R.id.tag_add_button);
-        addButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String tagName = tagNameEditText.getText().toString();
-                Tag tag = new Tag(tagName);
-                tag = dbProvider.addTag(tag);
-                tags.add(tag);
-                adapter.notifyDataSetChanged();
-            }
-        });
-        toolbar = view.findViewById(R.id.tag_selection_toolbar);
+    private TagSelectionViewModel viewModel;
 
+    @Inject
+    ViewModelFactory viewModelFactory;
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        AndroidSupportInjection.inject(this);
+        super.onAttach(context);
+    }
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(TagSelectionViewModel.class);
+        FragmentTagSelectionBinding viewBinding = DataBindingUtil.inflate(inflater,R.layout.fragment_tag_selection,container,false);
+        viewBinding.setViewModel(viewModel);
+        viewBinding.setLifecycleOwner(this);
+        View view = viewBinding.getRoot();
+
+        listView = view.findViewById(R.id.tag_list_view);
+        ArrayAdapter<Tag> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, viewModel.getTags());
+        listView.setAdapter(adapter);
+        viewModel.tagsLiveData.observe(this, (tags) -> adapter.notifyDataSetChanged());
+
+        toolbar = view.findViewById(R.id.tag_selection_toolbar);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -88,11 +95,6 @@ public class TagSelectionDialog extends DialogFragment {
         this.tagResultListener = tagResultListener;
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        dbProvider.close();
-    }
 
     private ActionMode.Callback callback = new ActionMode.Callback() {
 
@@ -107,7 +109,7 @@ public class TagSelectionDialog extends DialogFragment {
 
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             Tag tag = (Tag) listView.getSelectedItem();
-            dbProvider.deleteTag(tag);
+            viewModel.deleteTag(tag);
             return true;
         }
 

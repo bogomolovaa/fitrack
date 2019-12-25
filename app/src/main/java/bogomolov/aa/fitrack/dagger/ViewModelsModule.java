@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import bogomolov.aa.fitrack.viewmodels.MainViewModel;
 import bogomolov.aa.fitrack.viewmodels.StatsViewModel;
+import bogomolov.aa.fitrack.viewmodels.TagSelectionViewModel;
 import bogomolov.aa.fitrack.viewmodels.TrackViewModel;
 import bogomolov.aa.fitrack.viewmodels.TracksListViewModel;
 import dagger.Binds;
@@ -13,6 +14,11 @@ import dagger.multibindings.IntoMap;
 
 @Module
 public abstract class ViewModelsModule {
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(TagSelectionViewModel.class)
+    abstract ViewModel bindTagSelectionViewModel(TagSelectionViewModel tagSelectionViewModel);
 
     @Binds
     @IntoMap
