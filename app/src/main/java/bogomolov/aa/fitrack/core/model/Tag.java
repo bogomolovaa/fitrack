@@ -1,10 +1,6 @@
-package bogomolov.aa.fitrack.model;
+package bogomolov.aa.fitrack.core.model;
 
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
-
-public class Tag extends RealmObject {
-    @PrimaryKey
+public class Tag{
     private long id;
 
     private String name;

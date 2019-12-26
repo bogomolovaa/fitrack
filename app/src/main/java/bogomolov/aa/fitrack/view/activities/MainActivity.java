@@ -26,9 +26,9 @@ import java.util.ArrayList;
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.model.TrackerService;
-import bogomolov.aa.fitrack.model.TrackingScheduler;
-import bogomolov.aa.fitrack.model.Workarounds;
+import bogomolov.aa.fitrack.android.TrackerService;
+import bogomolov.aa.fitrack.android.TrackingScheduler;
+import bogomolov.aa.fitrack.android.Workarounds;
 import bogomolov.aa.fitrack.view.fragments.SettingsFragment;
 import dagger.android.AndroidInjection;
 import dagger.android.AndroidInjector;

@@ -17,11 +17,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import javax.inject.Inject;
-
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.dagger.ViewModelFactory;
-import bogomolov.aa.fitrack.model.TrackerService;
+import bogomolov.aa.fitrack.android.TrackerService;
 
 
 public class SettingsFragment extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {

@@ -31,7 +31,7 @@
             android:value="AIzaSyAFSVnjH4nw259Pwmsu-87S9p6tzp77p90" />
 
         <service
-            android:name=".model.TrackerService"
+            android:name=".android.TrackerService"
             android:exported="false" />
 
         <activity android:name=".view.activities.MainActivity">
@@ -43,8 +43,8 @@
         </activity>
 
 
-        <receiver android:name=".model.StartupReceiver"/>
-        <receiver android:name=".model.BootReceiver" android:enabled="true">
+        <receiver android:name=".android.StartupReceiver"/>
+        <receiver android:name=".android.BootReceiver" android:enabled="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />

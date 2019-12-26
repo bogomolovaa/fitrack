@@ -1,4 +1,4 @@
-package bogomolov.aa.fitrack.model;
+package bogomolov.aa.fitrack.android;
 
 import android.content.ComponentName;
 import android.content.Context;

@@ -1,9 +1,9 @@
-package bogomolov.aa.fitrack.model;
-
-import android.util.Log;
+package bogomolov.aa.fitrack.core;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import bogomolov.aa.fitrack.core.model.Point;
 
 public class RamerDouglasPeucker {
 

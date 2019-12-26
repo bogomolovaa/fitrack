@@ -8,17 +8,17 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import bogomolov.aa.fitrack.model.DbProvider;
-import bogomolov.aa.fitrack.model.Tag;
+import bogomolov.aa.fitrack.repository.RepositoryImpl;
+import bogomolov.aa.fitrack.core.model.Tag;
 
 public class TagSelectionViewModel extends ViewModel {
     public MutableLiveData<String> newName = new MutableLiveData<>();
     public MutableLiveData<List<Tag>> tagsLiveData = new MutableLiveData<>();
-    private DbProvider dbProvider;
+    private RepositoryImpl dbProvider;
     private List<Tag> tags;
 
     @Inject
-    public TagSelectionViewModel(DbProvider dbProvider) {
+    public TagSelectionViewModel(RepositoryImpl dbProvider) {
         this.dbProvider = dbProvider;
         tags = new ArrayList<>(dbProvider.getTags());
     }
@@ -32,7 +32,7 @@ public class TagSelectionViewModel extends ViewModel {
     public void onNewTag(){
         String tagName = newName.getValue();
         Tag tag = new Tag(tagName);
-        tag = dbProvider.addTag(tag);
+        dbProvider.addTag(tag);
         tags.add(tag);
         tagsLiveData.setValue(tags);
     }

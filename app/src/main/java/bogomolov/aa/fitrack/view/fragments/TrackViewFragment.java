@@ -16,7 +16,6 @@ import androidx.navigation.ui.NavigationUI;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -33,11 +32,8 @@ import javax.inject.Inject;
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentTrackViewBinding;
-import bogomolov.aa.fitrack.model.Point;
-import bogomolov.aa.fitrack.model.Tag;
-import bogomolov.aa.fitrack.model.Track;
-import bogomolov.aa.fitrack.view.TagResultListener;
-import bogomolov.aa.fitrack.view.TagSelectionDialog;
+import bogomolov.aa.fitrack.core.model.Point;
+import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.viewmodels.TrackViewModel;
 import dagger.android.support.AndroidSupportInjection;
 

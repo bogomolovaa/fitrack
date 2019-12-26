@@ -9,16 +9,16 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import bogomolov.aa.fitrack.model.DbProvider;
-import bogomolov.aa.fitrack.model.Tag;
-import bogomolov.aa.fitrack.model.Track;
+import bogomolov.aa.fitrack.repository.RepositoryImpl;
+import bogomolov.aa.fitrack.core.model.Tag;
+import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.view.TracksListView;
 
 public class TracksListViewModel extends ViewModel {
-    private DbProvider dbProvider;
+    private RepositoryImpl dbProvider;
 
     @Inject
-    public TracksListViewModel(DbProvider dbProvider) {
+    public TracksListViewModel(RepositoryImpl dbProvider) {
         this.dbProvider = dbProvider;
     }
 
@@ -36,9 +36,10 @@ public class TracksListViewModel extends ViewModel {
         if (tag != null) {
             List<Long> ids = new ArrayList<>(selectedIds);
             List<Track> tracks = dbProvider.getTracks(ids);
-            dbProvider.getRealm().beginTransaction();
-            for (Track track : tracks) track.setTag(tag.getName());
-            dbProvider.getRealm().commitTransaction();
+            for (Track track : tracks){
+                track.setTag(tag.getName());
+                dbProvider.save(track);
+            }
         }
     }
 

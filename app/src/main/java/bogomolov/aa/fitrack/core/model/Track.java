@@ -1,17 +1,13 @@
-package bogomolov.aa.fitrack.model;
+package bogomolov.aa.fitrack.core.model;
 
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import io.realm.RealmObject;
-import io.realm.annotations.Ignore;
 
-public class Track extends RealmObject {
+public class Track {
     public static final int EPSILON = 25;
-
-
     private long id;
     private Point startPoint;
     private Point endPoint;
@@ -23,9 +19,7 @@ public class Track extends RealmObject {
 
     private double distance;
 
-    @Ignore
     private double currentSpeed;
-    @Ignore
     private double currentDistance;
 
     public String getTimeString() {

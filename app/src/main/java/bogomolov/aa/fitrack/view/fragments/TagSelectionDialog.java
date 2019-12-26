@@ -1,4 +1,4 @@
-package bogomolov.aa.fitrack.view;
+package bogomolov.aa.fitrack.view.fragments;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -24,7 +24,8 @@ import javax.inject.Inject;
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentTagSelectionBinding;
-import bogomolov.aa.fitrack.model.Tag;
+import bogomolov.aa.fitrack.core.model.Tag;
+import bogomolov.aa.fitrack.view.TagResultListener;
 import bogomolov.aa.fitrack.viewmodels.TagSelectionViewModel;
 import dagger.android.support.AndroidSupportInjection;
 

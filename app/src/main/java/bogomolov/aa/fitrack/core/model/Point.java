@@ -1,13 +1,11 @@
-package bogomolov.aa.fitrack.model;
+package bogomolov.aa.fitrack.core.model;
 
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.List;
 
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
 
-public class Point extends RealmObject implements Comparable<Point>{
+public class Point implements Comparable<Point>{
     public static final int SMOOTHED = 1;
 
     @Override
@@ -19,7 +17,6 @@ public class Point extends RealmObject implements Comparable<Point>{
 
     public static final int RAW = 0;
 
-    @PrimaryKey
     private long id;
     private long time;
     private double lat;
@@ -88,6 +85,14 @@ public class Point extends RealmObject implements Comparable<Point>{
 
     public double getLng() {
         return lng;
+    }
+
+    public void setLat(double lat) {
+        this.lat = lat;
+    }
+
+    public void setLng(double lng) {
+        this.lng = lng;
     }
 
     public static LatLng[] toPolylineCoordinates(List<Point> points) {

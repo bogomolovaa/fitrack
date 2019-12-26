@@ -1,6 +1,6 @@
 package bogomolov.aa.fitrack.view;
 
-import bogomolov.aa.fitrack.model.Tag;
+import bogomolov.aa.fitrack.core.model.Tag;
 
 public interface TagResultListener {
 

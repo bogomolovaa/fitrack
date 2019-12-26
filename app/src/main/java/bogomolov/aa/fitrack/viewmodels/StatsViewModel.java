@@ -9,12 +9,12 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import bogomolov.aa.fitrack.model.DbProvider;
-import bogomolov.aa.fitrack.model.Tag;
-import bogomolov.aa.fitrack.model.Track;
+import bogomolov.aa.fitrack.repository.RepositoryImpl;
+import bogomolov.aa.fitrack.core.model.Tag;
+import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.view.StatsView;
 
-import static bogomolov.aa.fitrack.model.DateUtils.getTodayRange;
+import static bogomolov.aa.fitrack.core.DateUtils.getTodayRange;
 import static bogomolov.aa.fitrack.view.StatsView.FILTER_TODAY;
 import static bogomolov.aa.fitrack.view.StatsView.NO_TAG;
 import static bogomolov.aa.fitrack.view.StatsView.PARAM_DISTANCE;
@@ -27,7 +27,7 @@ public class StatsViewModel extends ViewModel {
     public MutableLiveData<String> speed = new MutableLiveData<>();
 
     private List<Track> tracks;
-    private DbProvider dbProvider;
+    private RepositoryImpl dbProvider;
     private Date[] datesRange;
     private String selectedTag = NO_TAG;
     private int selectedTimeFilter = FILTER_TODAY;
@@ -36,7 +36,7 @@ public class StatsViewModel extends ViewModel {
 
 
     @Inject
-    public StatsViewModel(DbProvider dbProvider) {
+    public StatsViewModel(RepositoryImpl dbProvider) {
         this.dbProvider = dbProvider;
 
         datesRange = getTodayRange();
@@ -44,7 +44,6 @@ public class StatsViewModel extends ViewModel {
         selectedTimeStep = TIME_STEP_DAY;
 
         loadTracks();
-        //updateView();
     }
 
     @Override

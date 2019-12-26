@@ -2,7 +2,7 @@ package bogomolov.aa.fitrack.view;
 
 import java.util.List;
 
-import bogomolov.aa.fitrack.model.Track;
+import bogomolov.aa.fitrack.core.model.Track;
 
 public interface TracksListView {
 

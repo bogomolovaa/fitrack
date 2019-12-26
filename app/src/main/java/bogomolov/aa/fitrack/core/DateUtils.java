@@ -1,4 +1,4 @@
-package bogomolov.aa.fitrack.model;
+package bogomolov.aa.fitrack.core;
 
 import android.app.DatePickerDialog;
 import android.app.Dialog;

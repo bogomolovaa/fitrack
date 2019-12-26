@@ -1,14 +1,8 @@
 package bogomolov.aa.fitrack.viewmodels;
 
-import android.app.Activity;
-import android.app.Application;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.view.View;
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
@@ -17,11 +11,11 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import bogomolov.aa.fitrack.model.DbProvider;
-import bogomolov.aa.fitrack.model.Point;
-import bogomolov.aa.fitrack.model.RamerDouglasPeucker;
-import bogomolov.aa.fitrack.model.Track;
-import bogomolov.aa.fitrack.model.TrackerService;
+import bogomolov.aa.fitrack.repository.RepositoryImpl;
+import bogomolov.aa.fitrack.core.model.Point;
+import bogomolov.aa.fitrack.core.RamerDouglasPeucker;
+import bogomolov.aa.fitrack.core.model.Track;
+import bogomolov.aa.fitrack.android.TrackerService;
 import bogomolov.aa.fitrack.view.MainView;
 
 public class MainViewModel extends ViewModel {
@@ -30,7 +24,7 @@ public class MainViewModel extends ViewModel {
     public MutableLiveData<String> avgSpeed = new MutableLiveData<>();
     public MutableLiveData<String> speed = new MutableLiveData<>();
 
-    private DbProvider dbProvider;
+    private RepositoryImpl dbProvider;
     private Handler handler;
     private Handler backgroundHandler;
     private HandlerThread handlerThread;
@@ -43,7 +37,7 @@ public class MainViewModel extends ViewModel {
     private static final int WINDOW_MAX_SIZE = 50;
 
     @Inject
-    public MainViewModel(DbProvider dbProvider) {
+    public MainViewModel(RepositoryImpl dbProvider) {
         super();
         this.dbProvider = dbProvider;
 
@@ -97,16 +91,14 @@ public class MainViewModel extends ViewModel {
         updateRunnable = new Runnable() {
             @Override
             public void run() {
-                DbProvider dbProvider = new DbProvider();
+                RepositoryImpl dbProvider = new RepositoryImpl();
                 Track track = dbProvider.getLastTrack();
-                if (track != null) track = dbProvider.getRealm().copyFromRealm(track);
                 Point point = dbProvider.getLastPoint();
-                if (point != null) point = dbProvider.getRealm().copyFromRealm(point);
                 List<Point> rawPoints = new ArrayList<>();
                 List<Point> smoothedPoints = new ArrayList<>();
 
                 if (track != null && track.isOpened()) {
-                    rawPoints.addAll(dbProvider.getRealm().copyFromRealm(dbProvider.getTrackPoints(track, Point.RAW)));
+                    rawPoints.addAll(dbProvider.getTrackPoints(track, Point.RAW));
                     smoothedPoints.addAll(getSmoothedPoints(track, rawPoints));
                 }
                 Point updatePoint = point;

@@ -1,9 +1,7 @@
 package bogomolov.aa.fitrack.viewmodels;
 
-import android.app.Application;
 import android.content.Context;
 
-import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
@@ -12,10 +10,10 @@ import java.util.List;
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.model.DbProvider;
-import bogomolov.aa.fitrack.model.Point;
-import bogomolov.aa.fitrack.model.Tag;
-import bogomolov.aa.fitrack.model.Track;
+import bogomolov.aa.fitrack.repository.RepositoryImpl;
+import bogomolov.aa.fitrack.core.model.Point;
+import bogomolov.aa.fitrack.core.model.Tag;
+import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.view.TagResultListener;
 
 
@@ -24,11 +22,11 @@ public class TrackViewModel extends ViewModel implements TagResultListener {
     public MutableLiveData<String> time = new MutableLiveData<>();
     public MutableLiveData<String> avgSpeed = new MutableLiveData<>();
     public MutableLiveData<String> selectedTag = new MutableLiveData<>();
-    private DbProvider dbProvider;
+    private RepositoryImpl dbProvider;
     private Track track;
 
     @Inject
-    public TrackViewModel(DbProvider dbProvider){
+    public TrackViewModel(RepositoryImpl dbProvider){
         this.dbProvider = dbProvider;
     }
 
@@ -53,9 +51,8 @@ public class TrackViewModel extends ViewModel implements TagResultListener {
     @Override
     public void onTagSelectionResult(Tag tag) {
         if (tag != null) {
-            dbProvider.getRealm().beginTransaction();
             track.setTag(tag.getName());
-            dbProvider.getRealm().commitTransaction();
+            dbProvider.save(track);
             selectedTag.setValue(tag.getName());
         }
     }

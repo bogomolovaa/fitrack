@@ -1,4 +1,4 @@
-package bogomolov.aa.fitrack.model;
+package bogomolov.aa.fitrack.android;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -12,15 +12,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.hardware.Sensor;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.hardware.TriggerEventListener;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.navigation.NavDeepLinkBuilder;
@@ -47,6 +42,10 @@ import java.util.List;
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.core.RamerDouglasPeucker;
+import bogomolov.aa.fitrack.core.model.Point;
+import bogomolov.aa.fitrack.core.model.Track;
+import bogomolov.aa.fitrack.repository.RepositoryImpl;
 import bogomolov.aa.fitrack.view.activities.MainActivity;
 import bogomolov.aa.fitrack.view.fragments.SettingsFragment;
 import dagger.android.AndroidInjection;
@@ -68,7 +67,7 @@ public class TrackerService extends Service
 
 
     @Inject
-    DbProvider dbProvider;
+    RepositoryImpl dbProvider;
 
     @Inject
     DispatchingAndroidInjector<Object> androidInjector;
@@ -228,7 +227,8 @@ public class TrackerService extends Service
                     Track track = new Track();
                     track.setStartPoint(lastPoint);
                     track.setStartTime(lastPoint.getTime());
-                    openedTrack = dbProvider.addTrack(track);
+                    dbProvider.addTrack(track);
+                    openedTrack = track;
                 } else if (System.currentTimeMillis() - startLocationUpdateTime > 5 * 60 * 1000) {
                     stopServiceAndStartActivityRecognition();
                 }
@@ -240,7 +240,8 @@ public class TrackerService extends Service
             Point lastPoint = points.get(points.size() - 1);
             if (!(Point.distance(point, lastPoint) > 200 || System.currentTimeMillis() - lastPoint.getTime() <= 2 * UPDATE_INTERVAL)) {
                 points.add(point);
-                lastPoint = dbProvider.addPoint(point);
+                lastPoint = point;
+                dbProvider.addPoint(lastPoint);
             }
             for (int i = points.size() - 1; i >= 0; i--) {
                 if (Point.distance(lastPoint, points.get(i)) <= 50) {
@@ -248,7 +249,6 @@ public class TrackerService extends Service
                         trackPoints = trackPoints.subList(0, i + 1);
                         trackPoints.add(lastPoint);
                         finishTrack(trackPoints, openedTrack, points.get(i).getTime());
-                        //pauseTracking();
                         stopServiceAndStartActivityRecognition();
                         break;
                     }
@@ -266,7 +266,7 @@ public class TrackerService extends Service
         finishTrack(dbProvider, points, openedTrack, time);
     }
 
-    public static void finishTrack(DbProvider dbProvider, List<Point> points, Track openedTrack, long time) {
+    public static void finishTrack(RepositoryImpl dbProvider, List<Point> points, Track openedTrack, long time) {
         if (points.size() == 0) return;
         Point lastPoint = points.get(points.size() - 1);
         List<Point> smoothedPoints = RamerDouglasPeucker.douglasPeucker(points, Track.EPSILON);
@@ -274,15 +274,15 @@ public class TrackerService extends Service
         for (Point point : smoothedPoints) {
             Point smoothedPoint = point.clone();
             smoothedPoint.setSmoothed(Point.SMOOTHED);
-            smoothedPointsManaged.add(dbProvider.addPoint(smoothedPoint));
+            dbProvider.addPoint(smoothedPoint);
+            smoothedPointsManaged.add(smoothedPoint);
         }
-        dbProvider.getRealm().beginTransaction();
         openedTrack.setEndPoint(lastPoint);
         openedTrack.setEndTime(time);
         openedTrack.setStartSmoothedPoint(smoothedPointsManaged.get(0));
         openedTrack.setEndSmoothedPoint(smoothedPointsManaged.get(smoothedPointsManaged.size() - 1));
         openedTrack.setDistance(Point.getTrackDistance(smoothedPointsManaged));
-        dbProvider.getRealm().commitTransaction();
+        dbProvider.save(openedTrack);
         dbProvider.deleteRawPoints(openedTrack);
 
         if (openedTrack.getDistance() < MIN_TRACK_DISTANCE) {

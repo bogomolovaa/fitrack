@@ -1,7 +1,6 @@
 package bogomolov.aa.fitrack.view.fragments;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 
@@ -16,14 +15,12 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -43,14 +40,10 @@ import javax.inject.Inject;
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentMainBinding;
-import bogomolov.aa.fitrack.model.Point;
-import bogomolov.aa.fitrack.model.Track;
+import bogomolov.aa.fitrack.core.model.Point;
+import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.view.MainView;
 import bogomolov.aa.fitrack.viewmodels.MainViewModel;
-import dagger.android.AndroidInjection;
-import dagger.android.AndroidInjector;
-import dagger.android.DispatchingAndroidInjector;
-import dagger.android.HasAndroidInjector;
 import dagger.android.support.AndroidSupportInjection;
 
 

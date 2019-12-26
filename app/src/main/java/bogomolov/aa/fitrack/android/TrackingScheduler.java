@@ -1,13 +1,9 @@
-package bogomolov.aa.fitrack.model;
+package bogomolov.aa.fitrack.android;
 
-import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.util.Log;
-
-import androidx.preference.PreferenceManager;
 
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityTransition;
@@ -19,6 +15,8 @@ import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import bogomolov.aa.fitrack.android.StartupReceiver;
 
 
 public class TrackingScheduler {

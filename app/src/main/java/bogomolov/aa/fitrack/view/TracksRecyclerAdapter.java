@@ -1,7 +1,6 @@
 package bogomolov.aa.fitrack.view;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.model.Track;
+import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.view.fragments.TracksListFragment;
 
 public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAdapter.ViewHolder> {

@@ -1,4 +1,4 @@
-package bogomolov.aa.fitrack.model;
+package bogomolov.aa.fitrack.android;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,7 +11,7 @@ import com.google.android.gms.location.ActivityTransitionResult;
 
 import java.util.Date;
 
-import static bogomolov.aa.fitrack.model.TrackerService.START_SERVICE_ACTION;
+import static bogomolov.aa.fitrack.android.TrackerService.START_SERVICE_ACTION;
 
 public class StartupReceiver extends BroadcastReceiver {
     @Override
