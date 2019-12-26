@@ -7,26 +7,21 @@ import bogomolov.aa.fitrack.core.model.Point;
 import bogomolov.aa.fitrack.core.model.Tag;
 import bogomolov.aa.fitrack.core.model.Track;
 
-interface Repository {
-    void save(Track track);
+public interface Repository {
 
-    List<Track> getFinishedTracks(Date[] datesRange);
+    void save(Track track);
 
     List<Track> getFinishedTracks(Date[] datesRange, String tag);
 
-    List<Track> getTracks(List<Long> ids);
+    List<Track> getTracks(Long... ids);
 
     List<Tag> getTags();
 
     void deleteTag(Tag tag);
 
-    void deleteTrack(long id);
+    void deleteTracks(Long... ids);
 
-    void deleteTracks(List<Long> ids);
-
-    void deleteRawPoints(Track track);
-
-    Track getTrack(long id);
+    void deleteInnerRawPoints(Track track);
 
     void addTag(Tag tag);
 
@@ -38,13 +33,11 @@ interface Repository {
 
     Track getLastTrack();
 
-    Track getOpenedTrack();
+    Point getLastRawPoint();
 
-    Point getLastPoint();
+    List<Point> getPointsAfterLastTrack(Track lastTrack);
 
-    List<Point> getLastPoints();
-
-    void deleteLastPoints();
+    void deletePointsAfterLastTrack(Track lastTrack);
 
     void close();
 }

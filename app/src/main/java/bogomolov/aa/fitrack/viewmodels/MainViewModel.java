@@ -2,6 +2,7 @@ package bogomolov.aa.fitrack.viewmodels;
 
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -11,6 +12,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import bogomolov.aa.fitrack.repository.Repository;
 import bogomolov.aa.fitrack.repository.RepositoryImpl;
 import bogomolov.aa.fitrack.core.model.Point;
 import bogomolov.aa.fitrack.core.RamerDouglasPeucker;
@@ -24,7 +26,7 @@ public class MainViewModel extends ViewModel {
     public MutableLiveData<String> avgSpeed = new MutableLiveData<>();
     public MutableLiveData<String> speed = new MutableLiveData<>();
 
-    private RepositoryImpl dbProvider;
+    private Repository repository;
     private Handler handler;
     private Handler backgroundHandler;
     private HandlerThread handlerThread;
@@ -37,9 +39,9 @@ public class MainViewModel extends ViewModel {
     private static final int WINDOW_MAX_SIZE = 50;
 
     @Inject
-    public MainViewModel(RepositoryImpl dbProvider) {
+    public MainViewModel(Repository repository) {
         super();
-        this.dbProvider = dbProvider;
+        this.repository = repository;
 
         handler = new Handler();
         handlerThread = new HandlerThread("MainViewModel background");
@@ -50,19 +52,16 @@ public class MainViewModel extends ViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        dbProvider.close();
+        repository.close();
         handlerThread.quitSafely();
     }
 
     public void startTrack(MainView mainView) {
 
         if (TrackerService.working) {
-            Point lastPoint = dbProvider.getLastPoint();
+            Point lastPoint = repository.getLastRawPoint();
             if (lastPoint != null) {
-                Track track = new Track();
-                track.setStartPoint(lastPoint);
-                track.setStartTime(lastPoint.getTime());
-                dbProvider.addTrack(track);
+                TrackerService.startTrack(repository,lastPoint);
                 mainView.showStartStopButtons(false);
             }
         } else {
@@ -71,15 +70,15 @@ public class MainViewModel extends ViewModel {
     }
 
     public void stopTrack(MainView mainView) {
-        Track openedTrack = dbProvider.getLastTrack();
-        if (openedTrack != null) {
-            TrackerService.finishTrack(dbProvider, dbProvider.getTrackPoints(openedTrack, Point.RAW), openedTrack, System.currentTimeMillis());
+        Track lastTrack = repository.getLastTrack();
+        if (lastTrack != null&&lastTrack.isOpened()) {
+            TrackerService.finishTrack(repository, repository.getTrackPoints(lastTrack, Point.RAW), lastTrack, System.currentTimeMillis());
         }
         mainView.showStartStopButtons(true);
     }
 
     public void onStartStopButtonsCreated(MainView mainView) {
-        Track lastTrack = dbProvider.getLastTrack();
+        Track lastTrack = repository.getLastTrack();
         if (lastTrack != null) {
             mainView.showStartStopButtons(!lastTrack.isOpened());
         } else {
@@ -89,16 +88,17 @@ public class MainViewModel extends ViewModel {
 
     public void startUpdating(MainView mainView) {
         updateRunnable = new Runnable() {
+
             @Override
             public void run() {
-                RepositoryImpl dbProvider = new RepositoryImpl();
-                Track track = dbProvider.getLastTrack();
-                Point point = dbProvider.getLastPoint();
+                Repository repository = new RepositoryImpl();
+                Track track = repository.getLastTrack();
+                Point point = repository.getLastRawPoint();
                 List<Point> rawPoints = new ArrayList<>();
                 List<Point> smoothedPoints = new ArrayList<>();
 
                 if (track != null && track.isOpened()) {
-                    rawPoints.addAll(dbProvider.getTrackPoints(track, Point.RAW));
+                    rawPoints.addAll(repository.getTrackPoints(track, Point.RAW));
                     smoothedPoints.addAll(getSmoothedPoints(track, rawPoints));
                 }
                 Point updatePoint = point;
@@ -119,7 +119,7 @@ public class MainViewModel extends ViewModel {
                 });
 
                 backgroundHandler.postDelayed(this, 1000);
-                dbProvider.close();
+                repository.close();
             }
         };
         backgroundHandler.post(updateRunnable);

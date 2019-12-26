@@ -45,7 +45,7 @@ import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.core.RamerDouglasPeucker;
 import bogomolov.aa.fitrack.core.model.Point;
 import bogomolov.aa.fitrack.core.model.Track;
-import bogomolov.aa.fitrack.repository.RepositoryImpl;
+import bogomolov.aa.fitrack.repository.Repository;
 import bogomolov.aa.fitrack.view.activities.MainActivity;
 import bogomolov.aa.fitrack.view.fragments.SettingsFragment;
 import dagger.android.AndroidInjection;
@@ -67,10 +67,11 @@ public class TrackerService extends Service
 
 
     @Inject
-    RepositoryImpl dbProvider;
+    Repository repository;
 
     @Inject
     DispatchingAndroidInjector<Object> androidInjector;
+
     @Override
     public AndroidInjector<Object> androidInjector() {
         return androidInjector;
@@ -100,7 +101,7 @@ public class TrackerService extends Service
             notificationManager.createNotificationChannel(notificationChannel);
         }
         PendingIntent resultPendingIntent = new NavDeepLinkBuilder(this).setComponentName(MainActivity.class)
-                     .setGraph(R.navigation.nav_graph)
+                .setGraph(R.navigation.nav_graph)
                 .setDestination(R.id.settingsFragment)
                 .createPendingIntent();
 
@@ -210,10 +211,11 @@ public class TrackerService extends Service
 
     private void checkTrack(Point point) {
         List<Point> trackPoints = null;
-        Track openedTrack = dbProvider.getOpenedTrack();
+        Track lastTrack = repository.getLastTrack();
+        Track openedTrack = lastTrack != null && !lastTrack.isOpened() ? null : lastTrack;
         if (openedTrack == null) {
-            dbProvider.addPoint(point);
-            List<Point> points = dbProvider.getLastPoints();
+            repository.addPoint(point);
+            List<Point> points = repository.getPointsAfterLastTrack(lastTrack);
             if (points.size() > 1) {
                 Point firstPoint = points.get(0);
                 for (int i = 0; i < points.size() - 1; i++)
@@ -224,24 +226,20 @@ public class TrackerService extends Service
                 Point lastPoint = points.get(points.size() - 1);
                 double distance = Point.distance(firstPoint, lastPoint);
                 if (distance > 50) {
-                    Track track = new Track();
-                    track.setStartPoint(lastPoint);
-                    track.setStartTime(lastPoint.getTime());
-                    dbProvider.addTrack(track);
-                    openedTrack = track;
+                    startTrack(repository, lastPoint);
                 } else if (System.currentTimeMillis() - startLocationUpdateTime > 5 * 60 * 1000) {
+                    repository.deletePointsAfterLastTrack(lastTrack);
                     stopServiceAndStartActivityRecognition();
                 }
             }
-            trackPoints = points;
         } else {
-            List<Point> points = new ArrayList<>(dbProvider.getTrackPoints(openedTrack, Point.RAW));
+            List<Point> points = new ArrayList<>(repository.getTrackPoints(openedTrack, Point.RAW));
             trackPoints = points;
             Point lastPoint = points.get(points.size() - 1);
             if (!(Point.distance(point, lastPoint) > 200 || System.currentTimeMillis() - lastPoint.getTime() <= 2 * UPDATE_INTERVAL)) {
                 points.add(point);
                 lastPoint = point;
-                dbProvider.addPoint(lastPoint);
+                repository.addPoint(lastPoint);
             }
             for (int i = points.size() - 1; i >= 0; i--) {
                 if (Point.distance(lastPoint, points.get(i)) <= 50) {
@@ -257,37 +255,40 @@ public class TrackerService extends Service
         }
     }
 
+    public static void startTrack(Repository repository, Point lastPoint) {
+        Track track = new Track();
+        track.setStartPoint(lastPoint);
+        track.setStartTime(lastPoint.getTime());
+        repository.addTrack(track);
+    }
+
     private void stopServiceAndStartActivityRecognition() {
         stopTrackingService();
         TrackingScheduler.startActivityRecognition(this);
     }
 
     private void finishTrack(List<Point> points, Track openedTrack, long time) {
-        finishTrack(dbProvider, points, openedTrack, time);
+        finishTrack(repository, points, openedTrack, time);
     }
 
-    public static void finishTrack(RepositoryImpl dbProvider, List<Point> points, Track openedTrack, long time) {
+    public static void finishTrack(Repository repository, List<Point> points, Track openedTrack, long time) {
         if (points.size() == 0) return;
         Point lastPoint = points.get(points.size() - 1);
-        List<Point> smoothedPoints = RamerDouglasPeucker.douglasPeucker(points, Track.EPSILON);
-        List<Point> smoothedPointsManaged = new ArrayList<>();
+        List<Point> smoothedPoints = Point.clonePoints(RamerDouglasPeucker.douglasPeucker(points, Track.EPSILON));
         for (Point point : smoothedPoints) {
-            Point smoothedPoint = point.clone();
-            smoothedPoint.setSmoothed(Point.SMOOTHED);
-            dbProvider.addPoint(smoothedPoint);
-            smoothedPointsManaged.add(smoothedPoint);
+            point.setSmoothed(Point.SMOOTHED);
+            repository.addPoint(point);
         }
         openedTrack.setEndPoint(lastPoint);
         openedTrack.setEndTime(time);
-        openedTrack.setStartSmoothedPoint(smoothedPointsManaged.get(0));
-        openedTrack.setEndSmoothedPoint(smoothedPointsManaged.get(smoothedPointsManaged.size() - 1));
-        openedTrack.setDistance(Point.getTrackDistance(smoothedPointsManaged));
-        dbProvider.save(openedTrack);
-        dbProvider.deleteRawPoints(openedTrack);
+        openedTrack.setStartSmoothedPoint(smoothedPoints.get(0));
+        openedTrack.setEndSmoothedPoint(smoothedPoints.get(smoothedPoints.size() - 1));
+        openedTrack.setDistance(Point.getTrackDistance(smoothedPoints));
+        repository.save(openedTrack);
+        repository.deleteInnerRawPoints(openedTrack);
 
         if (openedTrack.getDistance() < MIN_TRACK_DISTANCE) {
-            dbProvider.deleteTrack(openedTrack.getId());
-            dbProvider.deleteLastPoints();
+            repository.deleteTracks(openedTrack.getId());
         }
     }
 
@@ -309,7 +310,7 @@ public class TrackerService extends Service
     public void onDestroy() {
         super.onDestroy();
         stopLocationUpdates();
-        dbProvider.close();
+        repository.close();
     }
 
     public void stopLocationUpdates() {

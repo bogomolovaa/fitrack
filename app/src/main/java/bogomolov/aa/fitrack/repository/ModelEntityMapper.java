@@ -55,11 +55,11 @@ public class ModelEntityMapper {
         Track to = new Track();
         to.setId(from.getId());
         to.setDistance(from.getDistance());
-        to.setEndPoint(from.getEndPoint());
-        to.setEndSmoothedPoint(from.getEndSmoothedPoint());
+        to.setEndPoint(entityToModel(from.getEndPoint()));
+        to.setEndSmoothedPoint(entityToModel(from.getEndSmoothedPoint()));
         to.setEndTime(from.getEndTime());
-        to.setStartPoint(from.getStartPoint());
-        to.setStartSmoothedPoint(from.getStartSmoothedPoint());
+        to.setStartPoint(entityToModel(from.getStartPoint()));
+        to.setStartSmoothedPoint(entityToModel(from.getStartSmoothedPoint()));
         to.setStartTime(from.getStartTime());
         to.setTag(from.getTag());
         return to;
@@ -70,17 +70,18 @@ public class ModelEntityMapper {
         TrackEntity to = new TrackEntity();
         to.setId(from.getId());
         to.setDistance(from.getDistance());
-        to.setEndPoint(from.getEndPoint());
-        to.setEndSmoothedPoint(from.getEndSmoothedPoint());
+        to.setEndPoint(modelToEntity(from.getEndPoint()));
+        to.setEndSmoothedPoint(modelToEntity(from.getEndSmoothedPoint()));
         to.setEndTime(from.getEndTime());
-        to.setStartPoint(from.getStartPoint());
-        to.setStartSmoothedPoint(from.getStartSmoothedPoint());
+        to.setStartPoint(modelToEntity(from.getStartPoint()));
+        to.setStartSmoothedPoint(modelToEntity(from.getStartSmoothedPoint()));
         to.setStartTime(from.getStartTime());
         to.setTag(from.getTag());
         return to;
     }
 
     public static <Q> List<Q> entityToModel(List fromList, Class<Q> toClass) {
+        if(fromList==null) return null;
         List toList = new ArrayList<>();
         if (toClass.isAssignableFrom(Point.class))
             for (Object fromEntity : fromList) toList.add(entityToModel((PointEntity) fromEntity));
@@ -92,6 +93,7 @@ public class ModelEntityMapper {
     }
 
     public static <Q> List<Q> modelToEntity(List fromList, Class<Q> toClass) {
+        if(fromList==null) return null;
         List toList = new ArrayList<>();
         if (toClass.isAssignableFrom(PointEntity.class))
             for (Object fromEntity : fromList) toList.add(modelToEntity((Point) fromEntity));

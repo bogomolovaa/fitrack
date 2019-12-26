@@ -8,5 +8,5 @@ import dagger.Module;
 @Module
 public abstract class MainModule {
     @Binds
-    public abstract Repository getRepository(RepositoryImpl repository);
+    public abstract Repository bindsRepository(RepositoryImpl repository);
 }

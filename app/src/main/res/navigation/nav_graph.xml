@@ -28,9 +28,6 @@
         <action
             android:id="@+id/action_tracksListFragment_to_trackViewFragment"
             app:destination="@id/trackViewFragment" />
-        <action
-            android:id="@+id/action_tracksListFragment_to_tagSelectionDialog"
-            app:destination="@id/tagSelectionDialog" />
     </fragment>
     <fragment
         android:id="@+id/statsFragment"
@@ -50,8 +47,5 @@
         <argument
             android:name="trackId"
             app:argType="long" />
-        <action
-            android:id="@+id/action_trackViewFragment_to_tagSelectionDialog"
-            app:destination="@id/tagSelectionDialog" />
     </fragment>
 </navigation>

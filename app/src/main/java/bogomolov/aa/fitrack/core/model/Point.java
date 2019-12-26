@@ -2,18 +2,12 @@ package bogomolov.aa.fitrack.core.model;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
-public class Point implements Comparable<Point>{
+public class Point{
     public static final int SMOOTHED = 1;
-
-    @Override
-    public int compareTo(Point point) {
-        if(id > point.id) return 1;
-        if(id < point.id) return -1;
-        return 0;
-    }
 
     public static final int RAW = 0;
 
@@ -23,7 +17,7 @@ public class Point implements Comparable<Point>{
     private double lng;
     private int smoothed;
 
-    public Point clone(){
+    private Point clonePoint(){
         Point point = new Point();
         point.time = time;
         point.lat = lat;
@@ -125,5 +119,11 @@ public class Point implements Comparable<Point>{
         if (points.size() > 1) for (int i = 0; i < points.size() - 1; i++)
             distance += distance(points.get(i), points.get(i + 1));
         return distance;
+    }
+
+    public static List<Point> clonePoints(List<Point> points){
+        List<Point> cloned = new ArrayList<>();
+        for(Point point : points) cloned.add(point.clonePoint());
+        return cloned;
     }
 }

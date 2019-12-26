@@ -7,16 +7,14 @@ import io.realm.annotations.PrimaryKey;
 public class TrackEntity extends RealmObject {
     @PrimaryKey
     private long id;
-    private Point startPoint;
-    private Point endPoint;
-    private Point startSmoothedPoint;
-    private Point endSmoothedPoint;
+    private PointEntity startPoint;
+    private PointEntity endPoint;
+    private PointEntity startSmoothedPoint;
+    private PointEntity endSmoothedPoint;
     private long startTime;
     private long endTime;
     private String tag;
-
     private double distance;
-
 
     public long getId() {
         return id;
@@ -26,35 +24,35 @@ public class TrackEntity extends RealmObject {
         this.id = id;
     }
 
-    public Point getStartPoint() {
+    public PointEntity getStartPoint() {
         return startPoint;
     }
 
-    public void setStartPoint(Point startPoint) {
+    public void setStartPoint(PointEntity startPoint) {
         this.startPoint = startPoint;
     }
 
-    public Point getEndPoint() {
+    public PointEntity getEndPoint() {
         return endPoint;
     }
 
-    public void setEndPoint(Point endPoint) {
+    public void setEndPoint(PointEntity endPoint) {
         this.endPoint = endPoint;
     }
 
-    public Point getStartSmoothedPoint() {
+    public PointEntity getStartSmoothedPoint() {
         return startSmoothedPoint;
     }
 
-    public void setStartSmoothedPoint(Point startSmoothedPoint) {
+    public void setStartSmoothedPoint(PointEntity startSmoothedPoint) {
         this.startSmoothedPoint = startSmoothedPoint;
     }
 
-    public Point getEndSmoothedPoint() {
+    public PointEntity getEndSmoothedPoint() {
         return endSmoothedPoint;
     }
 
-    public void setEndSmoothedPoint(Point endSmoothedPoint) {
+    public void setEndSmoothedPoint(PointEntity endSmoothedPoint) {
         this.endSmoothedPoint = endSmoothedPoint;
     }
 
@@ -89,5 +87,4 @@ public class TrackEntity extends RealmObject {
     public void setDistance(double distance) {
         this.distance = distance;
     }
-
 }
