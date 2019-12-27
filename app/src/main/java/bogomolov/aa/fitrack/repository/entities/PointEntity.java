@@ -1,10 +1,13 @@
 package bogomolov.aa.fitrack.repository.entities;
 
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
-public class PointEntity extends RealmObject {
-    @PrimaryKey
+
+@Entity
+public class PointEntity {
+    @PrimaryKey(autoGenerate = true)
     private long id;
     private long time;
     private double lat;

@@ -4,6 +4,7 @@ import android.app.Application;
 
 import javax.inject.Inject;
 
+import bogomolov.aa.fitrack.dagger.AppComponent;
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.HasAndroidInjector;
@@ -16,13 +17,16 @@ public class TrackerApplication extends Application implements HasAndroidInjecto
     @Inject
     DispatchingAndroidInjector<Object> androidInjector;
 
+    private AppComponent appComponent;
+
 
     @Override
     public void onCreate() {
         super.onCreate();
         Realm.init(this);
 
-        DaggerAppComponent.create().inject(this);
+        appComponent = DaggerAppComponent.create();
+        appComponent.inject(this);
     }
 
     @Override

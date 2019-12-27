@@ -12,6 +12,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import bogomolov.aa.fitrack.TrackerApplication;
 import bogomolov.aa.fitrack.repository.Repository;
 import bogomolov.aa.fitrack.repository.RepositoryImpl;
 import bogomolov.aa.fitrack.core.model.Point;
@@ -52,8 +53,8 @@ public class MainViewModel extends ViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        repository.close();
         handlerThread.quitSafely();
+        repository.close();
     }
 
     public void startTrack(MainView mainView) {

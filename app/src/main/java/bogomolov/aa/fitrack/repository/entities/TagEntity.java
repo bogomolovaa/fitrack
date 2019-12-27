@@ -1,9 +1,10 @@
 package bogomolov.aa.fitrack.repository.entities;
 
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
-public class TagEntity  extends RealmObject {
+@Entity
+public class TagEntity{
     @PrimaryKey
     private long id;
     private String name;

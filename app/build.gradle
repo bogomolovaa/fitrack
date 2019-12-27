@@ -12,6 +12,8 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+
+
     }
     buildTypes {
         release {
@@ -55,5 +57,7 @@ dependencies {
     implementation "androidx.navigation:navigation-ui:2.1.0"
     implementation "androidx.lifecycle:lifecycle-extensions:2.1.0"
     implementation "androidx.lifecycle:lifecycle-common-java8:2.1.0"
+    implementation "androidx.room:room-runtime:2.2.3"
+    annotationProcessor "androidx.room:room-compiler:2.2.3"
 
 }
