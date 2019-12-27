@@ -9,10 +9,10 @@ import java.util.List;
 public class Track {
     public static final int EPSILON = 25;
     private long id;
-    private Point startPoint;
-    private Point endPoint;
-    private Point startSmoothedPoint;
-    private Point endSmoothedPoint;
+    private long startPointId;
+    private long endPointId;
+    private long startSmoothedPointId;
+    private long endSmoothedPointId;
     private long startTime;
     private long endTime;
     private String tag;
@@ -53,20 +53,20 @@ public class Track {
         this.tag = tag;
     }
 
-    public Point getStartSmoothedPoint() {
-        return startSmoothedPoint;
+    public long getStartSmoothedPointId() {
+        return startSmoothedPointId;
     }
 
-    public void setStartSmoothedPoint(Point startSmoothedPoint) {
-        this.startSmoothedPoint = startSmoothedPoint;
+    public void setStartSmoothedPointId(long startSmoothedPointId) {
+        this.startSmoothedPointId = startSmoothedPointId;
     }
 
-    public Point getEndSmoothedPoint() {
-        return endSmoothedPoint;
+    public long getEndSmoothedPointId() {
+        return endSmoothedPointId;
     }
 
-    public void setEndSmoothedPoint(Point endSmoothedPoint) {
-        this.endSmoothedPoint = endSmoothedPoint;
+    public void setEndSmoothedPointId(long endSmoothedPointId) {
+        this.endSmoothedPointId = endSmoothedPointId;
     }
 
     public double getDistance() {
@@ -103,28 +103,28 @@ public class Track {
         this.id = id;
     }
 
-    public Point getStartPoint() {
-        return startPoint;
+    public long getStartPointId() {
+        return startPointId;
     }
 
-    public Point getStartPoint(int smoothed) {
-        return smoothed == Point.RAW ? startPoint : startSmoothedPoint;
+    public long getStartPointId(int smoothed) {
+        return smoothed == Point.RAW ? startPointId : startSmoothedPointId;
     }
 
-    public void setStartPoint(Point startPoint) {
-        this.startPoint = startPoint;
+    public void setStartPointId(long startPointId) {
+        this.startPointId = startPointId;
     }
 
-    public Point getEndPoint() {
-        return endPoint;
+    public long getEndPointId() {
+        return endPointId;
     }
 
-    public Point getEndPoint(int smoothed) {
-        return smoothed == Point.RAW ? endPoint : endSmoothedPoint;
+    public long getEndPointId(int smoothed) {
+        return smoothed == Point.RAW ? endPointId : endSmoothedPointId;
     }
 
-    public void setEndPoint(Point endPoint) {
-        this.endPoint = endPoint;
+    public void setEndPointId(long endPointId) {
+        this.endPointId = endPointId;
     }
 
     public long getStartTime() {

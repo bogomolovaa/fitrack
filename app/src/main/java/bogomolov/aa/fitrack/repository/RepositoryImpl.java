@@ -1,8 +1,11 @@
 package bogomolov.aa.fitrack.repository;
 
-import android.util.Log;
+import android.app.Application;
+import android.content.Context;
 
-import java.util.ArrayList;
+import androidx.room.Query;
+import androidx.room.Room;
+
 import java.util.Date;
 import java.util.List;
 
@@ -22,81 +25,46 @@ import io.realm.Sort;
 import static bogomolov.aa.fitrack.repository.ModelEntityMapper.*;
 
 public class RepositoryImpl implements Repository {
-    private Realm realm;
+    private AppDatabase db;
 
     @Inject
-    public RepositoryImpl() {
-        boolean delete = false;
-        RealmConfiguration config = new RealmConfiguration.Builder()
-                .deleteRealmIfMigrationNeeded()
-                .build();
-        realm = Realm.getInstance(config);
-        if (delete)
-            realm.executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    realm.deleteAll();
-                }
-            });
+    public RepositoryImpl(Application application) {
+        db = Room.databaseBuilder(application, AppDatabase.class, "tracker_db").build();
     }
-
 
     @Override
     public void close() {
-        realm.close();
+        db.close();
     }
 
     @Override
     public void save(Track track) {
-        realm.beginTransaction();
-        realm.copyToRealmOrUpdate(modelToEntity(track));
-        realm.commitTransaction();
+        db.trackDao().update(modelToEntity(track));
     }
 
     @Override
     public void addTag(Tag tag) {
-        realm.beginTransaction();
-        Number maxId = realm.where(TagEntity.class).max("id");
-        long id = (maxId != null ? maxId.longValue() : 0) + 1;
-        tag.setId(id);
-        realm.copyToRealm(modelToEntity(tag));
-        realm.commitTransaction();
+        tag.setId(db.tagDao().insert(modelToEntity(tag)));
     }
 
     @Override
     public void addPoint(Point point) {
-        realm.beginTransaction();
-        Number maxId = realm.where(PointEntity.class).max("id");
-        long id = (maxId != null ? maxId.longValue() : 0) + 1;
-        point.setId(id);
-        realm.copyToRealm(modelToEntity(point));
-        realm.commitTransaction();
+        point.setId(db.pointDao().insert(modelToEntity(point)));
     }
-
 
     @Override
     public void addTrack(Track track) {
-        realm.beginTransaction();
-        if (track.getId() == 0) {
-            Number maxId = realm.where(TrackEntity.class).max("id");
-            long id = (maxId != null ? maxId.longValue() : 0) + 1;
-            track.setId(id);
-        }
-        realm.copyToRealmOrUpdate(modelToEntity(track));
-        realm.commitTransaction();
+        track.setId(db.trackDao().insert(modelToEntity(track)));
     }
-
 
     @Override
     public List<Track> getTracks(Long... ids) {
-        List<TrackEntity> tracks = realm.where(TrackEntity.class).in("id", ids).findAll();
-        return entityToModel(tracks, Track.class);
+        return entityToModel(db.trackDao().getTracks(ids), Track.class);
     }
 
     @Override
     public List<Tag> getTags() {
-        List<TagEntity> tags = realm.where(TagEntity.class).findAll();
-        return entityToModel(tags, Tag.class);
+        return entityToModel(db.tagDao().getTags(), Tag.class);
     }
 
     @Override
@@ -118,22 +86,22 @@ public class RepositoryImpl implements Repository {
     @Override
     public void deleteInnerRawPoints(Track track) {
         realm.beginTransaction();
-        realm.where(PointEntity.class).equalTo("smoothed", Point.RAW).greaterThan("id", track.getStartPoint().getId()).
-                lessThan("id", track.getEndPoint().getId()).findAll().deleteAllFromRealm();
+        realm.where(PointEntity.class).equalTo("smoothed", Point.RAW).greaterThan("id", track.getStartPointId().getId()).
+                lessThan("id", track.getEndPointId().getId()).findAll().deleteAllFromRealm();
         realm.commitTransaction();
     }
 
     @Override
     public void deletePointsAfterLastTrack(Track lastTrack) {
         realm.beginTransaction();
-        long lastId = lastTrack != null ? lastTrack.getEndPoint().getId() : 0;
+        long lastId = lastTrack != null ? lastTrack.getEndPointId().getId() : 0;
         realm.where(PointEntity.class).equalTo("smoothed", Point.RAW).greaterThan("id", lastId).findAll().deleteAllFromRealm();
         realm.commitTransaction();
     }
 
     @Override
     public List<Point> getPointsAfterLastTrack(Track lastTrack) {
-        long lastId = lastTrack != null ? lastTrack.getEndPoint().getId() : 0;
+        long lastId = lastTrack != null ? lastTrack.getEndPointId().getId() : 0;
         List<PointEntity> points = realm.where(PointEntity.class).equalTo("smoothed", Point.RAW).greaterThan("id", lastId).findAll();
         return entityToModel(points, Point.class);
     }
@@ -156,16 +124,16 @@ public class RepositoryImpl implements Repository {
     public List<Point> getTrackPoints(Track track, int smoothed) {
         List<PointEntity> points = null;
         if (track.isOpened()) {
-            points = realm.where(PointEntity.class).equalTo("smoothed", smoothed).greaterThanOrEqualTo("id", track.getStartPoint(smoothed).getId()).findAll().sort("id", Sort.ASCENDING);
+            points = realm.where(PointEntity.class).equalTo("smoothed", smoothed).greaterThanOrEqualTo("id", track.getStartPointId(smoothed).getId()).findAll().sort("id", Sort.ASCENDING);
         } else {
-            points = realm.where(PointEntity.class).equalTo("smoothed", smoothed).between("id", track.getStartPoint(smoothed).getId(), track.getEndPoint(smoothed).getId()).findAll().sort("id", Sort.ASCENDING);
+            points = realm.where(PointEntity.class).equalTo("smoothed", smoothed).between("id", track.getStartPointId(smoothed).getId(), track.getEndPointId(smoothed).getId()).findAll().sort("id", Sort.ASCENDING);
         }
         return entityToModel(points, Point.class);
     }
 
     @Override
     public List<Track> getFinishedTracks(Date[] datesRange, String tag) {
-        RealmQuery<TrackEntity> query = realm.where(TrackEntity.class).greaterThanOrEqualTo("startTime", datesRange[0].getTime()).lessThan("startTime", datesRange[1].getTime()).greaterThan("endTime",0);
+        RealmQuery<TrackEntity> query = realm.where(TrackEntity.class).greaterThanOrEqualTo("startTime", datesRange[0].getTime()).lessThan("startTime", datesRange[1].getTime()).greaterThan("endTime", 0);
         if (tag != null) query = query.equalTo("tag", tag);
         return entityToModel(query.findAll(), Track.class);
     }

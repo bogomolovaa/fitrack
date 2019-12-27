@@ -1,16 +1,18 @@
 package bogomolov.aa.fitrack.repository.entities;
 
-import bogomolov.aa.fitrack.core.model.Point;
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
-public class TrackEntity extends RealmObject {
-    @PrimaryKey
+import bogomolov.aa.fitrack.core.model.Point;
+
+@Entity
+public class TrackEntity {
+    @PrimaryKey(autoGenerate = true)
     private long id;
-    private PointEntity startPoint;
-    private PointEntity endPoint;
-    private PointEntity startSmoothedPoint;
-    private PointEntity endSmoothedPoint;
+    private long startPointId;
+    private long endPointId;
+    private long startSmoothedPointId;
+    private long endSmoothedPointId;
     private long startTime;
     private long endTime;
     private String tag;
@@ -24,36 +26,36 @@ public class TrackEntity extends RealmObject {
         this.id = id;
     }
 
-    public PointEntity getStartPoint() {
-        return startPoint;
+    public long getStartPointId() {
+        return startPointId;
     }
 
-    public void setStartPoint(PointEntity startPoint) {
-        this.startPoint = startPoint;
+    public void setStartPointId(long startPointId) {
+        this.startPointId = startPointId;
     }
 
-    public PointEntity getEndPoint() {
-        return endPoint;
+    public long getEndPointId() {
+        return endPointId;
     }
 
-    public void setEndPoint(PointEntity endPoint) {
-        this.endPoint = endPoint;
+    public void setEndPointId(long endPointId) {
+        this.endPointId = endPointId;
     }
 
-    public PointEntity getStartSmoothedPoint() {
-        return startSmoothedPoint;
+    public long getStartSmoothedPointId() {
+        return startSmoothedPointId;
     }
 
-    public void setStartSmoothedPoint(PointEntity startSmoothedPoint) {
-        this.startSmoothedPoint = startSmoothedPoint;
+    public void setStartSmoothedPointId(long startSmoothedPointId) {
+        this.startSmoothedPointId = startSmoothedPointId;
     }
 
-    public PointEntity getEndSmoothedPoint() {
-        return endSmoothedPoint;
+    public long getEndSmoothedPointId() {
+        return endSmoothedPointId;
     }
 
-    public void setEndSmoothedPoint(PointEntity endSmoothedPoint) {
-        this.endSmoothedPoint = endSmoothedPoint;
+    public void setEndSmoothedPointId(long endSmoothedPointId) {
+        this.endSmoothedPointId = endSmoothedPointId;
     }
 
     public long getStartTime() {

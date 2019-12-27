@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey;
 
 @Entity
 public class TagEntity{
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     private long id;
     private String name;
 

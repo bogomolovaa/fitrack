@@ -257,7 +257,7 @@ public class TrackerService extends Service
 
     public static void startTrack(Repository repository, Point lastPoint) {
         Track track = new Track();
-        track.setStartPoint(lastPoint);
+        track.setStartPointId(lastPoint.getId());
         track.setStartTime(lastPoint.getTime());
         repository.addTrack(track);
     }
@@ -279,10 +279,10 @@ public class TrackerService extends Service
             point.setSmoothed(Point.SMOOTHED);
             repository.addPoint(point);
         }
-        openedTrack.setEndPoint(lastPoint);
+        openedTrack.setEndPointId(lastPoint.getId());
         openedTrack.setEndTime(time);
-        openedTrack.setStartSmoothedPoint(smoothedPoints.get(0));
-        openedTrack.setEndSmoothedPoint(smoothedPoints.get(smoothedPoints.size() - 1));
+        openedTrack.setStartSmoothedPointId(smoothedPoints.get(0).getId());
+        openedTrack.setEndSmoothedPointId(smoothedPoints.get(smoothedPoints.size() - 1).getId());
         openedTrack.setDistance(Point.getTrackDistance(smoothedPoints));
         repository.save(openedTrack);
         repository.deleteInnerRawPoints(openedTrack);
