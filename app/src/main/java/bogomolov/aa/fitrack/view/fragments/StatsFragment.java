@@ -41,16 +41,26 @@ import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentStatsBinding;
 import bogomolov.aa.fitrack.core.DateUtils;
 import bogomolov.aa.fitrack.core.model.Track;
-import bogomolov.aa.fitrack.view.StatsView;
 import bogomolov.aa.fitrack.viewmodels.StatsViewModel;
 import dagger.android.support.AndroidSupportInjection;
 
 import static bogomolov.aa.fitrack.core.DateUtils.getMonthRange;
 import static bogomolov.aa.fitrack.core.DateUtils.getTodayRange;
 import static bogomolov.aa.fitrack.core.DateUtils.getWeekRange;
+import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_MONTH;
+import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_SELECT;
+import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_TODAY;
+import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_WEEK;
+import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.PARAM_DISTANCE;
+import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.PARAM_SPEED;
+import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.PARAM_TIME;
+import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.TIME_STEP_DAY;
+import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.TIME_STEP_WEEK;
 
 
-public class StatsFragment extends Fragment implements StatsView {
+public class StatsFragment extends Fragment {
+
+
     private BarChart chart;
     private StatsViewModel viewModel;
 
@@ -66,9 +76,7 @@ public class StatsFragment extends Fragment implements StatsView {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-
-        viewModel = ViewModelProviders.of(this,viewModelFactory).get(StatsViewModel.class);
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(StatsViewModel.class);
         FragmentStatsBinding binding = DataBindingUtil.inflate(inflater, R.layout.fragment_stats, container, false);
         binding.setLifecycleOwner(this);
         View view = binding.getRoot();
@@ -83,7 +91,9 @@ public class StatsFragment extends Fragment implements StatsView {
         NavigationUI.setupWithNavController(toolbar, navController);
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_stats);
 
-        Spinner tagSpinner = view.findViewById(R.id.stats_spinner_tag);
+        viewModel.tracksLiveData.observe(this, tracks ->
+                updateView(viewModel.datesRange, tracks, viewModel.selectedParam, viewModel.selectedTimeStep, viewModel.selectedTimeFilter));
+
 
         Spinner periodSpinner = view.findViewById(R.id.stats_spinner_period);
         periodSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -91,20 +101,17 @@ public class StatsFragment extends Fragment implements StatsView {
             public void onItemSelected(AdapterView<?> adapterView, View view, final int i, long l) {
                 switch (i) {
                     case FILTER_TODAY:
-                        viewModel.setTimeFilter(getTodayRange(), i,StatsFragment.this);
+                        viewModel.setTimeFilter(getTodayRange(), i);
                         break;
                     case FILTER_WEEK:
-                        viewModel.setTimeFilter(getWeekRange(), i,StatsFragment.this);
+                        viewModel.setTimeFilter(getWeekRange(), i);
                         break;
                     case FILTER_MONTH:
-                        viewModel.setTimeFilter(getMonthRange(), i,StatsFragment.this);
+                        viewModel.setTimeFilter(getMonthRange(), i);
                         break;
                     case FILTER_SELECT:
-                        DateUtils.selectDatesRange(getChildFragmentManager(), getContext(), new DateUtils.DatesSelector() {
-                            @Override
-                            public void onSelect(Date[] dates) {
-                                viewModel.setTimeFilter(dates, i,StatsFragment.this);
-                            }
+                        DateUtils.selectDatesRange(getChildFragmentManager(), getContext(), dates -> {
+                            viewModel.setTimeFilter(dates, i);
                         });
                         break;
                 }
@@ -116,13 +123,13 @@ public class StatsFragment extends Fragment implements StatsView {
             }
         });
 
-        ArrayAdapter<String> tagsArrayAdapter = new ArrayAdapter<String>(
-                getContext(), android.R.layout.simple_spinner_item, viewModel.getTagNames());
-        tagSpinner.setAdapter(tagsArrayAdapter);
+        Spinner tagSpinner = view.findViewById(R.id.stats_spinner_tag);
+        //ArrayAdapter<String> tagsArrayAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, viewModel.getTagNames());
+        //tagSpinner.setAdapter(tagsArrayAdapter);
         tagSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                viewModel.setTagFilter(tagSpinner.getSelectedItem().toString(), StatsFragment.this);
+                viewModel.setTagFilter(tagSpinner.getSelectedItem().toString());
             }
 
             @Override
@@ -138,7 +145,7 @@ public class StatsFragment extends Fragment implements StatsView {
         paramSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                viewModel.setParam(i,StatsFragment.this);
+                viewModel.setParam(i);
             }
 
             @Override
@@ -160,7 +167,7 @@ public class StatsFragment extends Fragment implements StatsView {
         timeStepSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                viewModel.setTimeStep(i, StatsFragment.this);
+                viewModel.setTimeStep(i);
             }
 
             @Override
@@ -175,7 +182,7 @@ public class StatsFragment extends Fragment implements StatsView {
     @Override
     public void onStart() {
         super.onStart();
-        viewModel.updateView(this);
+        viewModel.updateView(true);
     }
 
     private double getParamValue(Track track, int param) {
@@ -191,8 +198,7 @@ public class StatsFragment extends Fragment implements StatsView {
         return 0;
     }
 
-    @Override
-    public void updateView(Date[] datesRange, List<Track> tracks, int selectedParam, int selectedTimeStep, int selectedTimeFilter) {
+    private void updateView(Date[] datesRange, List<Track> tracks, int selectedParam, int selectedTimeStep, int selectedTimeFilter) {
         List<Track> sumTracks = new ArrayList<>();
         List<Date> dates = new ArrayList<>();
         Calendar calendar = new GregorianCalendar();

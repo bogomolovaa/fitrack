@@ -11,6 +11,8 @@ public interface Repository {
 
     void save(Track track);
 
+    void updateTracks(String tag, List<Long> ids);
+
     List<Track> getFinishedTracks(Date[] datesRange, String tag);
 
     List<Track> getTracks(Long... ids);

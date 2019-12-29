@@ -42,12 +42,11 @@ import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentMainBinding;
 import bogomolov.aa.fitrack.core.model.Point;
 import bogomolov.aa.fitrack.core.model.Track;
-import bogomolov.aa.fitrack.view.MainView;
 import bogomolov.aa.fitrack.viewmodels.MainViewModel;
 import dagger.android.support.AndroidSupportInjection;
 
 
-public class MainFragment extends Fragment implements OnMapReadyCallback, MainView {
+public class MainFragment extends Fragment implements OnMapReadyCallback {
     private GoogleMap googleMap;
     private Polyline trackRawPolyline;
     private Polyline trackSmoothedPolyline;
@@ -68,7 +67,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        viewModel = ViewModelProviders.of(this,viewModelFactory).get(MainViewModel.class);
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(MainViewModel.class);
         FragmentMainBinding binding = DataBindingUtil.inflate(inflater, R.layout.fragment_main, container, false);
         binding.setLifecycleOwner(this);
         View view = binding.getRoot();
@@ -84,13 +83,15 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_tracking);
 
 
+        viewModel.startStop.observe(this, this::showStartStopButtons);
+        viewModel.lastPointLiveData.observe(this, point -> updateView(viewModel.track, point, viewModel.rawPoints, viewModel.smoothedPoints));
+
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_fragment);
         mapFragment.getMapAsync(this);
 
         return view;
     }
 
-    @Override
     public void showStartStopButtons(boolean canStart) {
         if (startStopMenu != null) {
             startStopMenu.findItem(R.id.menu_track_start).setVisible(canStart);
@@ -102,23 +103,18 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.start_stop, menu);
         startStopMenu = menu;
-        viewModel.onStartStopButtonsCreated(this);
+        viewModel.onStartStopButtonsCreated();
         super.onCreateOptionsMenu(menu, inflater);
     }
-
-    public Context getViewContext() {
-        return getContext();
-    }
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_track_start:
-                viewModel.startTrack(this);
+                viewModel.startTrack(getContext());
                 break;
             case R.id.menu_track_stop:
-                viewModel.stopTrack(this);
+                viewModel.stopTrack();
                 break;
             default:
                 break;
@@ -126,7 +122,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
         return true;
     }
 
-    public void updateView(Track track, Point point, List<Point> rawTrackPoints, List<Point> smoothedPoints) {
+    private void updateView(Track track, Point point, List<Point> rawTrackPoints, List<Point> smoothedPoints) {
         if (googleMap != null) {
             if (point != null) {
                 LatLng latLng = new LatLng(point.getLat(), point.getLng());
@@ -178,7 +174,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback, MainVi
     @Override
     public void onStart() {
         super.onStart();
-        viewModel.startUpdating(this);
+        viewModel.startUpdating();
     }
 
     @Override

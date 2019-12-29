@@ -1,8 +1,8 @@
 package bogomolov.aa.fitrack.viewmodels;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -12,23 +12,23 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import bogomolov.aa.fitrack.TrackerApplication;
 import bogomolov.aa.fitrack.repository.Repository;
-import bogomolov.aa.fitrack.repository.RepositoryImpl;
 import bogomolov.aa.fitrack.core.model.Point;
 import bogomolov.aa.fitrack.core.RamerDouglasPeucker;
 import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.android.TrackerService;
-import bogomolov.aa.fitrack.view.MainView;
+
+import static bogomolov.aa.fitrack.core.Rx.worker;
 
 public class MainViewModel extends ViewModel {
     public MutableLiveData<String> distance = new MutableLiveData<>();
     public MutableLiveData<String> time = new MutableLiveData<>();
     public MutableLiveData<String> avgSpeed = new MutableLiveData<>();
     public MutableLiveData<String> speed = new MutableLiveData<>();
+    public MutableLiveData<Boolean> startStop = new MutableLiveData<>();
+    public MutableLiveData<Point> lastPointLiveData = new MutableLiveData<>();
 
     private Repository repository;
-    private Handler handler;
     private Handler backgroundHandler;
     private HandlerThread handlerThread;
 
@@ -37,6 +37,11 @@ public class MainViewModel extends ViewModel {
 
     private Runnable updateRunnable;
 
+    public Track track;
+    public List<Point> rawPoints;
+    public List<Point> smoothedPoints;
+
+
     private static final int WINDOW_MAX_SIZE = 50;
 
     @Inject
@@ -44,7 +49,6 @@ public class MainViewModel extends ViewModel {
         super();
         this.repository = repository;
 
-        handler = new Handler();
         handlerThread = new HandlerThread("MainViewModel background");
         handlerThread.start();
         backgroundHandler = new Handler(handlerThread.getLooper());
@@ -54,73 +58,68 @@ public class MainViewModel extends ViewModel {
     protected void onCleared() {
         super.onCleared();
         handlerThread.quitSafely();
-        repository.close();
     }
 
-    public void startTrack(MainView mainView) {
-
+    public void startTrack(Context context) {
         if (TrackerService.working) {
-            Point lastPoint = repository.getLastRawPoint();
-            if (lastPoint != null) {
-                TrackerService.startTrack(repository,lastPoint);
-                mainView.showStartStopButtons(false);
+            worker(() -> {
+                Point lastPoint = repository.getLastRawPoint();
+                if (lastPoint != null) {
+                    TrackerService.startTrack(repository, lastPoint);
+                    startStop.postValue(false);
+                }
+            });
+        } else {
+            TrackerService.startTrackerService(TrackerService.START_SERVICE_ACTION, context);
+        }
+    }
+
+    public void stopTrack() {
+        worker(() -> {
+            Track lastTrack = repository.getLastTrack();
+            if (lastTrack != null && lastTrack.isOpened()) {
+                TrackerService.finishTrack(repository, repository.getTrackPoints(lastTrack, Point.RAW), lastTrack, System.currentTimeMillis());
+                startStop.postValue(true);
             }
-        } else {
-            TrackerService.startTrackerService(TrackerService.START_SERVICE_ACTION, mainView.getViewContext());
-        }
+        });
     }
 
-    public void stopTrack(MainView mainView) {
-        Track lastTrack = repository.getLastTrack();
-        if (lastTrack != null&&lastTrack.isOpened()) {
-            TrackerService.finishTrack(repository, repository.getTrackPoints(lastTrack, Point.RAW), lastTrack, System.currentTimeMillis());
-        }
-        mainView.showStartStopButtons(true);
+
+    public void onStartStopButtonsCreated() {
+        worker(() -> {
+            Track track = repository.getLastTrack();
+            startStop.postValue(track == null || !track.isOpened());
+        });
     }
 
-    public void onStartStopButtonsCreated(MainView mainView) {
-        Track lastTrack = repository.getLastTrack();
-        if (lastTrack != null) {
-            mainView.showStartStopButtons(!lastTrack.isOpened());
-        } else {
-            mainView.showStartStopButtons(true);
-        }
-    }
-
-    public void startUpdating(MainView mainView) {
+    public void startUpdating() {
         updateRunnable = new Runnable() {
-
             @Override
             public void run() {
-                Repository repository = new RepositoryImpl();
-                Track track = repository.getLastTrack();
+                track = repository.getLastTrack();
                 Point point = repository.getLastRawPoint();
-                List<Point> rawPoints = new ArrayList<>();
-                List<Point> smoothedPoints = new ArrayList<>();
+                rawPoints = new ArrayList<>();
+                smoothedPoints = new ArrayList<>();
 
                 if (track != null && track.isOpened()) {
                     rawPoints.addAll(repository.getTrackPoints(track, Point.RAW));
                     smoothedPoints.addAll(getSmoothedPoints(track, rawPoints));
                 }
-                Point updatePoint = point;
-                Track updateTrack = track;
-                handler.post(() -> {
-                    if (updateTrack != null && updateTrack.isOpened()) {
-                        distance.setValue((int) updateTrack.getCurrentDistance() + " m");
-                        time.setValue(updateTrack.getTimeString());
-                        speed.setValue(String.format("%.1f", 3.6 * updateTrack.getCurrentSpeed()) + " km/h");
-                        avgSpeed.setValue(String.format("%.1f", 3.6 * updateTrack.getSpeedForCurrentDistance()) + " km/h");
-                    } else {
-                        distance.setValue("");
-                        time.setValue("");
-                        speed.setValue("");
-                        avgSpeed.setValue("");
-                    }
-                    mainView.updateView(updateTrack, updatePoint, rawPoints, smoothedPoints);
-                });
+
+                if (track != null && track.isOpened()) {
+                    distance.postValue((int) track.getCurrentDistance() + " m");
+                    time.postValue(track.getTimeString());
+                    speed.postValue(String.format("%.1f", 3.6 * track.getCurrentSpeed()) + " km/h");
+                    avgSpeed.postValue(String.format("%.1f", 3.6 * track.getSpeedForCurrentDistance()) + " km/h");
+                } else {
+                    distance.postValue("");
+                    time.postValue("");
+                    speed.postValue("");
+                    avgSpeed.postValue("");
+                }
+                lastPointLiveData.postValue(point);
 
                 backgroundHandler.postDelayed(this, 1000);
-                repository.close();
             }
         };
         backgroundHandler.post(updateRunnable);

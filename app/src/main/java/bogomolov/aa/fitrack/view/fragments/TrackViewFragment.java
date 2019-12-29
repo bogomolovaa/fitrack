@@ -52,33 +52,27 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        viewModel = ViewModelProviders.of(this,viewModelFactory).get(TrackViewModel.class);
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(TrackViewModel.class);
         FragmentTrackViewBinding viewBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_track_view, container, false);
         viewBinding.setViewModel(viewModel);
         viewBinding.setLifecycleOwner(this);
         View view = viewBinding.getRoot();
 
         long trackId = (Long) getArguments().get("trackId");
-        Track track = viewModel.setTrack(trackId,getContext());
-
+        viewModel.setTrack(trackId, getContext());
+        viewModel.trackName.observe(this, name -> ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(name));
 
         Toolbar toolbar = view.findViewById(R.id.toolbar_track_view);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
 
         NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
         NavigationUI.setupWithNavController(toolbar, navController);
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(track.getName());
 
-        view.findViewById(R.id.track_text_tag).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                TagSelectionDialog dialog = new TagSelectionDialog();
-                dialog.setTagResultListener(viewModel);
-                dialog.show(getChildFragmentManager(), "dialog");
-            }
+        view.findViewById(R.id.track_text_tag).setOnClickListener(v -> {
+            TagSelectionDialog dialog = new TagSelectionDialog();
+            dialog.setTagResultListener(viewModel);
+            dialog.show(getChildFragmentManager(), "TagSelectionDialog");
         });
-
-
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_track_view);
         mapFragment.getMapAsync(this);
@@ -114,7 +108,6 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastPoint.getLat(), lastPoint.getLng()), 15));
             }
             googleMap.addPolyline((new PolylineOptions()).color(0xffffff00).clickable(false).add(Point.toPolylineCoordinates(smoothedPoints)));
-            //trackSmoothedPolyline.setPoints(Arrays.asList(Point.toPolylineCoordinates(smoothedPoints)));
         }
     }
 

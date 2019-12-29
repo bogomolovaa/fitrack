@@ -34,6 +34,7 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
     public TracksRecyclerAdapter(TracksListFragment tracksListFragment, Context context) {
         this.context = context;
         this.tracksListFragment = tracksListFragment;
+        tracks = new ArrayList<>();
     }
 
     public void setTracks(List<Track> tracks) {
@@ -50,16 +51,6 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
     public Set<Long> getSelectedIds() {
         return selectedIds;
     }
-
-    public void deleteTracks(){
-        List<Track> newList = new ArrayList<>();
-        for(Track track : tracks){
-            if(!selectedIds.contains(track.getId())) newList.add(track);
-        }
-        tracks = newList;
-        notifyDataSetChanged();
-    }
-
 
     @NonNull
     @Override

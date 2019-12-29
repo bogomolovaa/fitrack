@@ -51,42 +51,32 @@ public class TagSelectionDialog extends DialogFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(TagSelectionViewModel.class);
-        FragmentTagSelectionBinding viewBinding = DataBindingUtil.inflate(inflater,R.layout.fragment_tag_selection,container,false);
+        FragmentTagSelectionBinding viewBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_tag_selection, container, false);
         viewBinding.setViewModel(viewModel);
         viewBinding.setLifecycleOwner(this);
         View view = viewBinding.getRoot();
 
         listView = view.findViewById(R.id.tag_list_view);
-        ArrayAdapter<Tag> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, viewModel.getTags());
-        listView.setAdapter(adapter);
-        viewModel.tagsLiveData.observe(this, (tags) -> adapter.notifyDataSetChanged());
+        viewModel.tagsLiveData.observe(this, (tags) -> {
+            ArrayAdapter<Tag> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, tags);
+            listView.setAdapter(adapter);
+        });
 
         toolbar = view.findViewById(R.id.tag_selection_toolbar);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dismiss();
+        toolbar.setNavigationOnClickListener(v -> dismiss());
+
+        listView.setOnItemLongClickListener((AdapterView<?> adapterView, View v, int position, long l) -> {
+            if (actionMode == null) {
+                actionMode = toolbar.startActionMode(callback);
+            } else {
+                actionMode.finish();
             }
+            return true;
         });
 
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if (actionMode == null) {
-                    actionMode = toolbar.startActionMode(callback);
-                } else {
-                    actionMode.finish();
-                }
-                return true;
-            }
-        });
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+        listView.setOnItemClickListener((AdapterView<?> adapterView, View v, int position, long l)-> {
                 selectedTag = (Tag) listView.getItemAtPosition(position);
                 dismiss();
-            }
         });
 
         return view;

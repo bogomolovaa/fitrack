@@ -16,44 +16,44 @@ import bogomolov.aa.fitrack.core.model.Tag;
 import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.view.TagResultListener;
 
+import static bogomolov.aa.fitrack.core.Rx.worker;
+
 
 public class TrackViewModel extends ViewModel implements TagResultListener {
     public MutableLiveData<String> distance = new MutableLiveData<>();
     public MutableLiveData<String> time = new MutableLiveData<>();
     public MutableLiveData<String> avgSpeed = new MutableLiveData<>();
     public MutableLiveData<String> selectedTag = new MutableLiveData<>();
+    public MutableLiveData<String> trackName = new MutableLiveData<>();
     private Repository repository;
     private Track track;
 
     @Inject
-    public TrackViewModel(Repository repository){
+    public TrackViewModel(Repository repository) {
         this.repository = repository;
     }
 
-    @Override
-    protected void onCleared(){
-        repository.close();
-    }
-
-    public List<Point> getTrackPoints(){
+    public List<Point> getTrackPoints() {
         return repository.getTrackPoints(track, Point.SMOOTHED);
     }
 
-    public Track setTrack(long trackId, Context context){
-        track = repository.getTracks(trackId).get(0);
-        distance.setValue((int) track.getDistance() + " m");
-        time.setValue(track.getTimeString());
-        avgSpeed.setValue(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
-        selectedTag.setValue(track.getTag() != null ? track.getTag() : context.getResources().getString(R.string.no_tag));
-        return track;
+    public void setTrack(long trackId, Context context) {
+        worker(() -> {
+            track = repository.getTracks(trackId).get(0);
+            distance.postValue((int) track.getDistance() + " m");
+            time.postValue(track.getTimeString());
+            avgSpeed.postValue(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
+            selectedTag.postValue(track.getTag() != null ? track.getTag() : context.getResources().getString(R.string.no_tag));
+            trackName.postValue(track.getName());
+        });
     }
 
     @Override
     public void onTagSelectionResult(Tag tag) {
         if (tag != null) {
             track.setTag(tag.getName());
-            repository.save(track);
-            selectedTag.setValue(tag.getName());
+            selectedTag.postValue(tag.getName());
+            worker(() -> repository.save(track));
         }
     }
 }

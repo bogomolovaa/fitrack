@@ -1,5 +1,7 @@
 package bogomolov.aa.fitrack.viewmodels;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import java.util.ArrayList;
@@ -10,44 +12,38 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.repository.Repository;
-import bogomolov.aa.fitrack.repository.RepositoryImpl;
 import bogomolov.aa.fitrack.core.model.Tag;
 import bogomolov.aa.fitrack.core.model.Track;
-import bogomolov.aa.fitrack.view.TracksListView;
+
+import static bogomolov.aa.fitrack.core.Rx.worker;
 
 public class TracksListViewModel extends ViewModel {
     private Repository repository;
+    public MutableLiveData<List<Track>> tracksLiveData = new MutableLiveData<>();
+    private Date[] datesRange;
 
     @Inject
     public TracksListViewModel(Repository repository) {
         this.repository = repository;
     }
 
-    @Override
-    protected void onCleared(){
-        repository.close();
+    public void updateTracks(Date[] dates) {
+        datesRange = dates;
+        worker(() -> tracksLiveData.postValue(repository.getFinishedTracks(dates, null)));
     }
 
-    public void onTimeFilterSelect(Date[] dates, TracksListView tracksListView){
-        List<Track> tracks = repository.getFinishedTracks(dates,null);
-        tracksListView.updateTracksList(tracks);
+    public void setTag(@NonNull Tag tag, Set<Long> selectedIds) {
+        worker(() -> {
+            repository.updateTracks(tag.getName(), new ArrayList<>(selectedIds));
+            if (datesRange != null) updateTracks(datesRange);
+        });
     }
 
-    public void setTag(Tag tag, Set<Long> selectedIds){
-        if (tag != null) {
-            List<Long> ids = new ArrayList<>(selectedIds);
-            List<Track> tracks = repository.getTracks(ids.toArray(new Long[0]));
-            for (Track track : tracks){
-                track.setTag(tag.getName());
-                repository.save(track);
-            }
-        }
+    public void deleteTracks(Set<Long> selectedIds) {
+        worker(() -> {
+            repository.deleteTracks(selectedIds.toArray(new Long[0]));
+            if (datesRange != null) updateTracks(datesRange);
+        });
     }
-
-    public void deleteTracks(Set<Long> selectedIds){
-        repository.deleteTracks(selectedIds.toArray(new Long[0]));
-    }
-
-
 
 }

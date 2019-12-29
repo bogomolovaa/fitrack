@@ -2,33 +2,33 @@ package bogomolov.aa.fitrack.repository;
 
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 
 import androidx.room.Query;
 import androidx.room.Room;
+import androidx.room.Transaction;
 
 import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import bogomolov.aa.fitrack.core.model.Point;
 import bogomolov.aa.fitrack.core.model.Tag;
 import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.repository.entities.PointEntity;
-import bogomolov.aa.fitrack.repository.entities.TagEntity;
 import bogomolov.aa.fitrack.repository.entities.TrackEntity;
-import io.realm.Realm;
-import io.realm.RealmConfiguration;
-import io.realm.RealmQuery;
-import io.realm.Sort;
 
 import static bogomolov.aa.fitrack.repository.ModelEntityMapper.*;
 
+@Singleton
 public class RepositoryImpl implements Repository {
     private AppDatabase db;
 
     @Inject
     public RepositoryImpl(Application application) {
+        Log.i("test", "DB CREATED");
         db = Room.databaseBuilder(application, AppDatabase.class, "tracker_db").build();
     }
 
@@ -40,6 +40,10 @@ public class RepositoryImpl implements Repository {
     @Override
     public void save(Track track) {
         db.trackDao().update(modelToEntity(track));
+    }
+
+    public void updateTracks(String tag, List<Long> ids) {
+        db.trackDao().updateTracks(tag, ids);
     }
 
     @Override
@@ -67,75 +71,61 @@ public class RepositoryImpl implements Repository {
         return entityToModel(db.tagDao().getTags(), Tag.class);
     }
 
+    @Transaction
     @Override
     public void deleteTag(Tag tag) {
-        List<TrackEntity> tracks = realm.where(TrackEntity.class).equalTo("tag", tag.getName()).findAll();
-        realm.beginTransaction();
-        for (TrackEntity track : tracks) track.setTag(null);
-        realm.commitTransaction();
-        realm.where(TagEntity.class).equalTo("id", tag.getId()).findAll().deleteAllFromRealm();
+        db.trackDao().updateTags(tag.getName(), null);
+        db.tagDao().delete(modelToEntity(tag));
     }
 
     @Override
     public void deleteTracks(Long... ids) {
-        realm.beginTransaction();
-        realm.where(TrackEntity.class).in("id", ids).findAll().deleteAllFromRealm();
-        realm.commitTransaction();
+        db.trackDao().deleteByIds(ids);
     }
 
     @Override
     public void deleteInnerRawPoints(Track track) {
-        realm.beginTransaction();
-        realm.where(PointEntity.class).equalTo("smoothed", Point.RAW).greaterThan("id", track.getStartPointId().getId()).
-                lessThan("id", track.getEndPointId().getId()).findAll().deleteAllFromRealm();
-        realm.commitTransaction();
+        db.pointDao().deleteByIds(track.getStartPointId(), track.getEndPointId(), Point.RAW);
     }
 
     @Override
     public void deletePointsAfterLastTrack(Track lastTrack) {
-        realm.beginTransaction();
-        long lastId = lastTrack != null ? lastTrack.getEndPointId().getId() : 0;
-        realm.where(PointEntity.class).equalTo("smoothed", Point.RAW).greaterThan("id", lastId).findAll().deleteAllFromRealm();
-        realm.commitTransaction();
+        long lastId = lastTrack != null ? lastTrack.getEndPointId() : 0;
+        db.pointDao().deleteByIdsGreater(lastId, Point.RAW);
     }
 
     @Override
     public List<Point> getPointsAfterLastTrack(Track lastTrack) {
-        long lastId = lastTrack != null ? lastTrack.getEndPointId().getId() : 0;
-        List<PointEntity> points = realm.where(PointEntity.class).equalTo("smoothed", Point.RAW).greaterThan("id", lastId).findAll();
+        long lastId = lastTrack != null ? lastTrack.getEndPointId() : 0;
+        List<PointEntity> points = db.pointDao().getPointsByIdsGreater(lastId, Point.RAW);
         return entityToModel(points, Point.class);
     }
 
     @Override
     public Track getLastTrack() {
-        List<TrackEntity> tracks = realm.where(TrackEntity.class).findAll().sort("id", Sort.ASCENDING);
-        TrackEntity track = tracks.size() > 0 ? tracks.get(tracks.size() - 1) : null;
-        return entityToModel(track);
+        return entityToModel(db.trackDao().getLastTrack());
     }
 
     @Override
     public Point getLastRawPoint() {
-        List<PointEntity> points = realm.where(PointEntity.class).equalTo("smoothed", Point.RAW).sort("id", Sort.ASCENDING).findAll();
-        PointEntity point = points.size() > 0 ? points.get(points.size() - 1) : null;
-        return entityToModel(point);
+        return entityToModel(db.pointDao().getLastPoint(Point.RAW));
     }
 
     @Override
     public List<Point> getTrackPoints(Track track, int smoothed) {
         List<PointEntity> points = null;
         if (track.isOpened()) {
-            points = realm.where(PointEntity.class).equalTo("smoothed", smoothed).greaterThanOrEqualTo("id", track.getStartPointId(smoothed).getId()).findAll().sort("id", Sort.ASCENDING);
+            points = db.pointDao().getPoints(track.getStartPointId(smoothed), smoothed);
         } else {
-            points = realm.where(PointEntity.class).equalTo("smoothed", smoothed).between("id", track.getStartPointId(smoothed).getId(), track.getEndPointId(smoothed).getId()).findAll().sort("id", Sort.ASCENDING);
+            points = db.pointDao().getPoints(track.getStartPointId(smoothed), track.getEndPointId(smoothed), smoothed);
         }
         return entityToModel(points, Point.class);
     }
 
     @Override
     public List<Track> getFinishedTracks(Date[] datesRange, String tag) {
-        RealmQuery<TrackEntity> query = realm.where(TrackEntity.class).greaterThanOrEqualTo("startTime", datesRange[0].getTime()).lessThan("startTime", datesRange[1].getTime()).greaterThan("endTime", 0);
-        if (tag != null) query = query.equalTo("tag", tag);
-        return entityToModel(query.findAll(), Track.class);
+        List<TrackEntity> tracks = tag != null ? db.trackDao().getFinishedTracks(datesRange[0].getTime(), datesRange[1].getTime(), tag) : db.trackDao().getFinishedTracks(datesRange[0].getTime(), datesRange[1].getTime());
+        return entityToModel(tracks, Track.class);
     }
 
 }

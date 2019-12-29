@@ -15,7 +15,6 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -26,7 +25,6 @@ import android.widget.AdapterView;
 import android.widget.Spinner;
 
 import java.util.Date;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -35,15 +33,13 @@ import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentTracksListBinding;
 import bogomolov.aa.fitrack.core.DateUtils;
 import bogomolov.aa.fitrack.core.model.Tag;
-import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.view.TagResultListener;
-import bogomolov.aa.fitrack.view.TracksListView;
 import bogomolov.aa.fitrack.view.TracksRecyclerAdapter;
 import bogomolov.aa.fitrack.viewmodels.TracksListViewModel;
 import dagger.android.support.AndroidSupportInjection;
 
 
-public class TracksListFragment extends Fragment implements TagResultListener, TracksListView {
+public class TracksListFragment extends Fragment implements TagResultListener {
     private TracksRecyclerAdapter adapter;
     private ActionMode actionMode;
     private Toolbar toolbar;
@@ -67,8 +63,8 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        viewModel = ViewModelProviders.of(this,viewModelFactory).get(TracksListViewModel.class);
-        FragmentTracksListBinding fragmentTracksListBinding = DataBindingUtil.inflate(inflater,R.layout.fragment_tracks_list,container,false);
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(TracksListViewModel.class);
+        FragmentTracksListBinding fragmentTracksListBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_tracks_list, container, false);
         fragmentTracksListBinding.setViewModel(viewModel);
         fragmentTracksListBinding.setLifecycleOwner(this);
         View view = fragmentTracksListBinding.getRoot();
@@ -80,6 +76,7 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
         NavigationUI.setupWithNavController(toolbar, navController);
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_tracks);
 
+        viewModel.tracksLiveData.observe(this, tracks -> adapter.setTracks(tracks));
 
 
         Spinner filterSpinner = view.findViewById(R.id.tracks_time_spinner);
@@ -88,24 +85,24 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 switch (i) {
                     case FILTER_TODAY:
-                        viewModel.onTimeFilterSelect(DateUtils.getTodayRange(),TracksListFragment.this);
+                        viewModel.updateTracks(DateUtils.getTodayRange());
                         break;
                     case FILTER_WEEK:
-                        viewModel.onTimeFilterSelect(DateUtils.getWeekRange(),TracksListFragment.this);
+                        viewModel.updateTracks(DateUtils.getWeekRange());
                         break;
                     case FILTER_MONTH:
-                        viewModel.onTimeFilterSelect(DateUtils.getMonthRange(),TracksListFragment.this);
+                        viewModel.updateTracks(DateUtils.getMonthRange());
                         break;
                     case FILTER_SELECT:
-                        DateUtils.selectDatesRange(getChildFragmentManager(),getContext(), new DateUtils.DatesSelector() {
+                        DateUtils.selectDatesRange(getChildFragmentManager(), getContext(), new DateUtils.DatesSelector() {
                             @Override
                             public void onSelect(Date[] dates) {
-                                viewModel.onTimeFilterSelect(dates,TracksListFragment.this);
+                                viewModel.updateTracks(dates);
                             }
                         });
                         break;
                     default:
-                        viewModel.onTimeFilterSelect(DateUtils.getTodayRange(),TracksListFragment.this);
+                        viewModel.updateTracks(DateUtils.getTodayRange());
                 }
             }
 
@@ -116,12 +113,11 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
         });
 
 
-
         RecyclerView recyclerView = view.findViewById(R.id.track_recycler);
-        adapter = new TracksRecyclerAdapter(this,getContext());
+        adapter = new TracksRecyclerAdapter(this, getContext());
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        viewModel.onTimeFilterSelect(DateUtils.getTodayRange(), this);
+        viewModel.updateTracks(DateUtils.getTodayRange());
 
         return view;
     }
@@ -151,12 +147,9 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
         }
 
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            Log.d("test", "item " + item.getTitle());
-
             switch (item.getItemId()) {
                 case R.id.menu_track_delete:
                     actionMode.finish();
-                    adapter.deleteTracks();
                     viewModel.deleteTracks(adapter.getSelectedIds());
                     break;
                 case R.id.menu_track_tag:
@@ -177,13 +170,8 @@ public class TracksListFragment extends Fragment implements TagResultListener, T
 
     @Override
     public void onTagSelectionResult(Tag tag) {
-        viewModel.setTag(tag, adapter.getSelectedIds());
+        if (tag != null) viewModel.setTag(tag, adapter.getSelectedIds());
         actionMode.finish();
-    }
-
-    @Override
-    public void updateTracksList(List<Track> tracks) {
-        adapter.setTracks(tracks);
     }
 
 }

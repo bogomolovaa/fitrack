@@ -12,88 +12,90 @@ import javax.inject.Inject;
 import bogomolov.aa.fitrack.repository.Repository;
 import bogomolov.aa.fitrack.core.model.Tag;
 import bogomolov.aa.fitrack.core.model.Track;
-import bogomolov.aa.fitrack.view.StatsView;
 
 import static bogomolov.aa.fitrack.core.DateUtils.getTodayRange;
-import static bogomolov.aa.fitrack.view.StatsView.FILTER_TODAY;
-import static bogomolov.aa.fitrack.view.StatsView.NO_TAG;
-import static bogomolov.aa.fitrack.view.StatsView.PARAM_DISTANCE;
-import static bogomolov.aa.fitrack.view.StatsView.TIME_STEP_DAY;
+import static bogomolov.aa.fitrack.core.Rx.worker;
 
 public class StatsViewModel extends ViewModel {
+    public static final String NO_TAG = "-";
+
+    public static final int PARAM_DISTANCE = 0;
+    public static final int PARAM_SPEED = 1;
+    public static final int PARAM_TIME = 2;
+
+    public static final int TIME_STEP_DAY = 0;
+    public static final int TIME_STEP_WEEK = 1;
+
+    public static final int FILTER_TODAY = 0;
+    public static final int FILTER_WEEK = 1;
+    public static final int FILTER_MONTH = 2;
+    public static final int FILTER_SELECT = 3;
+
     public MutableLiveData<String> distance = new MutableLiveData<>();
     public MutableLiveData<String> time = new MutableLiveData<>();
     public MutableLiveData<String> selectedPeriod = new MutableLiveData<>();
     public MutableLiveData<String> speed = new MutableLiveData<>();
+    public MutableLiveData<String[]> tagEntries = new MutableLiveData<>();
+    public MutableLiveData<List<Track>> tracksLiveData = new MutableLiveData<>();
 
     private List<Track> tracks;
     private Repository repository;
-    private Date[] datesRange;
+    public Date[] datesRange;
     private String selectedTag = NO_TAG;
-    private int selectedTimeFilter = FILTER_TODAY;
-    private int selectedParam;
-    private int selectedTimeStep;
+    public int selectedTimeFilter = FILTER_TODAY;
+    public int selectedParam;
+    public int selectedTimeStep;
 
 
     @Inject
     public StatsViewModel(Repository repository) {
         this.repository = repository;
-
         datesRange = getTodayRange();
         selectedParam = PARAM_DISTANCE;
         selectedTimeStep = TIME_STEP_DAY;
 
-        loadTracks();
+        worker(() -> tagEntries.postValue(getTagNames(repository.getTags())));
     }
 
-    @Override
-    protected void onCleared() {
-        repository.close();
-    }
-
-
-    public void setTimeFilter(Date[] datesRange, int selectedTimeFilter, StatsView statsView) {
+    public void setTimeFilter(Date[] datesRange, int selectedTimeFilter) {
         this.datesRange = datesRange;
         this.selectedTimeFilter = selectedTimeFilter;
-        loadTracks();
-        updateView(statsView);
+        updateView(true);
     }
 
-    public void setTagFilter(String selectedTag, StatsView statsView) {
+    public void setTagFilter(String selectedTag) {
         this.selectedTag = selectedTag;
-        loadTracks();
-        updateView(statsView);
+        updateView(true);
     }
 
-    public void setParam(int selectedParam, StatsView statsView) {
+    public void setParam(int selectedParam) {
         this.selectedParam = selectedParam;
-        updateView(statsView);
+        updateView(false);
     }
 
-    public void setTimeStep(int selectedTimeStep, StatsView statsView) {
+    public void setTimeStep(int selectedTimeStep) {
         this.selectedTimeStep = selectedTimeStep;
-        updateView(statsView);
+        updateView(false);
     }
 
-    public void updateView(StatsView statsView) {
+    public void updateView(boolean reload) {
         String startDateString = new SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[0]);
         String endDateString = new SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[1]);
         selectedPeriod.setValue(startDateString + " - " + endDateString);
 
-        Track sumTrack = Track.sumTracks(tracks);
-
-        distance.setValue((int) sumTrack.getDistance() + " m");
-        time.setValue(sumTrack.getTimeString());
-        speed.setValue(String.format("%.1f", 3.6 * sumTrack.getSpeed()) + " km/h");
-        statsView.updateView(datesRange, tracks, selectedParam, selectedTimeStep, selectedTimeFilter);
+        worker(() -> {
+            List<Track> tracks = reload ? repository.getFinishedTracks(datesRange, selectedTag.equals(NO_TAG) ? null : selectedTag) : StatsViewModel.this.tracks;
+            StatsViewModel.this.tracks = tracks;
+            Track sumTrack = Track.sumTracks(tracks);
+            distance.postValue((int) sumTrack.getDistance() + " m");
+            time.postValue(sumTrack.getTimeString());
+            speed.postValue(String.format("%.1f", 3.6 * sumTrack.getSpeed()) + " km/h");
+            tracksLiveData.postValue(tracks);
+        });
     }
 
-    private void loadTracks() {
-        tracks = repository.getFinishedTracks(datesRange, selectedTag.equals(NO_TAG) ? null : selectedTag);
-    }
 
-    public String[] getTagNames() {
-        List<Tag> tags = repository.getTags();
+    private String[] getTagNames(List<Tag> tags) {
         String[] tagNames = new String[tags.size() + 1];
         tagNames[0] = NO_TAG;
         for (int i = 0; i < tags.size(); i++) tagNames[i + 1] = tags.get(i).getName();

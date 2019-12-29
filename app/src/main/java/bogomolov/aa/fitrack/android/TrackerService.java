@@ -16,6 +16,7 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.navigation.NavDeepLinkBuilder;
@@ -52,6 +53,8 @@ import dagger.android.AndroidInjection;
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.HasAndroidInjector;
+
+import static bogomolov.aa.fitrack.core.Rx.worker;
 
 
 public class TrackerService extends Service
@@ -132,15 +135,6 @@ public class TrackerService extends Service
         prefs.apply();
         Intent intent = new Intent(context, TrackerService.class);
         intent.setAction(action);
-
-        /*
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent);
-        } else {
-            ContextCompat.startForegroundService(context, intent);
-        }
-         */
-
         ContextCompat.startForegroundService(context, intent);
     }
 
@@ -201,7 +195,7 @@ public class TrackerService extends Service
                     location = locationResult.getLastLocation();
                     if (location.getAccuracy() < MAX_LOCATION_ACCURACY) {
                         Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
-                        checkTrack(point);
+                        worker(() -> checkTrack(point));
                     }
                 }
             }
@@ -310,7 +304,6 @@ public class TrackerService extends Service
     public void onDestroy() {
         super.onDestroy();
         stopLocationUpdates();
-        repository.close();
     }
 
     public void stopLocationUpdates() {

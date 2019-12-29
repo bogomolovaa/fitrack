@@ -10,23 +10,18 @@ import dagger.android.DispatchingAndroidInjector;
 import dagger.android.HasAndroidInjector;
 
 import bogomolov.aa.fitrack.dagger.DaggerAppComponent;
-import io.realm.Realm;
 
 public class TrackerApplication extends Application implements HasAndroidInjector {
 
     @Inject
     DispatchingAndroidInjector<Object> androidInjector;
 
-    private AppComponent appComponent;
-
 
     @Override
     public void onCreate() {
         super.onCreate();
-        Realm.init(this);
 
-        appComponent = DaggerAppComponent.create();
-        appComponent.inject(this);
+        DaggerAppComponent.builder().application(this).build().inject(this);
     }
 
     @Override
