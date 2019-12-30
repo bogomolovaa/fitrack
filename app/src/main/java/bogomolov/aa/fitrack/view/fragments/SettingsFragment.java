@@ -62,11 +62,8 @@ public class SettingsFragment extends Fragment implements SharedPreferences.OnSh
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals(KEY_TRACKING)) {
             boolean isTracking = sharedPreferences.getBoolean(key, true);
-            if (isTracking) {
-                TrackerService.startTrackerService(TrackerService.START_SERVICE_ACTION, getContext());
-            } else {
-                TrackerService.startTrackerService(TrackerService.STOP_SERVICE_ACTION, getContext());
-            }
+            String action = isTracking ? TrackerService.START_SERVICE_ACTION : TrackerService.STOP_SERVICE_ACTION;
+            TrackerService.startTrackerService(action, getContext());
         }
     }
 

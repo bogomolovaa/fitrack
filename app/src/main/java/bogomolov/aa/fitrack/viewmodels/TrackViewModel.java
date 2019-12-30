@@ -25,16 +25,14 @@ public class TrackViewModel extends ViewModel implements TagResultListener {
     public MutableLiveData<String> avgSpeed = new MutableLiveData<>();
     public MutableLiveData<String> selectedTag = new MutableLiveData<>();
     public MutableLiveData<String> trackName = new MutableLiveData<>();
+    public MutableLiveData<List<Point>> trackPoints = new MutableLiveData<>();
     private Repository repository;
     private Track track;
 
     @Inject
     public TrackViewModel(Repository repository) {
         this.repository = repository;
-    }
-
-    public List<Point> getTrackPoints() {
-        return repository.getTrackPoints(track, Point.SMOOTHED);
+        worker(() -> trackPoints.postValue(repository.getTrackPoints(track, Point.SMOOTHED)));
     }
 
     public void setTrack(long trackId, Context context) {

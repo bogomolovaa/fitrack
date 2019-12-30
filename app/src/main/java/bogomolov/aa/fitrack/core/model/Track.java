@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import bogomolov.aa.fitrack.core.RamerDouglasPeucker;
+
 
 public class Track {
     public static final int EPSILON = 25;
@@ -41,7 +43,7 @@ public class Track {
         this.currentDistance = currentDistance;
     }
 
-    public String getName(){
+    public String getName() {
         return new SimpleDateFormat("dd.MM.yyyy HH:mm").format(new Date(startTime));
     }
 
@@ -83,12 +85,12 @@ public class Track {
 
     public double getSpeed() {
         long time = isOpened() ? System.currentTimeMillis() : endTime;
-        return distance / ((time-startTime) / 1000.0);
+        return distance / ((time - startTime) / 1000.0);
     }
 
     public double getSpeedForCurrentDistance() {
         long time = isOpened() ? System.currentTimeMillis() : endTime;
-        return currentDistance / ((time-startTime) / 1000.0);
+        return currentDistance / ((time - startTime) / 1000.0);
     }
 
     public void setCurrentSpeed(double currentSpeed) {
@@ -147,17 +149,27 @@ public class Track {
         return endTime == 0;
     }
 
-    public static Track sumTracks(List<Track> tracks){
+    public static Track sumTracks(List<Track> tracks) {
         double distance = 0;
         long time = 0;
         Track sumTrack = new Track();
-        for(Track track : tracks){
-            distance+=track.distance;
-            time+=track.getEndTime()-track.getStartTime();
+        for (Track track : tracks) {
+            distance += track.distance;
+            time += track.getEndTime() - track.getStartTime();
         }
         sumTrack.setDistance(distance);
         sumTrack.setEndTime(System.currentTimeMillis());
-        sumTrack.setStartTime(System.currentTimeMillis()-time);
+        sumTrack.setStartTime(System.currentTimeMillis() - time);
         return sumTrack;
+    }
+
+    public static List<Point> smooth(List<Point> rawPoints) {
+        return RamerDouglasPeucker.douglasPeucker(rawPoints, Track.EPSILON);
+    }
+
+    public static double getCurrentSpeed(List<Point> points) {
+        double distance = points.size() > 1 ? Point.distance(points.get(points.size() - 1), points.get(points.size() - 2)) : 0;
+        double seconds = points.size() > 1 ? (points.get(points.size() - 1).getTime() - points.get(points.size() - 2).getTime()) / 1000.0 : 0;
+        return seconds > 0 ? distance / seconds : 0;
     }
 }

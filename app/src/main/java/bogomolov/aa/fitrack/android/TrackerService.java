@@ -268,7 +268,7 @@ public class TrackerService extends Service
     public static void finishTrack(Repository repository, List<Point> points, Track openedTrack, long time) {
         if (points.size() == 0) return;
         Point lastPoint = points.get(points.size() - 1);
-        List<Point> smoothedPoints = Point.clonePoints(RamerDouglasPeucker.douglasPeucker(points, Track.EPSILON));
+        List<Point> smoothedPoints = Point.clonePoints(Track.smooth(points));
         for (Point point : smoothedPoints) {
             point.setSmoothed(Point.SMOOTHED);
             repository.addPoint(point);

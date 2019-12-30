@@ -123,56 +123,14 @@ public class StatsFragment extends Fragment {
             }
         });
 
-        Spinner tagSpinner = view.findViewById(R.id.stats_spinner_tag);
-        //ArrayAdapter<String> tagsArrayAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, viewModel.getTagNames());
-        //tagSpinner.setAdapter(tagsArrayAdapter);
-        tagSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                viewModel.setTagFilter(tagSpinner.getSelectedItem().toString());
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
-
-
-        final Spinner paramSpinner = view.findViewById(R.id.stats_spinner_param);
-        final Spinner timeStepSpinner = view.findViewById(R.id.stats_spinner_time_step);
-
-        paramSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                viewModel.setParam(i);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
-
-        ArrayAdapter arrayAdapter = new ArrayAdapter<CharSequence>(getContext(), R.layout.support_simple_spinner_dropdown_item, getResources().getStringArray(R.array.stats_filter_time_step)) {
+        Spinner timeStepSpinner = view.findViewById(R.id.stats_spinner_time_step);
+        timeStepSpinner.setAdapter(new ArrayAdapter<CharSequence>(getContext(), R.layout.support_simple_spinner_dropdown_item, getResources().getStringArray(R.array.stats_filter_time_step)) {
             @Override
             public boolean isEnabled(int position) {
                 if (periodSpinner.getSelectedItemPosition() == FILTER_TODAY || periodSpinner.getSelectedItemPosition() == FILTER_WEEK) {
                     return position == TIME_STEP_DAY;
                 }
                 return true;
-            }
-        };
-        timeStepSpinner.setAdapter(arrayAdapter);
-        timeStepSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                viewModel.setTimeStep(i);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
             }
         });
 

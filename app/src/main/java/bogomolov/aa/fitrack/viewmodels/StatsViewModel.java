@@ -12,12 +12,13 @@ import javax.inject.Inject;
 import bogomolov.aa.fitrack.repository.Repository;
 import bogomolov.aa.fitrack.core.model.Tag;
 import bogomolov.aa.fitrack.core.model.Track;
+import io.reactivex.Observable;
 
 import static bogomolov.aa.fitrack.core.DateUtils.getTodayRange;
 import static bogomolov.aa.fitrack.core.Rx.worker;
 
 public class StatsViewModel extends ViewModel {
-    public static final String NO_TAG = "-";
+    private static final String NO_TAG = "-";
 
     public static final int PARAM_DISTANCE = 0;
     public static final int PARAM_SPEED = 1;
@@ -38,6 +39,10 @@ public class StatsViewModel extends ViewModel {
     public MutableLiveData<String[]> tagEntries = new MutableLiveData<>();
     public MutableLiveData<List<Track>> tracksLiveData = new MutableLiveData<>();
 
+    public MutableLiveData<Integer> selectedTagLiveData = new MutableLiveData<>();
+    public MutableLiveData<Integer> selectedTimeStepLiveData = new MutableLiveData<>();
+    public MutableLiveData<Integer> selectedParamLiveData = new MutableLiveData<>();
+
     private List<Track> tracks;
     private Repository repository;
     public Date[] datesRange;
@@ -55,27 +60,27 @@ public class StatsViewModel extends ViewModel {
         selectedTimeStep = TIME_STEP_DAY;
 
         worker(() -> tagEntries.postValue(getTagNames(repository.getTags())));
+
+        selectedTagLiveData.observeForever(id -> {
+            if (tagEntries.getValue() != null) {
+                selectedTag = tagEntries.getValue()[id];
+                updateView(true);
+            }
+        });
+        selectedTimeStepLiveData.observeForever(id -> {
+            selectedTimeStep = id;
+            updateView(true);
+        });
+        selectedParamLiveData.observeForever(id -> {
+            selectedParam = id;
+            updateView(true);
+        });
     }
 
     public void setTimeFilter(Date[] datesRange, int selectedTimeFilter) {
         this.datesRange = datesRange;
         this.selectedTimeFilter = selectedTimeFilter;
         updateView(true);
-    }
-
-    public void setTagFilter(String selectedTag) {
-        this.selectedTag = selectedTag;
-        updateView(true);
-    }
-
-    public void setParam(int selectedParam) {
-        this.selectedParam = selectedParam;
-        updateView(false);
-    }
-
-    public void setTimeStep(int selectedTimeStep) {
-        this.selectedTimeStep = selectedTimeStep;
-        updateView(false);
     }
 
     public void updateView(boolean reload) {
@@ -94,12 +99,8 @@ public class StatsViewModel extends ViewModel {
         });
     }
 
-
     private String[] getTagNames(List<Tag> tags) {
-        String[] tagNames = new String[tags.size() + 1];
-        tagNames[0] = NO_TAG;
-        for (int i = 0; i < tags.size(); i++) tagNames[i + 1] = tags.get(i).getName();
-        return tagNames;
+        return Observable.fromIterable(tags).startWith(new Tag(NO_TAG)).map(Tag::getName).toList().blockingGet().toArray(new String[0]);
     }
 
 }

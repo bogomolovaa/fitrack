@@ -14,7 +14,6 @@ import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.repository.Repository;
 import bogomolov.aa.fitrack.core.model.Point;
-import bogomolov.aa.fitrack.core.RamerDouglasPeucker;
 import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.android.TrackerService;
 
@@ -84,14 +83,6 @@ public class MainViewModel extends ViewModel {
         });
     }
 
-
-    public void onStartStopButtonsCreated() {
-        worker(() -> {
-            Track track = repository.getLastTrack();
-            startStop.postValue(track == null || !track.isOpened());
-        });
-    }
-
     public void startUpdating() {
         updateRunnable = new Runnable() {
             @Override
@@ -142,8 +133,8 @@ public class MainViewModel extends ViewModel {
             windowStartId = Math.max(points.size() - windowSize, 0);
             List<Point> windowPointsRaw = getWindowPoints(points, windowSize);
             List<Point> preWindowPointsRaw = getPreWindowPoints(points, windowSize);
-            tailSmoothedPoints = RamerDouglasPeucker.douglasPeucker(preWindowPointsRaw, Track.EPSILON);
-            List<Point> windowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(windowPointsRaw, Track.EPSILON);
+            tailSmoothedPoints = Track.smooth(preWindowPointsRaw);
+            List<Point> windowSmoothedPoints = Track.smooth(windowPointsRaw);
             smoothedPoints.addAll(tailSmoothedPoints);
             smoothedPoints.addAll(windowSmoothedPoints);
         } else {
@@ -152,20 +143,20 @@ public class MainViewModel extends ViewModel {
                 List<Point> windowPointsRaw = getWindowPoints(points, windowSize);
                 List<Point> secondHalfWindowPointsRaw = getWindowPoints(points, windowSize / 2);
                 List<Point> firstHalfWindowPointsRaw = getPreWindowPoints(windowPointsRaw, windowSize / 2);
-                List<Point> secondHalfWindowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(secondHalfWindowPointsRaw, Track.EPSILON);
-                List<Point> firstHalfWindowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(firstHalfWindowPointsRaw, Track.EPSILON);
+                List<Point> secondHalfWindowSmoothedPoints = Track.smooth(secondHalfWindowPointsRaw);
+                List<Point> firstHalfWindowSmoothedPoints = Track.smooth(firstHalfWindowPointsRaw);
                 tailSmoothedPoints.addAll(firstHalfWindowSmoothedPoints);
                 smoothedPoints.addAll(tailSmoothedPoints);
                 smoothedPoints.addAll(secondHalfWindowSmoothedPoints);
                 windowStartId = points.size() - windowSize / 2;
             } else {
                 List<Point> windowPointsRaw = getWindowPoints(points, windowSize);
-                List<Point> windowSmoothedPoints = RamerDouglasPeucker.douglasPeucker(windowPointsRaw, Track.EPSILON);
+                List<Point> windowSmoothedPoints = Track.smooth(windowPointsRaw);
                 smoothedPoints.addAll(tailSmoothedPoints);
                 smoothedPoints.addAll(windowSmoothedPoints);
             }
         }
-        track.setCurrentSpeed(getCurrentSpeed(smoothedPoints));
+        track.setCurrentSpeed(Track.getCurrentSpeed(smoothedPoints));
         track.setCurrentDistance(Point.getTrackDistance(smoothedPoints));
         return smoothedPoints;
     }
@@ -178,10 +169,6 @@ public class MainViewModel extends ViewModel {
         return points.size() > windowSize ? points.subList(0, points.size() - windowSize) : new ArrayList<Point>();
     }
 
-    private double getCurrentSpeed(List<Point> points) {
-        double distance = points.size() > 1 ? Point.distance(points.get(points.size() - 1), points.get(points.size() - 2)) : 0;
-        double seconds = points.size() > 1 ? (points.get(points.size() - 1).getTime() - points.get(points.size() - 2).getTime()) / 1000.0 : 0;
-        return seconds > 0 ? distance / seconds : 0;
-    }
+
 
 }

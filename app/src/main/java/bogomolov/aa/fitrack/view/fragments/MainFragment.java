@@ -92,7 +92,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         return view;
     }
 
-    public void showStartStopButtons(boolean canStart) {
+    private void showStartStopButtons(boolean canStart) {
         if (startStopMenu != null) {
             startStopMenu.findItem(R.id.menu_track_start).setVisible(canStart);
             startStopMenu.findItem(R.id.menu_track_stop).setVisible(!canStart);
@@ -103,12 +103,11 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.start_stop, menu);
         startStopMenu = menu;
-        viewModel.onStartStopButtonsCreated();
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_track_start:
                 viewModel.startTrack(getContext());

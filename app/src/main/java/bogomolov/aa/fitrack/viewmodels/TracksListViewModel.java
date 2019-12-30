@@ -35,14 +35,14 @@ public class TracksListViewModel extends ViewModel {
     public void setTag(@NonNull Tag tag, Set<Long> selectedIds) {
         worker(() -> {
             repository.updateTracks(tag.getName(), new ArrayList<>(selectedIds));
-            if (datesRange != null) updateTracks(datesRange);
+            updateTracks(datesRange);
         });
     }
 
     public void deleteTracks(Set<Long> selectedIds) {
         worker(() -> {
             repository.deleteTracks(selectedIds.toArray(new Long[0]));
-            if (datesRange != null) updateTracks(datesRange);
+            updateTracks(datesRange);
         });
     }
 
