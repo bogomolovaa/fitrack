@@ -32,7 +32,6 @@ public class TrackViewModel extends ViewModel implements TagResultListener {
     @Inject
     public TrackViewModel(Repository repository) {
         this.repository = repository;
-        worker(() -> trackPoints.postValue(repository.getTrackPoints(track, Point.SMOOTHED)));
     }
 
     public void setTrack(long trackId, Context context) {
@@ -43,6 +42,7 @@ public class TrackViewModel extends ViewModel implements TagResultListener {
             avgSpeed.postValue(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
             selectedTag.postValue(track.getTag() != null ? track.getTag() : context.getResources().getString(R.string.no_tag));
             trackName.postValue(track.getName());
+            trackPoints.postValue(repository.getTrackPoints(track, Point.SMOOTHED));
         });
     }
 

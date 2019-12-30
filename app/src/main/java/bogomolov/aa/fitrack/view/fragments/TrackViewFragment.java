@@ -38,7 +38,7 @@ import bogomolov.aa.fitrack.viewmodels.TrackViewModel;
 import dagger.android.support.AndroidSupportInjection;
 
 
-public class TrackViewFragment extends Fragment {
+public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
     private TrackViewModel viewModel;
     private GoogleMap googleMap;
 
@@ -76,7 +76,7 @@ public class TrackViewFragment extends Fragment {
         });
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_track_view);
-        if (mapFragment != null) mapFragment.getMapAsync(googleMap1 -> googleMap = googleMap1);
+        if (mapFragment != null) mapFragment.getMapAsync(this);
 
         viewModel.trackPoints.observe(this, this::updateMap);
 
@@ -84,7 +84,7 @@ public class TrackViewFragment extends Fragment {
     }
 
     private void updateMap(List<Point> smoothedPoints) {
-        if (smoothedPoints.size() > 0) {
+        if (googleMap != null && smoothedPoints.size() > 0) {
             double minLat = 1000;
             double maxLat = 0;
             double minLng = 1000;
@@ -112,4 +112,10 @@ public class TrackViewFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        this.googleMap = googleMap;
+        List<Point> points = viewModel.trackPoints.getValue();
+        if (points != null) updateMap(points);
+    }
 }
