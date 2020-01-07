@@ -1,53 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
     <data>
-        <variable name="viewModel" type="bogomolov.aa.fitrack.viewmodels.TracksListViewModel"/>
+        <variable
+            name="viewModel"
+            type="bogomolov.aa.fitrack.viewmodels.TracksListViewModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".view.fragments.TracksListFragment">
-
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar_tracks_list"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        android:minHeight="?attr/actionBarSize"
-        android:theme="?attr/actionBarTheme"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="match_parent"
+        tools:context=".view.fragments.TracksListFragment">
 
-        <Spinner
-            android:id="@+id/tracks_time_spinner"
-            android:layout_width="115dp"
-            android:layout_height="34dp"
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/track_list_appbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar_tracks_list"
+                app:layout_scrollFlags="scroll|enterAlways"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/colorPrimary"
+                android:minHeight="?attr/actionBarSize"
+                android:theme="?attr/actionBarTheme">
+
+                <bogomolov.aa.fitrack.view.ReselectableSpinner
+                    android:id="@+id/tracks_time_spinner"
+                    android:layout_width="115dp"
+                    android:layout_height="34dp"
+                    android:layout_gravity="end"
+                    android:layout_marginEnd="8dp"
+                    android:entries="@array/track_time_filter" />
+
+
+            </androidx.appcompat.widget.Toolbar>
+        </com.google.android.material.appbar.AppBarLayout>
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/track_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            android:entries="@array/track_time_filter"
-            android:layout_gravity="end"/>
+            android:layout_marginBottom="8dp"
+            android:layoutAnimation="@anim/track_item_layout_anim"
+            android:scrollbars="vertical"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-
-    </androidx.appcompat.widget.Toolbar>
-
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/track_recycler"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:scrollbars="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar_tracks_list" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

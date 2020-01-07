@@ -2,6 +2,7 @@ package bogomolov.aa.fitrack.view;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -44,6 +47,7 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
     }
 
     public void disableCheckMode() {
+        selectedIds = new HashSet<>();
         checkMode = false;
         notifyDataSetChanged();
     }
@@ -55,7 +59,7 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        CardView cv = (CardView) LayoutInflater.from(parent.getContext())
+        MaterialCardView cv = (MaterialCardView) LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.track_card_view, parent, false);
         return new ViewHolder(cv, this);
     }
@@ -63,11 +67,9 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Track track = tracks.get(position);
-        CardView cardView = holder.cardView;
-        RadioButton radioButton = cardView.findViewById(R.id.card_checked_button);
+        MaterialCardView cardView = holder.cardView;
         boolean selected = selectedIds.contains(track.getId());
-        radioButton.setVisibility(checkMode ? View.VISIBLE : View.GONE);
-        radioButton.setChecked(selected);
+        cardView.setChecked(selected);
 
         ((TextView) cardView.findViewById(R.id.card_text_name)).setText(track.getName());
         ((TextView) cardView.findViewById(R.id.card_tag_name)).setText(track.getTag() != null ? track.getTag() : context.getResources().getString(R.string.no_tag));
@@ -82,10 +84,10 @@ public class TracksRecyclerAdapter extends RecyclerView.Adapter<TracksRecyclerAd
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
-        private CardView cardView;
+        private MaterialCardView cardView;
         private TracksRecyclerAdapter adapter;
 
-        public ViewHolder(@NonNull CardView itemView, TracksRecyclerAdapter adapter) {
+        public ViewHolder(@NonNull MaterialCardView itemView, TracksRecyclerAdapter adapter) {
             super(itemView);
             cardView = itemView;
             this.adapter = adapter;

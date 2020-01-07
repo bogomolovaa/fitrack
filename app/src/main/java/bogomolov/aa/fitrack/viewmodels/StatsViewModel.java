@@ -1,5 +1,7 @@
 package bogomolov.aa.fitrack.viewmodels;
 
+import android.util.Log;
+
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
@@ -47,6 +49,7 @@ public class StatsViewModel extends ViewModel {
     private Repository repository;
     public Date[] datesRange;
     private String selectedTag = NO_TAG;
+    public int selectedTagId;
     public int selectedTimeFilter = FILTER_TODAY;
     public int selectedParam;
     public int selectedTimeStep;
@@ -62,18 +65,23 @@ public class StatsViewModel extends ViewModel {
         worker(() -> tagEntries.postValue(getTagNames(repository.getTags())));
 
         selectedTagLiveData.observeForever(id -> {
-            if (tagEntries.getValue() != null) {
+            if (tagEntries.getValue() != null && id != selectedTagId) {
                 selectedTag = tagEntries.getValue()[id];
+                selectedTagId = id;
                 updateView(true);
             }
         });
         selectedTimeStepLiveData.observeForever(id -> {
-            selectedTimeStep = id;
-            updateView(true);
+            if (id != selectedTimeStep) {
+                selectedTimeStep = id;
+                updateView(true);
+            }
         });
         selectedParamLiveData.observeForever(id -> {
-            selectedParam = id;
-            updateView(true);
+            if (id != selectedParam) {
+                selectedParam = id;
+                updateView(true);
+            }
         });
     }
 

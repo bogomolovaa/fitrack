@@ -3,6 +3,7 @@ package bogomolov.aa.fitrack.view.fragments;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 
 import androidx.annotation.NonNull;
@@ -18,6 +20,9 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProviders;
+
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import javax.inject.Inject;
 
@@ -35,6 +40,7 @@ public class TagSelectionDialog extends DialogFragment {
     private ListView listView;
 
     private Tag selectedTag;
+    private Tag selectedToDeleteTag;
     private TagResultListener tagResultListener;
 
     private TagSelectionViewModel viewModel;
@@ -56,6 +62,7 @@ public class TagSelectionDialog extends DialogFragment {
         viewBinding.setLifecycleOwner(this);
         View view = viewBinding.getRoot();
 
+
         listView = view.findViewById(R.id.tag_list_view);
         viewModel.tagsLiveData.observe(this, (tags) -> {
             ArrayAdapter<Tag> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, tags);
@@ -63,20 +70,36 @@ public class TagSelectionDialog extends DialogFragment {
         });
 
         toolbar = view.findViewById(R.id.tag_selection_toolbar);
-        toolbar.setNavigationOnClickListener(v -> dismiss());
+        toolbar.setTitle(R.string.title_select_tag);
+
+        ImageView closeButton = view.findViewById(R.id.tags_back_button);
+        closeButton.setOnClickListener(v -> dismiss());
 
         listView.setOnItemLongClickListener((AdapterView<?> adapterView, View v, int position, long l) -> {
             if (actionMode == null) {
                 actionMode = toolbar.startActionMode(callback);
+                selectedToDeleteTag = viewModel.tagsLiveData.getValue().get(position);
             } else {
                 actionMode.finish();
             }
             return true;
         });
 
-        listView.setOnItemClickListener((AdapterView<?> adapterView, View v, int position, long l)-> {
+        listView.setOnItemClickListener((AdapterView<?> adapterView, View v, int position, long l) -> {
+            if (actionMode == null) {
                 selectedTag = (Tag) listView.getItemAtPosition(position);
                 dismiss();
+            } else {
+                selectedToDeleteTag = viewModel.tagsLiveData.getValue().get(position);
+            }
+        });
+
+
+        TextInputLayout textInputAddTag = view.findViewById(R.id.tag_name_edit_layout);
+        TextInputEditText textAddTag = view.findViewById(R.id.tag_name_edit_text);
+        textInputAddTag.setEndIconOnClickListener(v -> {
+            viewModel.onNewTag();
+            textAddTag.setText("");
         });
 
         return view;
@@ -99,8 +122,8 @@ public class TagSelectionDialog extends DialogFragment {
         }
 
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            Tag tag = (Tag) listView.getSelectedItem();
-            viewModel.deleteTag(tag);
+            if (selectedToDeleteTag != null) viewModel.deleteTag(selectedToDeleteTag);
+            actionMode.finish();
             return true;
         }
 

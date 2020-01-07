@@ -32,7 +32,7 @@ public class Track {
         int minutes = (int) (deltaTime / (60 * 1000));
         deltaTime = deltaTime % (60 * 1000);
         int seconds = (int) (deltaTime / 1000);
-        return hours + ":" + minutes + ":" + seconds;
+        return String.format("%02d", hours) + ":" + String.format("%02d", minutes) + ":" + String.format("%02d", seconds);
     }
 
     public double getCurrentDistance() {

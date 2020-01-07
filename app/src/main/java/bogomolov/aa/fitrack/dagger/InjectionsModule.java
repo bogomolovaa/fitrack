@@ -2,6 +2,7 @@ package bogomolov.aa.fitrack.dagger;
 
 import bogomolov.aa.fitrack.android.TrackerService;
 import bogomolov.aa.fitrack.view.activities.MainActivity;
+import bogomolov.aa.fitrack.view.fragments.FiltersBottomSheetDialogFragment;
 import bogomolov.aa.fitrack.view.fragments.MainFragment;
 import bogomolov.aa.fitrack.view.fragments.StatsFragment;
 import bogomolov.aa.fitrack.view.fragments.TagSelectionDialog;
@@ -29,6 +30,9 @@ public abstract class InjectionsModule {
 
     @ContributesAndroidInjector
     public abstract TrackViewFragment bindTrackViewFragment();
+
+    @ContributesAndroidInjector
+    public abstract FiltersBottomSheetDialogFragment bindFiltersBottomSheetDialogFragment();
 
     @ContributesAndroidInjector
     public abstract TagSelectionDialog bindTagSelectionDialog();

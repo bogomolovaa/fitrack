@@ -4,6 +4,7 @@ package bogomolov.aa.fitrack.view.fragments;
 import android.content.Context;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
@@ -14,6 +15,9 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -65,15 +69,12 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
 
         Toolbar toolbar = view.findViewById(R.id.toolbar_track_view);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+        setHasOptionsMenu(true);
 
         NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
         NavigationUI.setupWithNavController(toolbar, navController);
 
-        view.findViewById(R.id.track_text_tag).setOnClickListener(v -> {
-            TagSelectionDialog dialog = new TagSelectionDialog();
-            dialog.setTagResultListener(viewModel);
-            dialog.show(getChildFragmentManager(), "TagSelectionDialog");
-        });
+        view.findViewById(R.id.track_text_tag).setOnClickListener(v -> showTagSelection());
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_track_view);
         if (mapFragment != null) mapFragment.getMapAsync(this);
@@ -81,6 +82,30 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
         viewModel.trackPoints.observe(this, this::updateMap);
 
         return view;
+    }
+
+    private void showTagSelection(){
+        TagSelectionDialog dialog = new TagSelectionDialog();
+        dialog.setTagResultListener(viewModel);
+        dialog.show(getChildFragmentManager(), "TagSelectionDialog");
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.track_view_menu, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.track_view_set_tag_item:
+                showTagSelection();
+                break;
+            default:
+                break;
+        }
+        return true;
     }
 
     private void updateMap(List<Point> smoothedPoints) {

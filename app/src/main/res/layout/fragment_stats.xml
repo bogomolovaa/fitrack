@@ -20,13 +20,12 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
+            app:layout_constraintTop_toBottomOf="@+id/stats_linear_layout" />
 
 
         <androidx.appcompat.widget.Toolbar
@@ -44,13 +43,17 @@
 
         <TextView
             android:id="@+id/stats_text_selected_period"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
             android:text="@{viewModel.selectedPeriod}"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toTopOf="@+id/stats_linear_layout"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout3" />
+            app:layout_constraintTop_toBottomOf="@+id/toolbar_stats" />
 
         <LinearLayout
             android:id="@+id/stats_linear_layout"
@@ -71,84 +74,33 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@{viewModel.distance}" />
+                android:text="@{viewModel.distance}"
+                android:textAlignment="viewStart"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/stats_text_time"
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@{viewModel.time}" />
+                android:text="@{viewModel.time}"
+                android:textAlignment="center"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/stats_text_avg_speed"
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@{viewModel.speed}" />
+                android:text="@{viewModel.speed}"
+                android:textAlignment="viewEnd"
+                android:textSize="18sp" />
 
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/linearLayout2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/stats_linear_layout">
 
-            <Spinner
-                android:id="@+id/stats_spinner_param"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:selectedItemPosition="@={viewModel.selectedParamLiveData}"
-                android:entries="@array/stats_filter_type" />
 
-            <Spinner
-                android:id="@+id/stats_spinner_time_step"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:selectedItemPosition="@={viewModel.selectedTimeStepLiveData}" />
 
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/linearLayout3"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar_stats">
-
-            <Spinner
-                android:id="@+id/stats_spinner_period"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginEnd="8dp"
-                android:layout_weight="1"
-                android:entries="@array/track_time_filter" />
-
-            <Spinner
-                android:id="@+id/stats_spinner_tag"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginEnd="8dp"
-                android:layout_weight="1"
-                android:entries="@{viewModel.tagEntries}"
-                android:selectedItemPosition="@={viewModel.selectedTagLiveData}" />
-        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

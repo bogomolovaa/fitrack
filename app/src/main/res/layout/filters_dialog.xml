@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable
+            name="viewModel"
+            type="bogomolov.aa.fitrack.viewmodels.StatsViewModel" />
+    </data>
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
+        android:orientation="vertical">
+
+        <TableRow android:padding="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/stats_filters_param"
+                android:textSize="18sp" />
+
+            <Spinner
+                android:id="@+id/stats_spinner_param"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:entries="@array/stats_filter_type"
+                android:selectedItemPosition="@={viewModel.selectedParamLiveData}" />
+        </TableRow>
+
+        <TableRow android:padding="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/stats_filters_time_step"
+                android:textSize="18sp" />
+            <Spinner
+                android:id="@+id/stats_spinner_time_step"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:selectedItemPosition="@={viewModel.selectedTimeStepLiveData}"/>
+        </TableRow>
+
+        <TableRow android:padding="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/stats_filters_period"
+                android:textSize="18sp" />
+            <bogomolov.aa.fitrack.view.ReselectableSpinner
+                android:id="@+id/stats_spinner_period"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:entries="@array/track_time_filter" />
+        </TableRow>
+
+        <TableRow android:padding="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/stats_filters_tag"
+                android:textSize="18sp" />
+            <Spinner
+                android:id="@+id/stats_spinner_tag"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:entries="@{viewModel.tagEntries}"
+                android:selectedItemPosition="@={viewModel.selectedTagLiveData}"/>
+        </TableRow>
+
+    </TableLayout>
+</layout>

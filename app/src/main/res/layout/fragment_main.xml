@@ -23,15 +23,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
+    <fragment
+        android:id="@+id/map_fragment"
+        class="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+
     <LinearLayout
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|left"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_gravity="bottom|start"
+        android:background="#99FFFFFF"
         android:orientation="horizontal"
+        android:padding="5dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar">
@@ -42,6 +52,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@{viewModel.distance}"
+            android:textAlignment="viewStart"
+            android:textColor="#000000"
+            android:textSize="18sp"
             tools:layout_editor_absoluteX="31dp"
             tools:layout_editor_absoluteY="61dp" />
 
@@ -51,6 +64,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@{viewModel.time}"
+            android:textAlignment="center"
+            android:textColor="#000000"
+            android:textSize="18sp"
             tools:layout_editor_absoluteX="176dp"
             tools:layout_editor_absoluteY="61dp" />
 
@@ -60,6 +76,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@{viewModel.avgSpeed}"
+            android:textAlignment="viewEnd"
+            android:textColor="#000000"
+            android:textSize="18sp"
             tools:layout_editor_absoluteX="320dp"
             tools:layout_editor_absoluteY="61dp" />
 
@@ -67,30 +86,18 @@
 
     <TextView
         android:id="@+id/text_speed"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="8dp"
+        android:background="#99FFFFFF"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
         android:text="@{viewModel.speed}"
+        android:textAlignment="center"
+        android:textColor="#000000"
+        android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
-
-
-    <fragment
-        android:id="@+id/map_fragment"
-        class="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text_speed" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

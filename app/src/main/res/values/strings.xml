@@ -43,6 +43,7 @@
     <string name="title_stats">Statistics</string>
     <string name="title_tracks">Tracks</string>
     <string name="title_settings">Settings</string>
+    <string name="title_select_tag">Select tag</string>
 
     <string name="notification_title">Fitrack</string>
     <string name="notification_text">Tracking enabled</string>
@@ -54,6 +55,15 @@
 
 
     <string name="set_tag">Set tag</string>
+    <string name="stats_filters">Filters</string>
+
+    <string name="stats_filters_param">Parameter</string>
+    <string name="stats_filters_time_step">Time step</string>
+    <string name="stats_filters_period">Period</string>
+    <string name="stats_filters_tag">Tag</string>
+
+    <string name="create_new_tag_hint">New tag</string>
+
 
     <string name="need_autostart_string">The app must be in autostart white list. Please, do it manually in settings.</string>
 

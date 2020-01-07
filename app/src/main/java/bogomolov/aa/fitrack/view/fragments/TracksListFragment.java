@@ -1,6 +1,7 @@
 package bogomolov.aa.fitrack.view.fragments;
 
 
+import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
 
@@ -15,12 +16,15 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
 import android.widget.AdapterView;
 import android.widget.Spinner;
 
@@ -48,6 +52,8 @@ public class TracksListFragment extends Fragment implements TagResultListener {
     ViewModelFactory viewModelFactory;
 
     private TracksListViewModel viewModel;
+    private boolean spinnersCanClicked;
+
 
     private static final int FILTER_TODAY = 0;
     private static final int FILTER_WEEK = 1;
@@ -76,13 +82,25 @@ public class TracksListFragment extends Fragment implements TagResultListener {
         NavigationUI.setupWithNavController(toolbar, navController);
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_tracks);
 
-        viewModel.tracksLiveData.observe(this, tracks -> adapter.setTracks(tracks));
+        RecyclerView recyclerView = view.findViewById(R.id.track_recycler);
+        adapter = new TracksRecyclerAdapter(this, getContext());
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        if (viewModel.tracksLiveData.getValue() == null)
+            viewModel.updateTracks(DateUtils.getTodayRange());
+
+        viewModel.tracksLiveData.observe(this, tracks -> {
+            adapter.setTracks(tracks);
+            LayoutAnimationController animation = AnimationUtils.loadLayoutAnimation(TracksListFragment.this.getContext(), R.anim.track_item_layout_anim);
+            recyclerView.setLayoutAnimation(animation);
+        });
 
 
         Spinner filterSpinner = view.findViewById(R.id.tracks_time_spinner);
         filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                if (!spinnersCanClicked) return;
                 switch (i) {
                     case FILTER_TODAY:
                         viewModel.updateTracks(DateUtils.getTodayRange());
@@ -94,12 +112,7 @@ public class TracksListFragment extends Fragment implements TagResultListener {
                         viewModel.updateTracks(DateUtils.getMonthRange());
                         break;
                     case FILTER_SELECT:
-                        DateUtils.selectDatesRange(getChildFragmentManager(), getContext(), new DateUtils.DatesSelector() {
-                            @Override
-                            public void onSelect(Date[] dates) {
-                                viewModel.updateTracks(dates);
-                            }
-                        });
+                        DateUtils.selectDatesRange(getChildFragmentManager(), dates -> viewModel.updateTracks(dates));
                         break;
                     default:
                         viewModel.updateTracks(DateUtils.getTodayRange());
@@ -112,12 +125,8 @@ public class TracksListFragment extends Fragment implements TagResultListener {
             }
         });
 
+        getActivity().getWindow().getDecorView().postDelayed(() -> spinnersCanClicked = true, 500);
 
-        RecyclerView recyclerView = view.findViewById(R.id.track_recycler);
-        adapter = new TracksRecyclerAdapter(this, getContext());
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        viewModel.updateTracks(DateUtils.getTodayRange());
 
         return view;
     }
@@ -162,7 +171,7 @@ public class TracksListFragment extends Fragment implements TagResultListener {
         }
 
         public void onDestroyActionMode(ActionMode mode) {
-            adapter.disableCheckMode();
+            if(adapter!=null) adapter.disableCheckMode();
             actionMode = null;
         }
 
@@ -171,7 +180,7 @@ public class TracksListFragment extends Fragment implements TagResultListener {
     @Override
     public void onTagSelectionResult(Tag tag) {
         if (tag != null) viewModel.setTag(tag, adapter.getSelectedIds());
-        actionMode.finish();
+        if(actionMode!=null) actionMode.finish();
     }
 
 }

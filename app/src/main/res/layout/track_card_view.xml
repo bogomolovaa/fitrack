@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:checkable="true"
     android:id="@+id/track_card_view"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -34,7 +36,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|top"
             android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="40dp"
+            android:layout_marginBottom="8dp"
             android:orientation="horizontal"
             card_view:layout_constraintBottom_toBottomOf="parent"
             card_view:layout_constraintEnd_toStartOf="@+id/card_checked_button"
@@ -47,21 +50,24 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="distance" />
+                android:text="distance"
+                android:textAlignment="viewStart" />
 
             <TextView
                 android:id="@+id/card_text_time"
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="time" />
+                android:text="time"
+                android:textAlignment="center" />
 
             <TextView
                 android:id="@+id/card_text_avg_speed"
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="speed" />
+                android:text="speed"
+                android:textAlignment="viewEnd" />
 
         </LinearLayout>
 
@@ -72,6 +78,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
+            android:visibility="gone"
             card_view:layout_constraintBottom_toBottomOf="parent"
             card_view:layout_constraintEnd_toEndOf="parent"
             card_view:layout_constraintTop_toTopOf="parent" />
@@ -81,12 +88,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
             android:text="Tag"
-            card_view:layout_constraintEnd_toStartOf="@+id/card_checked_button"
+            card_view:layout_constraintEnd_toEndOf="@+id/card_linear_layout"
             card_view:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

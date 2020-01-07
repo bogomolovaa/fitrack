@@ -4,6 +4,7 @@ package bogomolov.aa.fitrack.view.fragments;
 import android.content.Context;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
@@ -14,6 +15,9 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -44,11 +48,7 @@ import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.viewmodels.StatsViewModel;
 import dagger.android.support.AndroidSupportInjection;
 
-import static bogomolov.aa.fitrack.core.DateUtils.getMonthRange;
-import static bogomolov.aa.fitrack.core.DateUtils.getTodayRange;
-import static bogomolov.aa.fitrack.core.DateUtils.getWeekRange;
 import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_MONTH;
-import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_SELECT;
 import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_TODAY;
 import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_WEEK;
 import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.PARAM_DISTANCE;
@@ -86,6 +86,7 @@ public class StatsFragment extends Fragment {
 
         Toolbar toolbar = view.findViewById(R.id.toolbar_stats);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+        setHasOptionsMenu(true);
 
         NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
         NavigationUI.setupWithNavController(toolbar, navController);
@@ -95,46 +96,25 @@ public class StatsFragment extends Fragment {
                 updateView(viewModel.datesRange, tracks, viewModel.selectedParam, viewModel.selectedTimeStep, viewModel.selectedTimeFilter));
 
 
-        Spinner periodSpinner = view.findViewById(R.id.stats_spinner_period);
-        periodSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, final int i, long l) {
-                switch (i) {
-                    case FILTER_TODAY:
-                        viewModel.setTimeFilter(getTodayRange(), i);
-                        break;
-                    case FILTER_WEEK:
-                        viewModel.setTimeFilter(getWeekRange(), i);
-                        break;
-                    case FILTER_MONTH:
-                        viewModel.setTimeFilter(getMonthRange(), i);
-                        break;
-                    case FILTER_SELECT:
-                        DateUtils.selectDatesRange(getChildFragmentManager(), getContext(), dates -> {
-                            viewModel.setTimeFilter(dates, i);
-                        });
-                        break;
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
-
-        Spinner timeStepSpinner = view.findViewById(R.id.stats_spinner_time_step);
-        timeStepSpinner.setAdapter(new ArrayAdapter<CharSequence>(getContext(), R.layout.support_simple_spinner_dropdown_item, getResources().getStringArray(R.array.stats_filter_time_step)) {
-            @Override
-            public boolean isEnabled(int position) {
-                if (periodSpinner.getSelectedItemPosition() == FILTER_TODAY || periodSpinner.getSelectedItemPosition() == FILTER_WEEK) {
-                    return position == TIME_STEP_DAY;
-                }
-                return true;
-            }
-        });
-
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.stats_filters_menu, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.stats_filters:
+                new FiltersBottomSheetDialogFragment().show(getChildFragmentManager(),"Filters bottom sheet");
+                break;
+            default:
+                break;
+        }
+        return true;
     }
 
     @Override

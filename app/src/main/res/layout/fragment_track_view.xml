@@ -23,24 +23,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/track_text_tag"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
-        android:text='@{viewModel.selectedTag ?? @string/set_tag}'
+
+    <fragment
+        android:id="@+id/map_track_view"
+        class="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/track_linear_layout" />
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_track_view" />
 
     <LinearLayout
         android:id="@+id/track_linear_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|top"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
+        android:background="#99FFFFFF"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -52,36 +51,43 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="@{viewModel.distance}" />
+            android:padding="5dp"
+            android:text="@{viewModel.distance}"
+            android:textAlignment="viewStart"
+            android:textSize="18sp" />
 
         <TextView
             android:id="@+id/track_text_time"
             android:layout_width="0dip"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="@{viewModel.time}" />
+            android:padding="5dp"
+            android:text="@{viewModel.time}"
+            android:textAlignment="center"
+            android:textSize="18sp" />
 
         <TextView
             android:id="@+id/track_text_avg_speed"
             android:layout_width="0dip"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="@{viewModel.avgSpeed}" />
+            android:padding="5dp"
+            android:text="@{viewModel.avgSpeed}"
+            android:textAlignment="viewEnd"
+            android:textSize="18sp" />
 
     </LinearLayout>
 
-    <fragment
-        android:id="@+id/map_track_view"
-        class="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <TextView
+        android:id="@+id/track_text_tag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:text='@{viewModel.selectedTag ?? @string/set_tag}'
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/track_text_tag" />
+        app:layout_constraintTop_toBottomOf="@+id/track_linear_layout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

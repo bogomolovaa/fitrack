@@ -1,45 +1,43 @@
 package bogomolov.aa.fitrack.core;
 
-import android.app.DatePickerDialog;
-import android.app.Dialog;
-import android.content.Context;
-import android.os.Bundle;
-import android.widget.DatePicker;
-
-import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
+
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import ru.slybeaver.slycalendarview.SlyCalendarDialog;
+
 public class DateUtils {
 
-    public static void selectDatesRange(FragmentManager fragmentManager, Context context, DatesSelector datesSelector) {
-        selectDatesRange(fragmentManager, context, new Date[2], datesSelector);
-    }
+    public static void selectDatesRange(FragmentManager fragmentManager, DatesSelector datesSelector){
+        new SlyCalendarDialog()
+                .setSingle(false)
+                .setCallback(new SlyCalendarDialog.Callback() {
+                    @Override
+                    public void onCancelled() {
 
-    private static void selectDatesRange(FragmentManager fragmentManager, Context context, final Date[] dates, final DatesSelector datesSelector) {
-        new DatePickerFragment(context, new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker view, int year, int month, int day) {
-                Calendar c = Calendar.getInstance();
-                c.set(Calendar.YEAR, year);
-                c.set(Calendar.MONTH, month);
-                c.set(Calendar.DAY_OF_MONTH, day);
-                c.set(Calendar.HOUR_OF_DAY, 0);
-                c.set(Calendar.MINUTE, 0);
-                c.set(Calendar.SECOND, 0);
-                c.set(Calendar.MILLISECOND, 0);
-                if (dates[0] == null) {
-                    dates[0] = c.getTime();
-                    selectDatesRange(fragmentManager, context, dates, datesSelector);
-                } else {
-                    dates[1] = c.getTime();
-                    datesSelector.onSelect(dates);
-                }
-            }
-        }).show(fragmentManager, "datePicker");
+                    }
+
+                    @Override
+                    public void onDataSelected(Calendar firstDate, Calendar secondDate, int hours, int minutes) {
+                        Date[] dates = new Date[2];
+                        Calendar calendar = new GregorianCalendar();
+                        calendar.setTime(firstDate.getTime());
+                        calendar.set(Calendar.HOUR_OF_DAY, 0);
+                        calendar.set(Calendar.MINUTE, 0);
+                        calendar.set(Calendar.SECOND, 0);
+                        dates[0] = calendar.getTime();
+                        calendar.setTime(secondDate.getTime());
+                        calendar.set(Calendar.HOUR_OF_DAY, 23);
+                        calendar.set(Calendar.MINUTE, 59);
+                        calendar.set(Calendar.SECOND, 59);
+                        dates[1] = calendar.getTime();
+                        datesSelector.onSelect(dates);
+                    }
+                })
+                .show(fragmentManager, "TAG_SLYCALENDAR");
     }
 
     public static Date[] getMonthRange() {
@@ -86,25 +84,6 @@ public class DateUtils {
         return dateRange;
     }
 
-    public static class DatePickerFragment extends DialogFragment {
-        private DatePickerDialog.OnDateSetListener listener;
-        private Context context;
-
-        public DatePickerFragment(Context context, DatePickerDialog.OnDateSetListener listener) {
-            this.context = context;
-            this.listener = listener;
-        }
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            Calendar c = Calendar.getInstance();
-            int year = c.get(Calendar.YEAR);
-            int month = c.get(Calendar.MONTH);
-            int day = c.get(Calendar.DAY_OF_MONTH);
-
-            return new DatePickerDialog(context, listener, year, month, day);
-        }
-    }
 
     public interface DatesSelector {
         void onSelect(Date[] dates);

@@ -33,11 +33,6 @@ public class RepositoryImpl implements Repository {
     }
 
     @Override
-    public void close() {
-        db.close();
-    }
-
-    @Override
     public void save(Track track) {
         db.trackDao().update(modelToEntity(track));
     }
