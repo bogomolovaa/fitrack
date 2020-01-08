@@ -37,7 +37,6 @@ import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentTrackViewBinding;
 import bogomolov.aa.fitrack.core.model.Point;
-import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.viewmodels.TrackViewModel;
 import dagger.android.support.AndroidSupportInjection;
 

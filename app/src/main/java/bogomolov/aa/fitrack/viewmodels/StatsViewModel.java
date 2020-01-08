@@ -1,7 +1,5 @@
 package bogomolov.aa.fitrack.viewmodels;
 
-import android.util.Log;
-
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
@@ -17,7 +15,7 @@ import bogomolov.aa.fitrack.core.model.Track;
 import io.reactivex.Observable;
 
 import static bogomolov.aa.fitrack.core.DateUtils.getTodayRange;
-import static bogomolov.aa.fitrack.core.Rx.worker;
+import static bogomolov.aa.fitrack.android.Rx.worker;
 
 public class StatsViewModel extends ViewModel {
     private static final String NO_TAG = "-";

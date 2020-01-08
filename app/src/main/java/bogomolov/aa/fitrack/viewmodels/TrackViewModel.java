@@ -16,7 +16,7 @@ import bogomolov.aa.fitrack.core.model.Tag;
 import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.view.TagResultListener;
 
-import static bogomolov.aa.fitrack.core.Rx.worker;
+import static bogomolov.aa.fitrack.android.Rx.worker;
 
 
 public class TrackViewModel extends ViewModel implements TagResultListener {

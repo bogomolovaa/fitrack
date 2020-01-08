@@ -12,6 +12,7 @@ import bogomolov.aa.fitrack.repository.entities.TrackEntity;
 
 @Database(entities = {PointEntity.class, TagEntity.class, TrackEntity.class}, version = 1)
 public abstract class AppDatabase extends RoomDatabase {
+    public static String DB_NAME = "tracker_db";
 
     public abstract PointDao pointDao();
 

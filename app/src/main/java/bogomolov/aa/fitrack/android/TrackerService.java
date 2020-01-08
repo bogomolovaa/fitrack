@@ -16,7 +16,6 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.navigation.NavDeepLinkBuilder;
@@ -37,13 +36,9 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.core.RamerDouglasPeucker;
 import bogomolov.aa.fitrack.core.model.Point;
 import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.repository.Repository;
@@ -54,7 +49,7 @@ import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.HasAndroidInjector;
 
-import static bogomolov.aa.fitrack.core.Rx.worker;
+import static bogomolov.aa.fitrack.android.Rx.worker;
 
 
 public class TrackerService extends Service
@@ -62,10 +57,8 @@ public class TrackerService extends Service
         GoogleApiClient.OnConnectionFailedListener, LocationListener, HasAndroidInjector {
     private GoogleApiClient googleApiClient;
     private Location location;
-    private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     public static boolean working;
-    public static boolean updating = false;
     private long startLocationUpdateTime;
 
 
@@ -82,7 +75,6 @@ public class TrackerService extends Service
 
 
     private static final double MAX_LOCATION_ACCURACY = 50;
-    private static final double MIN_TRACK_DISTANCE = 150;
     public static final String START_SERVICE_ACTION = "start";
     public static final String STOP_SERVICE_ACTION = "stop";
     private static final long UPDATE_INTERVAL = 1000, FASTEST_INTERVAL = 1000;
@@ -176,7 +168,7 @@ public class TrackerService extends Service
 
     private void startLocationUpdates() {
         startLocationUpdateTime = System.currentTimeMillis();
-        locationRequest = LocationRequest.create();
+        LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(UPDATE_INTERVAL);
         locationRequest.setFastestInterval(FASTEST_INTERVAL);
@@ -195,7 +187,10 @@ public class TrackerService extends Service
                     location = locationResult.getLastLocation();
                     if (location.getAccuracy() < MAX_LOCATION_ACCURACY) {
                         Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
-                        worker(() -> checkTrack(point));
+                        worker(() -> {
+                            if (Track.onNewPoint(point, repository, startLocationUpdateTime, UPDATE_INTERVAL))
+                                stopServiceAndStartActivityRecognition();
+                        });
                     }
                 }
             }
@@ -203,87 +198,10 @@ public class TrackerService extends Service
         LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(locationRequest, locationCallback, null);
     }
 
-    private void checkTrack(Point point) {
-        List<Point> trackPoints = null;
-        Track lastTrack = repository.getLastTrack();
-        Track openedTrack = lastTrack != null && !lastTrack.isOpened() ? null : lastTrack;
-        if (openedTrack == null) {
-            repository.addPoint(point);
-            List<Point> points = repository.getPointsAfterLastTrack(lastTrack);
-            if (points.size() > 1) {
-                Point firstPoint = points.get(0);
-                for (int i = 0; i < points.size() - 1; i++)
-                    if (System.currentTimeMillis() - points.get(i).getTime() < 3 * 60 * 1000) {
-                        firstPoint = points.get(i);
-                        break;
-                    }
-                Point lastPoint = points.get(points.size() - 1);
-                double distance = Point.distance(firstPoint, lastPoint);
-                if (distance > 50) {
-                    startTrack(repository, lastPoint);
-                } else if (System.currentTimeMillis() - startLocationUpdateTime > 5 * 60 * 1000) {
-                    repository.deletePointsAfterLastTrack(lastTrack);
-                    stopServiceAndStartActivityRecognition();
-                }
-            }
-        } else {
-            List<Point> points = new ArrayList<>(repository.getTrackPoints(openedTrack, Point.RAW));
-            trackPoints = points;
-            Point lastPoint = points.get(points.size() - 1);
-            if (!(Point.distance(point, lastPoint) > 200 || System.currentTimeMillis() - lastPoint.getTime() <= 2 * UPDATE_INTERVAL)) {
-                points.add(point);
-                lastPoint = point;
-                repository.addPoint(lastPoint);
-            }
-            for (int i = points.size() - 1; i >= 0; i--) {
-                if (Point.distance(lastPoint, points.get(i)) <= 50) {
-                    if (lastPoint.getTime() - points.get(i).getTime() > 3 * 60 * 1000) {
-                        trackPoints = trackPoints.subList(0, i + 1);
-                        trackPoints.add(lastPoint);
-                        finishTrack(trackPoints, openedTrack, points.get(i).getTime());
-                        stopServiceAndStartActivityRecognition();
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    public static void startTrack(Repository repository, Point lastPoint) {
-        Track track = new Track();
-        track.setStartPointId(lastPoint.getId());
-        track.setStartTime(lastPoint.getTime());
-        repository.addTrack(track);
-    }
 
     private void stopServiceAndStartActivityRecognition() {
         stopTrackingService();
         TrackingScheduler.startActivityRecognition(this);
-    }
-
-    private void finishTrack(List<Point> points, Track openedTrack, long time) {
-        finishTrack(repository, points, openedTrack, time);
-    }
-
-    public static void finishTrack(Repository repository, List<Point> points, Track openedTrack, long time) {
-        if (points.size() == 0) return;
-        Point lastPoint = points.get(points.size() - 1);
-        List<Point> smoothedPoints = Point.clonePoints(Track.smooth(points));
-        for (Point point : smoothedPoints) {
-            point.setSmoothed(Point.SMOOTHED);
-            repository.addPoint(point);
-        }
-        openedTrack.setEndPointId(lastPoint.getId());
-        openedTrack.setEndTime(time);
-        openedTrack.setStartSmoothedPointId(smoothedPoints.get(0).getId());
-        openedTrack.setEndSmoothedPointId(smoothedPoints.get(smoothedPoints.size() - 1).getId());
-        openedTrack.setDistance(Point.getTrackDistance(smoothedPoints));
-        repository.save(openedTrack);
-        repository.deleteInnerRawPoints(openedTrack);
-
-        if (openedTrack.getDistance() < MIN_TRACK_DISTANCE) {
-            repository.deleteTracks(openedTrack.getId());
-        }
     }
 
 

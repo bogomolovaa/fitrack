@@ -20,9 +20,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -43,7 +40,6 @@ import javax.inject.Inject;
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentStatsBinding;
-import bogomolov.aa.fitrack.core.DateUtils;
 import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.viewmodels.StatsViewModel;
 import dagger.android.support.AndroidSupportInjection;
@@ -90,7 +86,6 @@ public class StatsFragment extends Fragment {
 
         NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
         NavigationUI.setupWithNavController(toolbar, navController);
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_stats);
 
         viewModel.tracksLiveData.observe(this, tracks ->
                 updateView(viewModel.datesRange, tracks, viewModel.selectedParam, viewModel.selectedTimeStep, viewModel.selectedTimeFilter));

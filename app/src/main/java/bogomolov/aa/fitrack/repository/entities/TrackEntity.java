@@ -3,8 +3,6 @@ package bogomolov.aa.fitrack.repository.entities;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
-import bogomolov.aa.fitrack.core.model.Point;
-
 @Entity
 public class TrackEntity {
     @PrimaryKey(autoGenerate = true)

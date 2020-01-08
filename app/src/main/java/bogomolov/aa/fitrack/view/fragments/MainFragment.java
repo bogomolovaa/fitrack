@@ -52,6 +52,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
     private Polyline trackSmoothedPolyline;
     private Marker currentPositionMarker;
     private Menu startStopMenu;
+    private boolean zoomed;
 
     @Inject
     ViewModelFactory viewModelFactory;
@@ -80,7 +81,6 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
         DrawerLayout drawerLayout = getActivity().findViewById(R.id.drawer_layout);
         NavigationUI.setupWithNavController(toolbar, navController, drawerLayout);
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_tracking);
 
 
         viewModel.startStop.observe(this, this::showStartStopButtons);
@@ -130,9 +130,11 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 } else {
                     currentPositionMarker.setPosition(latLng);
                 }
-                if (track == null || !track.isOpened()) {
+
+                if (!zoomed) {
                     googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18));
-                } else {
+                    zoomed = true;
+                } else if (track != null && track.isOpened()) {
                     googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
                 }
             }

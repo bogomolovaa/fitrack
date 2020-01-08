@@ -33,7 +33,6 @@ public class SettingsFragment extends Fragment implements SharedPreferences.OnSh
 
         NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
         NavigationUI.setupWithNavController(toolbar, navController);
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_settings);
 
         SettingsFragmentView settingsFragment = new SettingsFragmentView();
         getChildFragmentManager()

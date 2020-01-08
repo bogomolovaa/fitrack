@@ -1,4 +1,4 @@
-package bogomolov.aa.fitrack.core;
+package bogomolov.aa.fitrack.android;
 
 import android.util.Log;
 

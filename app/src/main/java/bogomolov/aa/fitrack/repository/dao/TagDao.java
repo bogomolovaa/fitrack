@@ -7,7 +7,6 @@ import androidx.room.Query;
 
 import java.util.List;
 
-import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.repository.entities.TagEntity;
 
 @Dao

@@ -17,7 +17,7 @@ import bogomolov.aa.fitrack.core.model.Point;
 import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.android.TrackerService;
 
-import static bogomolov.aa.fitrack.core.Rx.worker;
+import static bogomolov.aa.fitrack.android.Rx.worker;
 
 public class MainViewModel extends ViewModel {
     public MutableLiveData<String> distance = new MutableLiveData<>();
@@ -64,7 +64,7 @@ public class MainViewModel extends ViewModel {
             worker(() -> {
                 Point lastPoint = repository.getLastRawPoint();
                 if (lastPoint != null) {
-                    TrackerService.startTrack(repository, lastPoint);
+                    Track.startTrack(repository, lastPoint);
                     startStop.postValue(false);
                 }
             });
@@ -77,7 +77,7 @@ public class MainViewModel extends ViewModel {
         worker(() -> {
             Track lastTrack = repository.getLastTrack();
             if (lastTrack != null && lastTrack.isOpened()) {
-                TrackerService.finishTrack(repository, repository.getTrackPoints(lastTrack, Point.RAW), lastTrack, System.currentTimeMillis());
+                Track.finishTrack(repository, repository.getTrackPoints(lastTrack, Point.RAW), lastTrack, System.currentTimeMillis());
                 startStop.postValue(true);
             }
         });

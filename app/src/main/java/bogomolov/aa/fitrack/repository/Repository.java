@@ -41,4 +41,6 @@ public interface Repository {
 
     void deletePointsAfterLastTrack(Track lastTrack);
 
+    void close();
+
 }

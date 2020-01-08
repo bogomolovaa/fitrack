@@ -3,7 +3,6 @@ package bogomolov.aa.fitrack.viewmodels;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -11,7 +10,7 @@ import javax.inject.Inject;
 import bogomolov.aa.fitrack.repository.Repository;
 import bogomolov.aa.fitrack.core.model.Tag;
 
-import static bogomolov.aa.fitrack.core.Rx.*;
+import static bogomolov.aa.fitrack.android.Rx.*;
 
 
 public class TagSelectionViewModel extends ViewModel {

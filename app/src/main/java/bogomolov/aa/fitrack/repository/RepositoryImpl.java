@@ -1,11 +1,5 @@
 package bogomolov.aa.fitrack.repository;
 
-import android.app.Application;
-import android.content.Context;
-import android.util.Log;
-
-import androidx.room.Query;
-import androidx.room.Room;
 import androidx.room.Transaction;
 
 import java.util.Date;
@@ -27,9 +21,8 @@ public class RepositoryImpl implements Repository {
     private AppDatabase db;
 
     @Inject
-    public RepositoryImpl(Application application) {
-        Log.i("test", "DB CREATED");
-        db = Room.databaseBuilder(application, AppDatabase.class, "tracker_db").build();
+    public RepositoryImpl(AppDatabase db) {
+        this.db = db;
     }
 
     @Override
@@ -87,6 +80,11 @@ public class RepositoryImpl implements Repository {
     public void deletePointsAfterLastTrack(Track lastTrack) {
         long lastId = lastTrack != null ? lastTrack.getEndPointId() : 0;
         db.pointDao().deleteByIdsGreater(lastId, Point.RAW);
+    }
+
+    @Override
+    public void close() {
+        db.close();
     }
 
     @Override

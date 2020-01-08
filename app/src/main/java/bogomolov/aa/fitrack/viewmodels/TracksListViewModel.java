@@ -15,7 +15,7 @@ import bogomolov.aa.fitrack.repository.Repository;
 import bogomolov.aa.fitrack.core.model.Tag;
 import bogomolov.aa.fitrack.core.model.Track;
 
-import static bogomolov.aa.fitrack.core.Rx.worker;
+import static bogomolov.aa.fitrack.android.Rx.worker;
 
 public class TracksListViewModel extends ViewModel {
     private Repository repository;

@@ -1,15 +1,12 @@
 package bogomolov.aa.fitrack.repository.dao;
 
 import androidx.room.Dao;
-import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
 import java.util.List;
 
-import bogomolov.aa.fitrack.core.model.Track;
-import bogomolov.aa.fitrack.repository.entities.TagEntity;
 import bogomolov.aa.fitrack.repository.entities.TrackEntity;
 
 @Dao

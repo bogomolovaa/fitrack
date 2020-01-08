@@ -1,7 +1,6 @@
 package bogomolov.aa.fitrack.view.fragments;
 
 
-import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
 
@@ -16,7 +15,6 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -27,8 +25,6 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.widget.AdapterView;
 import android.widget.Spinner;
-
-import java.util.Date;
 
 import javax.inject.Inject;
 
@@ -80,7 +76,6 @@ public class TracksListFragment extends Fragment implements TagResultListener {
 
         NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
         NavigationUI.setupWithNavController(toolbar, navController);
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(R.string.title_tracks);
 
         RecyclerView recyclerView = view.findViewById(R.id.track_recycler);
         adapter = new TracksRecyclerAdapter(this, getContext());
