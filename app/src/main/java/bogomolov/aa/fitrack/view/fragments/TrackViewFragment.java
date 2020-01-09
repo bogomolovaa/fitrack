@@ -63,8 +63,8 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
         View view = viewBinding.getRoot();
 
         long trackId = (Long) getArguments().get("trackId");
-        viewModel.setTrack(trackId, getContext());
-        viewModel.trackName.observe(this, name -> ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(name));
+        viewModel.setTrack(trackId);
+        viewModel.trackLiveData.observe(this, track -> ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(track.getName()));
 
         Toolbar toolbar = view.findViewById(R.id.toolbar_track_view);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
@@ -83,7 +83,7 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
         return view;
     }
 
-    private void showTagSelection(){
+    private void showTagSelection() {
         TagSelectionDialog dialog = new TagSelectionDialog();
         dialog.setTagResultListener(viewModel);
         dialog.show(getChildFragmentManager(), "TagSelectionDialog");

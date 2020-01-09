@@ -32,10 +32,8 @@ public class StatsViewModel extends ViewModel {
     public static final int FILTER_MONTH = 2;
     public static final int FILTER_SELECT = 3;
 
-    public MutableLiveData<String> distance = new MutableLiveData<>();
-    public MutableLiveData<String> time = new MutableLiveData<>();
+    public MutableLiveData<Track> trackLiveData = new MutableLiveData<>();
     public MutableLiveData<String> selectedPeriod = new MutableLiveData<>();
-    public MutableLiveData<String> speed = new MutableLiveData<>();
     public MutableLiveData<String[]> tagEntries = new MutableLiveData<>();
     public MutableLiveData<List<Track>> tracksLiveData = new MutableLiveData<>();
 
@@ -98,9 +96,7 @@ public class StatsViewModel extends ViewModel {
             List<Track> tracks = reload ? repository.getFinishedTracks(datesRange, selectedTag.equals(NO_TAG) ? null : selectedTag) : StatsViewModel.this.tracks;
             StatsViewModel.this.tracks = tracks;
             Track sumTrack = Track.sumTracks(tracks);
-            distance.postValue((int) sumTrack.getDistance() + " m");
-            time.postValue(sumTrack.getTimeString());
-            speed.postValue(String.format("%.1f", 3.6 * sumTrack.getSpeed()) + " km/h");
+            trackLiveData.postValue(sumTrack);
             tracksLiveData.postValue(tracks);
         });
     }

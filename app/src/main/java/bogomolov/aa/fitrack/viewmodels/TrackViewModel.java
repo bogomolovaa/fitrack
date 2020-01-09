@@ -20,37 +20,29 @@ import static bogomolov.aa.fitrack.android.Rx.worker;
 
 
 public class TrackViewModel extends ViewModel implements TagResultListener {
-    public MutableLiveData<String> distance = new MutableLiveData<>();
-    public MutableLiveData<String> time = new MutableLiveData<>();
-    public MutableLiveData<String> avgSpeed = new MutableLiveData<>();
-    public MutableLiveData<String> selectedTag = new MutableLiveData<>();
-    public MutableLiveData<String> trackName = new MutableLiveData<>();
+    public MutableLiveData<Track> trackLiveData = new MutableLiveData<>();
     public MutableLiveData<List<Point>> trackPoints = new MutableLiveData<>();
     private Repository repository;
-    private Track track;
 
     @Inject
     public TrackViewModel(Repository repository) {
         this.repository = repository;
     }
 
-    public void setTrack(long trackId, Context context) {
+    public void setTrack(long trackId) {
         worker(() -> {
-            track = repository.getTracks(trackId).get(0);
-            distance.postValue((int) track.getDistance() + " m");
-            time.postValue(track.getTimeString());
-            avgSpeed.postValue(String.format("%.1f", 3.6 * track.getSpeed()) + " km/h");
-            selectedTag.postValue(track.getTag() != null ? track.getTag() : context.getResources().getString(R.string.no_tag));
-            trackName.postValue(track.getName());
+            Track track = repository.getTracks(trackId).get(0);
+            trackLiveData.postValue(track);
             trackPoints.postValue(repository.getTrackPoints(track, Point.SMOOTHED));
         });
     }
 
     @Override
     public void onTagSelectionResult(Tag tag) {
-        if (tag != null) {
+        Track track = trackLiveData.getValue();
+        if (tag != null && track != null) {
             track.setTag(tag.getName());
-            selectedTag.postValue(tag.getName());
+            trackLiveData.postValue(track);
             worker(() -> repository.save(track));
         }
     }

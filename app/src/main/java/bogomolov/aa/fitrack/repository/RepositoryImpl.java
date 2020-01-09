@@ -1,5 +1,6 @@
 package bogomolov.aa.fitrack.repository;
 
+import androidx.paging.DataSource;
 import androidx.room.Transaction;
 
 import java.util.Date;
@@ -119,6 +120,12 @@ public class RepositoryImpl implements Repository {
     public List<Track> getFinishedTracks(Date[] datesRange, String tag) {
         List<TrackEntity> tracks = tag != null ? db.trackDao().getFinishedTracks(datesRange[0].getTime(), datesRange[1].getTime(), tag) : db.trackDao().getFinishedTracks(datesRange[0].getTime(), datesRange[1].getTime());
         return entityToModel(tracks, Track.class);
+    }
+
+    @Override
+    public DataSource.Factory<Integer, Track> getFinishedTracksDataSource(Date[] datesRange) {
+        DataSource.Factory<Integer, TrackEntity> factory = db.trackDao().getFinishedTracksDataSource(datesRange[0].getTime(), datesRange[1].getTime());
+        return factory.map(ModelEntityMapper::entityToModel);
     }
 
 }

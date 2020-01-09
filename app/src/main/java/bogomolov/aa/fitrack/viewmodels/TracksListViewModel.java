@@ -1,8 +1,12 @@
 package bogomolov.aa.fitrack.viewmodels;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModel;
+import androidx.paging.LivePagedListBuilder;
+import androidx.paging.PagedList;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,7 +23,10 @@ import static bogomolov.aa.fitrack.android.Rx.worker;
 
 public class TracksListViewModel extends ViewModel {
     private Repository repository;
-    public MutableLiveData<List<Track>> tracksLiveData = new MutableLiveData<>();
+    private MutableLiveData<Date[]> datesLiveData = new MutableLiveData<>();
+    public LiveData<PagedList<Track>> tracksLiveData = Transformations.switchMap(datesLiveData, dates ->
+            new LivePagedListBuilder<>(repository.getFinishedTracksDataSource(dates), 10).build()
+    );
     private Date[] datesRange;
 
     @Inject
@@ -29,7 +36,7 @@ public class TracksListViewModel extends ViewModel {
 
     public void updateTracks(Date[] dates) {
         datesRange = dates;
-        worker(() -> tracksLiveData.postValue(repository.getFinishedTracks(dates, null)));
+        datesLiveData.postValue(dates);
     }
 
     public void setTag(@NonNull Tag tag, Set<Long> selectedIds) {

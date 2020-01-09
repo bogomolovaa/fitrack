@@ -64,7 +64,7 @@ public class Track {
                     if (lastPoint.getTime() - points.get(i).getTime() > 3 * 60 * 1000) {
                         trackPoints = trackPoints.subList(0, i + 1);
                         trackPoints.add(lastPoint);
-                        finishTrack(repository,trackPoints, openedTrack, points.get(i).getTime());
+                        finishTrack(repository, trackPoints, openedTrack, points.get(i).getTime());
                         return true;
                     }
                 }
@@ -162,7 +162,7 @@ public class Track {
 
     public double getSpeed() {
         long time = isOpened() ? System.currentTimeMillis() : endTime;
-        return distance / ((time - startTime) / 1000.0);
+        return 3.6 * distance / ((time - startTime) / 1000.0);
     }
 
     public double getSpeedForCurrentDistance() {

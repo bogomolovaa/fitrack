@@ -1,5 +1,7 @@
 package bogomolov.aa.fitrack.repository;
 
+import androidx.paging.DataSource;
+
 import java.util.Date;
 import java.util.List;
 
@@ -14,6 +16,8 @@ public interface Repository {
     void updateTracks(String tag, List<Long> ids);
 
     List<Track> getFinishedTracks(Date[] datesRange, String tag);
+
+    DataSource.Factory<Integer, Track> getFinishedTracksDataSource(Date[] datesRange);
 
     List<Track> getTracks(Long... ids);
 

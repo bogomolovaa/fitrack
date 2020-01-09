@@ -1,5 +1,6 @@
 package bogomolov.aa.fitrack.repository.dao;
 
+import androidx.paging.DataSource;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
@@ -32,6 +33,9 @@ public interface TrackDao {
 
     @Query("SELECT * from TrackEntity where id = (SELECT max(id) from TrackEntity)")
     TrackEntity getLastTrack();
+
+    @Query("SELECT * from TrackEntity where startTime >= :time1 and startTime < :time2 and endTime > 0")
+    DataSource.Factory<Integer, TrackEntity> getFinishedTracksDataSource(long time1, long time2);
 
     @Query("SELECT * from TrackEntity where startTime >= :time1 and startTime < :time2 and tag = :tag and endTime > 0")
     List<TrackEntity> getFinishedTracks(long time1, long time2, String tag);

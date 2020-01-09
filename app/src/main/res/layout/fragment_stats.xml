@@ -74,7 +74,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@{viewModel.distance}"
+                android:text='@{(int) viewModel.trackLiveData.distance+" m"}'
                 android:textAlignment="viewStart"
                 android:textSize="18sp" />
 
@@ -83,7 +83,7 @@
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@{viewModel.time}"
+                android:text="@{viewModel.trackLiveData.timeString}"
                 android:textAlignment="center"
                 android:textSize="18sp" />
 
@@ -92,7 +92,7 @@
                 android:layout_width="0dip"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@{viewModel.speed}"
+                android:text='@{String.format("%.1f", viewModel.trackLiveData.getSpeed()) + " km/h"}'
                 android:textAlignment="viewEnd"
                 android:textSize="18sp" />
 

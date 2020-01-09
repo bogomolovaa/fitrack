@@ -124,7 +124,7 @@ public class StatsFragment extends Fragment {
             case PARAM_DISTANCE:
                 return track.getDistance() / 1000.0;
             case PARAM_SPEED:
-                return 3.6 * track.getSpeed();
+                return track.getSpeed();
             case PARAM_TIME:
                 return (track.getEndTime() - track.getStartTime()) / (3600 * 1000.0);
         }

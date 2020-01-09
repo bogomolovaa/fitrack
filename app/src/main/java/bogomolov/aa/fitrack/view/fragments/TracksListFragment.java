@@ -15,6 +15,7 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -34,13 +35,13 @@ import bogomolov.aa.fitrack.databinding.FragmentTracksListBinding;
 import bogomolov.aa.fitrack.core.DateUtils;
 import bogomolov.aa.fitrack.core.model.Tag;
 import bogomolov.aa.fitrack.view.TagResultListener;
-import bogomolov.aa.fitrack.view.TracksRecyclerAdapter;
+import bogomolov.aa.fitrack.view.TracksPagedAdapter;
 import bogomolov.aa.fitrack.viewmodels.TracksListViewModel;
 import dagger.android.support.AndroidSupportInjection;
 
 
 public class TracksListFragment extends Fragment implements TagResultListener {
-    private TracksRecyclerAdapter adapter;
+    private TracksPagedAdapter adapter;
     private ActionMode actionMode;
     private Toolbar toolbar;
 
@@ -78,14 +79,16 @@ public class TracksListFragment extends Fragment implements TagResultListener {
         NavigationUI.setupWithNavController(toolbar, navController);
 
         RecyclerView recyclerView = view.findViewById(R.id.track_recycler);
-        adapter = new TracksRecyclerAdapter(this, getContext());
-        recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         if (viewModel.tracksLiveData.getValue() == null)
             viewModel.updateTracks(DateUtils.getTodayRange());
 
+        adapter = new TracksPagedAdapter(this);
+        recyclerView.setAdapter(adapter);
+
         viewModel.tracksLiveData.observe(this, tracks -> {
-            adapter.setTracks(tracks);
+            Log.i("test","loaded "+tracks.size());
+            adapter.submitList(tracks);
             LayoutAnimationController animation = AnimationUtils.loadLayoutAnimation(TracksListFragment.this.getContext(), R.anim.track_item_layout_anim);
             recyclerView.setLayoutAnimation(animation);
         });
@@ -136,7 +139,7 @@ public class TracksListFragment extends Fragment implements TagResultListener {
     @Override
     public void onResume() {
         super.onResume();
-        adapter.notifyDataSetChanged();
+        //adapter.notifyDataSetChanged();
     }
 
     private ActionMode.Callback callback = new ActionMode.Callback() {

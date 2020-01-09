@@ -53,7 +53,7 @@
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:padding="5dp"
-            android:text="@{viewModel.distance}"
+            android:text='@{(int)viewModel.trackLiveData.distance + " m"}'
             android:textAlignment="viewStart"
             android:textSize="18sp" />
 
@@ -63,7 +63,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:padding="5dp"
-            android:text="@{viewModel.time}"
+            android:text="@{viewModel.trackLiveData.timeString}"
             android:textAlignment="center"
             android:textSize="18sp" />
 
@@ -74,7 +74,7 @@
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
             android:padding="5dp"
-            android:text="@{viewModel.avgSpeed}"
+            android:text='@{String.format("%.1f", viewModel.trackLiveData.getSpeed()) + " km/h"}'
             android:textAlignment="viewEnd"
             android:textSize="18sp" />
 
@@ -86,7 +86,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:text='@{viewModel.selectedTag ?? @string/set_tag}'
+        android:text='@{viewModel.trackLiveData.tag ?? @string/set_tag}'
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/track_linear_layout" />
