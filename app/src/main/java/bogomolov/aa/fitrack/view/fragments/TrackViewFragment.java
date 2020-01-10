@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.databinding.DataBindingUtil;
@@ -13,6 +14,8 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
+import androidx.transition.ChangeBounds;
+import androidx.transition.TransitionInflater;
 
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -55,6 +58,13 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setSharedElementEnterTransition(TransitionInflater.from(getContext()).inflateTransition(android.R.transition.move));
+
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(TrackViewModel.class);
         FragmentTrackViewBinding viewBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_track_view, container, false);
@@ -62,9 +72,16 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
         viewBinding.setLifecycleOwner(this);
         View view = viewBinding.getRoot();
 
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("");
+
         long trackId = (Long) getArguments().get("trackId");
         viewModel.setTrack(trackId);
-        viewModel.trackLiveData.observe(this, track -> ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(track.getName()));
+        viewModel.trackLiveData.observe(this, track -> {
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("");
+            startPostponedEnterTransition();
+        });
+
+        postponeEnterTransition();
 
         Toolbar toolbar = view.findViewById(R.id.toolbar_track_view);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);

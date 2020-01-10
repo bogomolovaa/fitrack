@@ -1,14 +1,17 @@
 package bogomolov.aa.fitrack.view;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.FragmentNavigator;
 import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
@@ -116,7 +119,13 @@ public class TracksPagedAdapter extends PagedListAdapter<Track, TracksPagedAdapt
                 } else {
                     Bundle bundle = new Bundle();
                     bundle.putLong("trackId", track.getId());
-                    Navigation.findNavController(v).navigate(R.id.action_tracksListFragment_to_trackViewFragment, bundle);
+                    View view1 = v.findViewById(R.id.card_linear_layout);
+                    View view2 = v.findViewById(R.id.card_text_name);
+                    FragmentNavigator.Extras extras = new FragmentNavigator.Extras.Builder()
+                            .addSharedElement(view1, view1.getTransitionName())
+                            .addSharedElement(view2, view2.getTransitionName())
+                            .build();
+                    Navigation.findNavController(v).navigate(R.id.action_tracksListFragment_to_trackViewFragment, bundle, null, extras);
                 }
             }
         }

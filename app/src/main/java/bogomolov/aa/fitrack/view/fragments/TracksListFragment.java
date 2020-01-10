@@ -156,8 +156,9 @@ public class TracksListFragment extends Fragment implements TagResultListener {
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.menu_track_delete:
-                    actionMode.finish();
+                    Log.i("test","delete ids "+adapter.getSelectedIds());
                     viewModel.deleteTracks(adapter.getSelectedIds());
+                    actionMode.finish();
                     break;
                 case R.id.menu_track_tag:
                     TagSelectionDialog dialog = new TagSelectionDialog();

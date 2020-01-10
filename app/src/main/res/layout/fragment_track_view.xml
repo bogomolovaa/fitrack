@@ -21,7 +21,23 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" >
+
+        <TextView
+            android:id="@+id/track_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text='@{viewModel.trackLiveData.name}'
+            android:textAlignment="viewStart"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:transitionName='@{"track_name_"+viewModel.trackLiveData.id}'
+            tools:layout_editor_absoluteX="16dp"
+            tools:layout_editor_absoluteY="12dp"
+            tools:text="Track name" />
+
+    </androidx.appcompat.widget.Toolbar>
 
 
     <fragment
@@ -41,6 +57,9 @@
         android:layout_gravity="bottom|top"
         android:background="#99FFFFFF"
         android:orientation="horizontal"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:transitionName='@{"track_params_"+viewModel.trackLiveData.id}'
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar_track_view">
