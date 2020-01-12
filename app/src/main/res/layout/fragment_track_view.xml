@@ -59,7 +59,6 @@
         android:orientation="horizontal"
         android:paddingTop="4dp"
         android:paddingBottom="4dp"
-        android:transitionName='@{"track_params_"+viewModel.trackLiveData.id}'
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar_track_view">
@@ -67,6 +66,7 @@
 
         <TextView
             android:id="@+id/track_text_distance"
+            android:transitionName='@{"track_distance_"+viewModel.trackLiveData.id}'
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_marginStart="8dp"
@@ -78,6 +78,7 @@
 
         <TextView
             android:id="@+id/track_text_time"
+            android:transitionName='@{"track_time_"+viewModel.trackLiveData.id}'
             android:layout_width="0dip"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -88,6 +89,7 @@
 
         <TextView
             android:id="@+id/track_text_avg_speed"
+            android:transitionName='@{"track_speed_"+viewModel.trackLiveData.id}'
             android:layout_width="0dip"
             android:layout_height="match_parent"
             android:layout_marginEnd="8dp"
@@ -101,6 +103,7 @@
 
     <TextView
         android:id="@+id/track_text_tag"
+        android:transitionName='@{"track_tag_"+viewModel.trackLiveData.id}'
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"

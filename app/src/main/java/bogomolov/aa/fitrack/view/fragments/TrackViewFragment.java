@@ -72,7 +72,6 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
         viewBinding.setLifecycleOwner(this);
         View view = viewBinding.getRoot();
 
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("");
 
         long trackId = (Long) getArguments().get("trackId");
         viewModel.setTrack(trackId);

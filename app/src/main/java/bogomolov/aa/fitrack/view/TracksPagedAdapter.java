@@ -119,11 +119,17 @@ public class TracksPagedAdapter extends PagedListAdapter<Track, TracksPagedAdapt
                 } else {
                     Bundle bundle = new Bundle();
                     bundle.putLong("trackId", track.getId());
-                    View view1 = v.findViewById(R.id.card_linear_layout);
-                    View view2 = v.findViewById(R.id.card_text_name);
+                    View view1 = v.findViewById(R.id.card_text_distance);
+                    View view2 = v.findViewById(R.id.card_text_time);
+                    View view3 = v.findViewById(R.id.card_text_avg_speed);
+                    View view4 = v.findViewById(R.id.card_text_name);
+                    View view5 = v.findViewById(R.id.card_tag_name);
                     FragmentNavigator.Extras extras = new FragmentNavigator.Extras.Builder()
                             .addSharedElement(view1, view1.getTransitionName())
                             .addSharedElement(view2, view2.getTransitionName())
+                            .addSharedElement(view3, view3.getTransitionName())
+                            .addSharedElement(view4, view4.getTransitionName())
+                            .addSharedElement(view5, view5.getTransitionName())
                             .build();
                     Navigation.findNavController(v).navigate(R.id.action_tracksListFragment_to_trackViewFragment, bundle, null, extras);
                 }
