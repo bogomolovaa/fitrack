@@ -56,22 +56,22 @@ public class TagSelectionDialog extends DialogFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(TagSelectionViewModel.class);
-        FragmentTagSelectionBinding viewBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_tag_selection, container, false);
-        viewBinding.setViewModel(viewModel);
-        viewBinding.setLifecycleOwner(this);
-        View view = viewBinding.getRoot();
+        FragmentTagSelectionBinding binding = DataBindingUtil.inflate(inflater, R.layout.fragment_tag_selection, container, false);
+        binding.setViewModel(viewModel);
+        binding.setLifecycleOwner(this);
+        View view = binding.getRoot();
 
 
-        listView = view.findViewById(R.id.tag_list_view);
+        listView = binding.tagListView;
         viewModel.tagsLiveData.observe(this, (tags) -> {
             ArrayAdapter<Tag> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, tags);
             listView.setAdapter(adapter);
         });
 
-        toolbar = view.findViewById(R.id.tag_selection_toolbar);
+        toolbar = binding.tagSelectionToolbar;
         toolbar.setTitle(R.string.title_select_tag);
 
-        ImageView closeButton = view.findViewById(R.id.tags_back_button);
+        ImageView closeButton = binding.tagsBackButton;
         closeButton.setOnClickListener(v -> dismiss());
 
         listView.setOnItemLongClickListener((AdapterView<?> adapterView, View v, int position, long l) -> {
@@ -94,8 +94,8 @@ public class TagSelectionDialog extends DialogFragment {
         });
 
 
-        TextInputLayout textInputAddTag = view.findViewById(R.id.tag_name_edit_layout);
-        TextInputEditText textAddTag = view.findViewById(R.id.tag_name_edit_text);
+        TextInputLayout textInputAddTag = binding.tagNameEditLayout;
+        TextInputEditText textAddTag = binding.tagNameEditText;
         textInputAddTag.setEndIconOnClickListener(v -> {
             viewModel.onNewTag();
             textAddTag.setText("");

@@ -12,6 +12,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import bogomolov.aa.fitrack.core.TrackActions;
 import bogomolov.aa.fitrack.repository.Repository;
 import bogomolov.aa.fitrack.core.model.Point;
 import bogomolov.aa.fitrack.core.model.Track;
@@ -64,7 +65,7 @@ public class MainViewModel extends ViewModel {
             worker(() -> {
                 Point lastPoint = repository.getLastRawPoint();
                 if (lastPoint != null) {
-                    Track.startTrack(repository, lastPoint);
+                    TrackActions.startTrack(repository, lastPoint);
                     startStop.postValue(false);
                 }
             });
@@ -73,11 +74,11 @@ public class MainViewModel extends ViewModel {
         }
     }
 
-    public void stopTrack() {
+    public void stopTrack(Context context) {
         worker(() -> {
             Track lastTrack = repository.getLastTrack();
             if (lastTrack != null && lastTrack.isOpened()) {
-                Track.finishTrack(repository, repository.getTrackPoints(lastTrack, Point.RAW), lastTrack, System.currentTimeMillis());
+                TrackActions.finishTrack(repository,context, repository.getTrackPoints(lastTrack, Point.RAW), lastTrack, System.currentTimeMillis());
                 startStop.postValue(true);
             }
         });

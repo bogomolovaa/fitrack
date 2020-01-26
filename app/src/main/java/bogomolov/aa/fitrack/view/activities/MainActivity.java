@@ -10,6 +10,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -29,6 +30,7 @@ import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.android.TrackerService;
 import bogomolov.aa.fitrack.android.TrackingScheduler;
 import bogomolov.aa.fitrack.android.Workarounds;
+import bogomolov.aa.fitrack.databinding.ActivityMainBinding;
 import bogomolov.aa.fitrack.view.fragments.SettingsFragment;
 import dagger.android.AndroidInjection;
 import dagger.android.AndroidInjector;
@@ -55,19 +57,19 @@ public class MainActivity extends AppCompatActivity implements HasAndroidInjecto
     protected void onCreate(Bundle savedInstanceState) {
         AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
+        ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
 
 
-        DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
+        DrawerLayout drawerLayout = binding.drawerLayout;
         AppBarConfiguration appBarConfiguration =
                 new AppBarConfiguration.Builder(navController.getGraph())
                         .setDrawerLayout(drawerLayout)
                         .build();
 
-        NavigationView navView = findViewById(R.id.nav_view);
+        NavigationView navView = binding.navView;
         NavigationUI.setupWithNavController(navView, navController);
 
 

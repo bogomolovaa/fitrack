@@ -10,16 +10,6 @@
     <string name="signature_title">Your signature</string>
     <string name="reply_title">Default reply action</string>
 
-    <!-- Sync Preferences -->
-    <string name="sync_title">Sync email periodically</string>
-    <string name="attachment_title">Download incoming attachments</string>
-    <string name="attachment_summary_on">Automatically download attachments for incoming emails
-    </string>
-    <string name="attachment_summary_off">Only download attachments when manually requested</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
     <!--Menu items -->
     <string name="menu_tracking">Tracking</string>
     <string name="menu_tracks">Tracks list</string>
@@ -63,6 +53,9 @@
     <string name="stats_filters_tag">Tag</string>
 
     <string name="create_new_tag_hint">New tag</string>
+
+    <string name="today">Today</string>
+    <string name="track_image">Track image</string>
 
 
     <string name="need_autostart_string">The app must be in autostart white list. Please, do it manually in settings.</string>

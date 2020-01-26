@@ -16,6 +16,7 @@ import io.reactivex.Observable;
 
 import static bogomolov.aa.fitrack.core.DateUtils.getTodayRange;
 import static bogomolov.aa.fitrack.android.Rx.worker;
+import static bogomolov.aa.fitrack.core.DateUtils.getWeekRange;
 
 public class StatsViewModel extends ViewModel {
     private static final String NO_TAG = "-";
@@ -54,7 +55,7 @@ public class StatsViewModel extends ViewModel {
     @Inject
     public StatsViewModel(Repository repository) {
         this.repository = repository;
-        datesRange = getTodayRange();
+        datesRange = getWeekRange();
         selectedParam = PARAM_DISTANCE;
         selectedTimeStep = TIME_STEP_DAY;
 

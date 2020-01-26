@@ -78,9 +78,9 @@ public class StatsFragment extends Fragment {
         View view = binding.getRoot();
         binding.setViewModel(viewModel);
 
-        chart = view.findViewById(R.id.chart);
+        chart = binding.chart;
 
-        Toolbar toolbar = view.findViewById(R.id.toolbar_stats);
+        Toolbar toolbar = binding.toolbarStats;
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
         setHasOptionsMenu(true);
 
@@ -126,7 +126,7 @@ public class StatsFragment extends Fragment {
             case PARAM_SPEED:
                 return track.getSpeed();
             case PARAM_TIME:
-                return (track.getEndTime() - track.getStartTime()) / (3600 * 1000.0);
+                return (track.getEndTime() - track.getStartTime()) / (60 * 1000.0);
         }
         return 0;
     }
@@ -156,7 +156,7 @@ public class StatsFragment extends Fragment {
             entries.add(new BarEntry(i, (float) getParamValue(sumTrack, selectedParam)));
             calendar.setTime(dates.get(i));
             if (selectedTimeFilter == FILTER_TODAY) {
-                categories.add("today");
+                categories.add(getContext().getResources().getString(R.string.today));
             } else if (selectedTimeFilter == FILTER_WEEK) {
                 categories.add(new DateFormatSymbols(getResources().getConfiguration().locale).getShortWeekdays()[calendar.get(Calendar.DAY_OF_WEEK)]);
             } else {

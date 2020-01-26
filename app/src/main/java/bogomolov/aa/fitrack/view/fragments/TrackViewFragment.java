@@ -37,6 +37,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.android.MapSaver;
 import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentTrackViewBinding;
 import bogomolov.aa.fitrack.core.model.Point;
@@ -61,16 +62,16 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setSharedElementEnterTransition(TransitionInflater.from(getContext()).inflateTransition(android.R.transition.move));
-
+        setSharedElementReturnTransition(TransitionInflater.from(getContext()).inflateTransition(android.R.transition.move));
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(TrackViewModel.class);
-        FragmentTrackViewBinding viewBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_track_view, container, false);
-        viewBinding.setViewModel(viewModel);
-        viewBinding.setLifecycleOwner(this);
-        View view = viewBinding.getRoot();
+        FragmentTrackViewBinding binding = DataBindingUtil.inflate(inflater, R.layout.fragment_track_view, container, false);
+        binding.setViewModel(viewModel);
+        binding.setLifecycleOwner(this);
+        View view = binding.getRoot();
 
 
         long trackId = (Long) getArguments().get("trackId");
@@ -79,22 +80,24 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
             ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("");
             startPostponedEnterTransition();
         });
-
         postponeEnterTransition();
 
-        Toolbar toolbar = view.findViewById(R.id.toolbar_track_view);
+        Toolbar toolbar = binding.toolbarTrackView;
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
         setHasOptionsMenu(true);
 
         NavController navController = Navigation.findNavController(getActivity(), R.id.nav_host_fragment);
         NavigationUI.setupWithNavController(toolbar, navController);
 
-        view.findViewById(R.id.track_text_tag).setOnClickListener(v -> showTagSelection());
+        binding.trackTextTag.setOnClickListener(v -> showTagSelection());
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_track_view);
         if (mapFragment != null) mapFragment.getMapAsync(this);
 
-        viewModel.trackPoints.observe(this, this::updateMap);
+        viewModel.trackPoints.observe(this, points -> {
+            updateMap(googleMap, points);
+            //MapSaver.save(getContext(), viewModel.trackLiveData.getValue(), points, 600, 400);
+        });
 
         return view;
     }
@@ -123,7 +126,7 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
         return true;
     }
 
-    private void updateMap(List<Point> smoothedPoints) {
+    public static void updateMap(GoogleMap googleMap, List<Point> smoothedPoints) {
         if (googleMap != null && smoothedPoints.size() > 0) {
             double minLat = 1000;
             double maxLat = 0;
@@ -148,7 +151,7 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
                 Point lastPoint = smoothedPoints.get(smoothedPoints.size() - 1);
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastPoint.getLat(), lastPoint.getLng()), 15));
             }
-            googleMap.addPolyline((new PolylineOptions()).color(0xffffff00).clickable(false).add(Point.toPolylineCoordinates(smoothedPoints)));
+            googleMap.addPolyline((new PolylineOptions()).color(0xffff0000).clickable(false).add(MainFragment.toPolylineCoordinates(smoothedPoints)));
         }
     }
 
@@ -156,6 +159,6 @@ public class TrackViewFragment extends Fragment implements OnMapReadyCallback {
     public void onMapReady(GoogleMap googleMap) {
         this.googleMap = googleMap;
         List<Point> points = viewModel.trackPoints.getValue();
-        if (points != null) updateMap(points);
+        if (points != null) updateMap(googleMap, points);
     }
 }

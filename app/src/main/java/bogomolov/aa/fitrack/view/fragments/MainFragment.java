@@ -15,6 +15,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,6 +27,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -38,6 +40,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.android.MapSaver;
 import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentMainBinding;
 import bogomolov.aa.fitrack.core.model.Point;
@@ -51,8 +54,8 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
     private Polyline trackRawPolyline;
     private Polyline trackSmoothedPolyline;
     private Marker currentPositionMarker;
-    private Menu startStopMenu;
     private boolean zoomed;
+    private boolean canStart;
 
     @Inject
     ViewModelFactory viewModelFactory;
@@ -74,7 +77,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         View view = binding.getRoot();
         binding.setViewModel(viewModel);
 
-        Toolbar toolbar = view.findViewById(R.id.toolbar);
+        Toolbar toolbar = binding.toolbar;
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
         setHasOptionsMenu(true);
 
@@ -82,8 +85,10 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         DrawerLayout drawerLayout = getActivity().findViewById(R.id.drawer_layout);
         NavigationUI.setupWithNavController(toolbar, navController, drawerLayout);
 
-
-        viewModel.startStop.observe(this, this::showStartStopButtons);
+        viewModel.startStop.observe(this, b -> {
+            canStart = b;
+            getActivity().invalidateOptionsMenu();
+        });
         viewModel.lastPointLiveData.observe(this, point -> updateView(viewModel.track, point, viewModel.rawPoints, viewModel.smoothedPoints));
 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_fragment);
@@ -92,17 +97,17 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
         return view;
     }
 
-    private void showStartStopButtons(boolean canStart) {
-        if (startStopMenu != null) {
-            startStopMenu.findItem(R.id.menu_track_start).setVisible(canStart);
-            startStopMenu.findItem(R.id.menu_track_stop).setVisible(!canStart);
-        }
+
+    @Override
+    public void onPrepareOptionsMenu(@NonNull Menu menu) {
+        menu.findItem(R.id.menu_track_start).setVisible(canStart);
+        menu.findItem(R.id.menu_track_stop).setVisible(!canStart);
     }
+
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.start_stop, menu);
-        startStopMenu = menu;
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -113,7 +118,7 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 viewModel.startTrack(getContext());
                 break;
             case R.id.menu_track_stop:
-                viewModel.stopTrack();
+                viewModel.stopTrack(getContext());
                 break;
             default:
                 break;
@@ -126,9 +131,11 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
             if (point != null) {
                 LatLng latLng = new LatLng(point.getLat(), point.getLng());
                 if (currentPositionMarker == null) {
-                    currentPositionMarker = googleMap.addMarker(new MarkerOptions().position(latLng).title("Current Location"));
+                    currentPositionMarker = googleMap.addMarker(new MarkerOptions().
+                            position(latLng).flat(true).anchor(0.5f, 0.5f).icon(BitmapDescriptorFactory.fromResource(R.drawable.direction_arrow)));
                 } else {
                     currentPositionMarker.setPosition(latLng);
+
                 }
 
                 if (!zoomed) {
@@ -139,20 +146,28 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 }
             }
 
-            if (track != null) showStartStopButtons(!track.isOpened());
+            if (track != null) {
+                canStart = !track.isOpened();
+                getActivity().invalidateOptionsMenu();
+            }
             if (track != null && track.isOpened()) {
                 if (trackRawPolyline == null) {
                     trackRawPolyline = googleMap.addPolyline((new PolylineOptions())
-                            .clickable(false).add(Point.toPolylineCoordinates(rawTrackPoints)));
+                            .clickable(false).add(toPolylineCoordinates(rawTrackPoints)));
                 } else {
-                    trackRawPolyline.setPoints(Arrays.asList(Point.toPolylineCoordinates(rawTrackPoints)));
+                    trackRawPolyline.setPoints(Arrays.asList(toPolylineCoordinates(rawTrackPoints)));
                 }
 
+
+                float rotation = 0;
+                if (smoothedPoints.size() > 1)
+                    rotation = angleFromCoordinate(smoothedPoints.get(smoothedPoints.size() - 2), smoothedPoints.get(smoothedPoints.size() - 1));
+                currentPositionMarker.setRotation(rotation);
                 if (trackSmoothedPolyline == null) {
-                    trackSmoothedPolyline = googleMap.addPolyline((new PolylineOptions()).color(0xffffff00)
-                            .clickable(false).add(Point.toPolylineCoordinates(smoothedPoints)));
+                    trackSmoothedPolyline = googleMap.addPolyline((new PolylineOptions()).color(0xffff0000)
+                            .clickable(false).add(toPolylineCoordinates(smoothedPoints)));
                 } else {
-                    trackSmoothedPolyline.setPoints(Arrays.asList(Point.toPolylineCoordinates(smoothedPoints)));
+                    trackSmoothedPolyline.setPoints(Arrays.asList(toPolylineCoordinates(smoothedPoints)));
                 }
             } else {
                 if (trackRawPolyline != null) {
@@ -165,6 +180,26 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 }
             }
         }
+    }
+
+    private static float angleFromCoordinate(Point point1, Point point2) {
+        double f1 = Math.toRadians(point1.getLat());
+        double f2 = Math.toRadians(point2.getLat());
+        double l1 = Math.toRadians(point1.getLng());
+        double l2 = Math.toRadians(point2.getLng());
+
+        double y = Math.sin(l2 - l1) * Math.cos(f2);
+        double x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(l2 - l1);
+
+        double brng = Math.toDegrees(Math.atan2(y, x));
+        return (float) (brng - 90);
+    }
+
+    public static LatLng[] toPolylineCoordinates(List<Point> points) {
+        LatLng[] latLngs = new LatLng[points.size()];
+        for (int i = 0; i < points.size(); i++)
+            latLngs[i] = new LatLng(points.get(i).getLat(), points.get(i).getLng());
+        return latLngs;
     }
 
     @Override

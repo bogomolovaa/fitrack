@@ -1,5 +1,7 @@
 package bogomolov.aa.fitrack.repository;
 
+import android.util.Log;
+
 import androidx.paging.DataSource;
 import androidx.room.Transaction;
 

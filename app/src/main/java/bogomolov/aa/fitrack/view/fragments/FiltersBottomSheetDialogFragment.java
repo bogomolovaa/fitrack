@@ -59,7 +59,7 @@ public class FiltersBottomSheetDialogFragment extends BottomSheetDialogFragment 
         View view = binding.getRoot();
         binding.setViewModel(viewModel);
 
-        Spinner periodSpinner = view.findViewById(R.id.stats_spinner_period);
+        Spinner periodSpinner = binding.statsSpinnerPeriod;
 
         periodSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -89,7 +89,7 @@ public class FiltersBottomSheetDialogFragment extends BottomSheetDialogFragment 
             }
         });
 
-        Spinner timeStepSpinner = view.findViewById(R.id.stats_spinner_time_step);
+        Spinner timeStepSpinner = binding.statsSpinnerTimeStep;
         timeStepSpinner.setAdapter(new ArrayAdapter<CharSequence>(getContext(), R.layout.support_simple_spinner_dropdown_item, getResources().getStringArray(R.array.stats_filter_time_step)) {
             @Override
             public boolean isEnabled(int position) {

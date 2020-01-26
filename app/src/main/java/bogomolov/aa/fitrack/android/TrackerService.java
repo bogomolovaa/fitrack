@@ -39,8 +39,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
+import bogomolov.aa.fitrack.core.TrackActions;
 import bogomolov.aa.fitrack.core.model.Point;
-import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.repository.Repository;
 import bogomolov.aa.fitrack.view.activities.MainActivity;
 import bogomolov.aa.fitrack.view.fragments.SettingsFragment;
@@ -135,11 +135,10 @@ public class TrackerService extends Service
         if (intent.getAction().equals(START_SERVICE_ACTION)) {
             if (googleApiClient != null) googleApiClient.connect();
             working = true;
-            return START_STICKY;
         } else if (intent.getAction().equals(STOP_SERVICE_ACTION)) {
             stopTrackingService();
         }
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
 
     private void stopTrackingService() {
@@ -166,6 +165,10 @@ public class TrackerService extends Service
         startLocationUpdates();
     }
 
+    private boolean areEqual(Location location1, Location location2) {
+        return location1.getLongitude() == location2.getLongitude() && location1.getLatitude() == location2.getLatitude();
+    }
+
     private void startLocationUpdates() {
         startLocationUpdateTime = System.currentTimeMillis();
         LocationRequest locationRequest = LocationRequest.create();
@@ -183,12 +186,12 @@ public class TrackerService extends Service
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                if (!(locationResult.getLastLocation().getLongitude() == location.getLongitude() && locationResult.getLastLocation().getLatitude() == location.getLatitude())) {
+                if (locationResult.getLastLocation() != null && (location == null || !areEqual(location, locationResult.getLastLocation()))) {
                     location = locationResult.getLastLocation();
                     if (location.getAccuracy() < MAX_LOCATION_ACCURACY) {
                         Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
                         worker(() -> {
-                            if (Track.onNewPoint(point, repository, startLocationUpdateTime, UPDATE_INTERVAL))
+                            if (TrackActions.onNewPoint(point, repository,getApplicationContext(), startLocationUpdateTime, UPDATE_INTERVAL))
                                 stopServiceAndStartActivityRecognition();
                         });
                     }

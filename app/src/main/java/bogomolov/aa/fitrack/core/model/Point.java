@@ -1,7 +1,5 @@
 package bogomolov.aa.fitrack.core.model;
 
-import com.google.android.gms.maps.model.LatLng;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,12 +87,7 @@ public class Point{
         this.lng = lng;
     }
 
-    public static LatLng[] toPolylineCoordinates(List<Point> points) {
-        LatLng[] latLngs = new LatLng[points.size()];
-        for (int i = 0; i < points.size(); i++)
-            latLngs[i] = new LatLng(points.get(i).getLat(), points.get(i).getLng());
-        return latLngs;
-    }
+
 
     public static double distance(Point point1, Point point2) {
         double lat1 = point1.getLat();
