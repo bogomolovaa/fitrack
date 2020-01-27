@@ -57,7 +57,8 @@
     <string name="today">Today</string>
     <string name="track_image">Track image</string>
 
-    <string name="distance_km">%1$d km</string>
+    <string name="distance_km">%1$.1f</string>
+    <string name="km">KM</string>
 
 
     <string name="need_autostart_string">The app must be in autostart white list. Please, do it manually in settings.</string>

@@ -37,15 +37,17 @@ public class WidgetProvider extends AppWidgetProvider {
             Intent intent = new Intent(context, MainActivity.class);
             PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 
-            List<Track> tracks = repository.getFinishedTracks(DateUtils.getTodayRange(), null);
-            Track sumTrack = Track.sumTracks(tracks);
-            String widgetText = context.getResources().getString(R.string.distance_km, sumTrack.getDistance());
+            Rx.worker(() -> {
+                List<Track> tracks = repository.getFinishedTracks(DateUtils.getTodayRange(), null);
+                Track sumTrack = Track.sumTracks(tracks);
+                String widgetText = context.getResources().getString(R.string.distance_km, sumTrack.getDistance()/1000);
 
-            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
-            views.setOnClickPendingIntent(R.id.widget_text, pendingIntent);
-            views.setTextViewText(R.id.widget_text, widgetText);
+                RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+                views.setOnClickPendingIntent(R.id.widget_layout, pendingIntent);
+                views.setTextViewText(R.id.widget_text, widgetText);
 
-            appWidgetManager.updateAppWidget(appWidgetId, views);
+                appWidgetManager.updateAppWidget(appWidgetId, views);
+            });
         }
     }
 
