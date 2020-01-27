@@ -85,7 +85,7 @@ public class TrackActions {
         if (openedTrack.getDistance() < MIN_TRACK_DISTANCE) {
             repository.deleteTracks(openedTrack.getId());
         }else{
-            MapSaver.save(context, openedTrack, smoothedPoints, 600, 400);
+            MapSaver.saveUI(context, openedTrack, smoothedPoints, 600, 400);
         }
     }
 }

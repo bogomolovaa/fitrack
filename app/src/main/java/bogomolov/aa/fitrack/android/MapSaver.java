@@ -34,6 +34,10 @@ public class MapSaver {
         return new File(filesDir, "track_" + track.getId() + ".png").getAbsolutePath();
     }
 
+    public static void saveUI(Context context, Track track, List<Point> points, int width, int height) {
+        Rx.ui(() -> save(context, track, points, width, height));
+    }
+
     public static void save(Context context, Track track, List<Point> points, int width, int height) {
         Log.i("test", "MapSaver.save");
         GoogleMapOptions options = new GoogleMapOptions()
@@ -76,7 +80,7 @@ public class MapSaver {
                         mMapView.buildDrawingCache(true);
                         Bitmap b = Bitmap.createBitmap(mMapView.getDrawingCache());
                         mMapView.setDrawingCacheEnabled(false);
-                        persistImage(b, getTrackImageFile(context, track));
+                        Rx.worker(() -> persistImage(b, getTrackImageFile(context, track)));
                     }
                 });
 

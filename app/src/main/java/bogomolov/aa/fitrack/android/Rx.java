@@ -38,6 +38,11 @@ public class Rx {
         Completable.fromRunnable(runnable).subscribeOn(Schedulers.io()).subscribe();
     }
 
+    public static void ui(Runnable runnable){
+        Completable.fromRunnable(runnable).subscribeOn(AndroidSchedulers.mainThread()).subscribe();
+    }
+
+
     private static class Optional<T> {
         T t;
 

@@ -14,7 +14,6 @@ import bogomolov.aa.fitrack.core.model.Tag;
 import bogomolov.aa.fitrack.core.model.Track;
 import io.reactivex.Observable;
 
-import static bogomolov.aa.fitrack.core.DateUtils.getTodayRange;
 import static bogomolov.aa.fitrack.android.Rx.worker;
 import static bogomolov.aa.fitrack.core.DateUtils.getWeekRange;
 
