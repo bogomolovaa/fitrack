@@ -1,6 +1,7 @@
 package bogomolov.aa.fitrack.dagger;
 
 import bogomolov.aa.fitrack.android.TrackerService;
+import bogomolov.aa.fitrack.android.WidgetProvider;
 import bogomolov.aa.fitrack.view.activities.MainActivity;
 import bogomolov.aa.fitrack.view.fragments.FiltersBottomSheetDialogFragment;
 import bogomolov.aa.fitrack.view.fragments.MainFragment;
@@ -13,6 +14,10 @@ import dagger.android.ContributesAndroidInjector;
 
 @Module
 public abstract class InjectionsModule {
+
+    @ContributesAndroidInjector
+    public abstract WidgetProvider bindWidgetProvider();
+
     @ContributesAndroidInjector
     public abstract TrackerService bindTrackerService();
 
