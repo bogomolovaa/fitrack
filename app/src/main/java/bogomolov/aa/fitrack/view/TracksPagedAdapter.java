@@ -101,8 +101,10 @@ public class TracksPagedAdapter extends PagedListAdapter<Track, TracksPagedAdapt
         public void bind(Track track) {
             binding.setTrack(track);
             binding.executePendingBindings();
-            Bitmap bitmap = BitmapFactory.decodeFile(MapSaver.getTrackImageFile(adapter.tracksListFragment.getContext(), track));
-            if(bitmap!=null) binding.trackImage.setImageBitmap(bitmap);
+            if (track != null) {
+                Bitmap bitmap = BitmapFactory.decodeFile(MapSaver.getTrackImageFile(adapter.tracksListFragment.getContext(), track));
+                if (bitmap != null) binding.trackImage.setImageBitmap(bitmap);
+            }
         }
 
 

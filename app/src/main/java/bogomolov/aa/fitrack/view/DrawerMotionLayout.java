@@ -10,6 +10,14 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 public class DrawerMotionLayout extends MotionLayout implements DrawerLayout.DrawerListener{
 
+    public DrawerMotionLayout(Context context) {
+        super(context);
+    }
+
+    public DrawerMotionLayout(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
     public DrawerMotionLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
