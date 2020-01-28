@@ -23,7 +23,7 @@ The app does not address anyone under the age of 13
 
 <h3>Changes to This Privacy Policy</h3>
 
-Privacy Policy may be updated from time to time. You are advised to review this page periodically for any changes. Any changes are effective immediately after they are posted on this page.
+Privacy Policy may be updated from time to time. You are advised to review this page periodically for any changes. These changes are effective immediately after they are posted on this page.
 
 <h3>Contact Us</h3>
 
