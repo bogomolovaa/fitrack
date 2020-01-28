@@ -46,7 +46,7 @@ public class StatsViewModel extends ViewModel {
     public Date[] datesRange;
     private String selectedTag = NO_TAG;
     public int selectedTagId;
-    public int selectedTimeFilter = FILTER_TODAY;
+    public int selectedTimeFilter = FILTER_WEEK;
     public int selectedParam;
     public int selectedTimeStep;
 
