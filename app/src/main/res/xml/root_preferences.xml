@@ -6,6 +6,11 @@
         app:defaultValue="true"
         app:title="@string/settings_tracking" />
 
+    <Preference android:title="@string/privacy" >
+        <intent android:action="android.intent.action.VIEW"
+            android:data="https://bogomolovaa.github.io/fitrack/" />
+    </Preference>
+
 
 
 </androidx.preference.PreferenceScreen>
