@@ -3,6 +3,7 @@ package bogomolov.aa.fitrack.android;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.widget.RemoteViews;
@@ -13,6 +14,7 @@ import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.core.DateUtils;
+import bogomolov.aa.fitrack.core.model.Point;
 import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.repository.Repository;
 import bogomolov.aa.fitrack.view.activities.MainActivity;
@@ -40,7 +42,13 @@ public class WidgetProvider extends AppWidgetProvider {
             Rx.worker(() -> {
                 List<Track> tracks = repository.getFinishedTracks(DateUtils.getTodayRange(), null);
                 Track sumTrack = Track.sumTracks(tracks);
-                String widgetText = context.getResources().getString(R.string.distance_km, sumTrack.getDistance()/1000);
+                double distance = sumTrack.getDistance();
+                Track lastTrack = repository.getLastTrack();
+                if (lastTrack.isOpened()) {
+                    List<Point> smoothedPoints = Track.smooth(repository.getTrackPoints(lastTrack, Point.RAW));
+                    distance += Point.getTrackDistance(smoothedPoints);
+                }
+                String widgetText = context.getResources().getString(R.string.distance_km, distance / 1000);
 
                 RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
                 views.setOnClickPendingIntent(R.id.widget_layout, pendingIntent);
@@ -49,6 +57,15 @@ public class WidgetProvider extends AppWidgetProvider {
                 appWidgetManager.updateAppWidget(appWidgetId, views);
             });
         }
+    }
+
+    public static void updateWidget(Context context) {
+        Intent intent = new Intent(context, WidgetProvider.class);
+        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        int[] ids = AppWidgetManager.getInstance(context)
+                .getAppWidgetIds(new ComponentName(context, WidgetProvider.class));
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
+        context.sendBroadcast(intent);
     }
 
 }

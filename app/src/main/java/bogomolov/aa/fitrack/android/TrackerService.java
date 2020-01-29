@@ -36,6 +36,10 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
@@ -60,6 +64,7 @@ public class TrackerService extends Service
     private LocationCallback locationCallback;
     public static boolean working;
     private long startLocationUpdateTime;
+    private ScheduledExecutorService scheduler;
 
 
     @Inject
@@ -170,6 +175,8 @@ public class TrackerService extends Service
     }
 
     private void startLocationUpdates() {
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(() -> WidgetProvider.updateWidget(getApplicationContext()), 1, 1, TimeUnit.MINUTES);
         startLocationUpdateTime = System.currentTimeMillis();
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -191,7 +198,7 @@ public class TrackerService extends Service
                     if (location.getAccuracy() < MAX_LOCATION_ACCURACY) {
                         Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
                         worker(() -> {
-                            if (TrackActions.onNewPoint(point, repository,getApplicationContext(), startLocationUpdateTime, UPDATE_INTERVAL))
+                            if (TrackActions.onNewPoint(point, repository, getApplicationContext(), startLocationUpdateTime, UPDATE_INTERVAL))
                                 stopServiceAndStartActivityRecognition();
                         });
                     }
@@ -228,6 +235,7 @@ public class TrackerService extends Service
     }
 
     public void stopLocationUpdates() {
+        scheduler.shutdownNow();
         if (googleApiClient != null && googleApiClient.isConnected()) {
             if (locationCallback != null) {
                 LocationServices.getFusedLocationProviderClient(this).removeLocationUpdates(locationCallback);
