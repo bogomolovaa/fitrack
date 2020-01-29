@@ -22,7 +22,6 @@ public class StartupReceiver extends BroadcastReceiver {
             ActivityTransitionResult result = ActivityTransitionResult.extractResult(intent);
             for (ActivityTransitionEvent event : result.getTransitionEvents()) {
                 if(((SystemClock.elapsedRealtime()-(event.getElapsedRealTimeNanos()/1000000))/1000) <= 30) {
-                    Log.i("test", "ACTION RECOGNIZED " + event.toString() + " " + new Date(event.getElapsedRealTimeNanos() / 1000000));
                     TrackerService.startTrackerService(START_SERVICE_ACTION, context);
                     TrackingScheduler.stopActivityRecognition(context);
                 }

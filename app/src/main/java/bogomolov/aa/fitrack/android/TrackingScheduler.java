@@ -47,7 +47,6 @@ public class TrackingScheduler {
                 new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void result) {
-                        Log.i("test","startActivityRecognition success");
                     }
                 }
         );
@@ -55,7 +54,6 @@ public class TrackingScheduler {
                 new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
-                        Log.i("test","startActivityRecognition failure");
                     }
                 }
         );
@@ -76,7 +74,6 @@ public class TrackingScheduler {
                     @Override
                     public void onSuccess(Void result) {
                         myPendingIntent.cancel();
-                        Log.i("test","stopActivityRecognition success");
                     }
                 }
         );
@@ -85,7 +82,6 @@ public class TrackingScheduler {
                 new OnFailureListener() {
                     @Override
                     public void onFailure(Exception e) {
-                        Log.i("test","stopActivityRecognition failure");
                     }
                 }
         );

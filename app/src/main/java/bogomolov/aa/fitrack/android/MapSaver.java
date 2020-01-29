@@ -39,7 +39,6 @@ public class MapSaver {
     }
 
     public static void save(Context context, Track track, List<Point> points, int width, int height) {
-        Log.i("test", "MapSaver.save");
         GoogleMapOptions options = new GoogleMapOptions()
                 .compassEnabled(false)
                 .mapToolbarEnabled(false)
@@ -50,7 +49,6 @@ public class MapSaver {
         mMapView.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap googleMap) {
-                Log.i("test", "onMapReady");
 
                 mMapView.measure(View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
                         View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY));
@@ -72,7 +70,6 @@ public class MapSaver {
                 googleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
                     @Override
                     public void onMapLoaded() {
-                        Log.i("test", "onMapLoaded");
                         mMapView.setDrawingCacheEnabled(true);
                         mMapView.measure(View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
                                 View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY));
@@ -98,6 +95,5 @@ public class MapSaver {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Log.i("test", "persistImage " + imageFile.getAbsolutePath());
     }
 }

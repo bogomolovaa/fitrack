@@ -97,7 +97,6 @@ public class TracksListFragment extends Fragment implements TagResultListener {
         recyclerView.setAdapter(adapter);
 
         viewModel.tracksLiveData.observe(getViewLifecycleOwner(), tracks -> {
-            Log.i("test", "loaded " + tracks.size());
             adapter.submitList(tracks);
                 LayoutAnimationController animation = AnimationUtils.loadLayoutAnimation(TracksListFragment.this.getContext(), R.anim.track_item_layout_anim);
                 recyclerView.setLayoutAnimation(animation);
@@ -137,7 +136,6 @@ public class TracksListFragment extends Fragment implements TagResultListener {
                     default:
                         viewModel.updateTracks(DateUtils.getTodayRange());
                 }
-                Log.i("test","onItemSelected");
                 canAnimate = true;
             }
 
@@ -174,7 +172,6 @@ public class TracksListFragment extends Fragment implements TagResultListener {
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.menu_track_delete:
-                    Log.i("test", "delete ids " + adapter.getSelectedIds());
                     viewModel.deleteTracks(adapter.getSelectedIds());
                     actionMode.finish();
                     break;

@@ -29,7 +29,6 @@ public class Rx {
 
             @Override
             public void onError(Throwable e) {
-                Log.i("test","error "+e.getMessage());
             }
         });
     }

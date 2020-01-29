@@ -52,7 +52,7 @@ import dagger.android.support.AndroidSupportInjection;
 
 public class MainFragment extends Fragment implements OnMapReadyCallback {
     private GoogleMap googleMap;
-    private Polyline trackRawPolyline;
+    //private Polyline trackRawPolyline;
     private Polyline trackSmoothedPolyline;
     private Marker currentPositionMarker;
     private boolean zoomed;
@@ -152,13 +152,14 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                 getActivity().invalidateOptionsMenu();
             }
             if (track != null && track.isOpened()) {
+                /*
                 if (trackRawPolyline == null) {
                     trackRawPolyline = googleMap.addPolyline((new PolylineOptions())
                             .clickable(false).add(toPolylineCoordinates(rawTrackPoints)));
                 } else {
                     trackRawPolyline.setPoints(Arrays.asList(toPolylineCoordinates(rawTrackPoints)));
                 }
-
+                */
 
                 float rotation = 0;
                 if (smoothedPoints.size() > 1)
@@ -171,10 +172,12 @@ public class MainFragment extends Fragment implements OnMapReadyCallback {
                     trackSmoothedPolyline.setPoints(Arrays.asList(toPolylineCoordinates(smoothedPoints)));
                 }
             } else {
+                /*
                 if (trackRawPolyline != null) {
                     trackRawPolyline.remove();
                     trackRawPolyline = null;
                 }
+                 */
                 if (trackSmoothedPolyline != null) {
                     trackSmoothedPolyline.remove();
                     trackSmoothedPolyline = null;
