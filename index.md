@@ -17,10 +17,6 @@ Link to privacy policy of third party service providers used by the app
 	<li><a href="https://www.google.com/policies/privacy/">Google Play Services</a></li>
 </ul>	
 
-<h3>Children’s Privacy</h3>
-
-The app does not address anyone under the age of 13
-
 <h3>Changes to This Privacy Policy</h3>
 
 Privacy Policy may be updated from time to time. You are advised to review this page periodically for any changes. These changes are effective immediately after they are posted on this page.
