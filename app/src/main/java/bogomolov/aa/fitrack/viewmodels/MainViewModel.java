@@ -134,8 +134,8 @@ public class MainViewModel extends ViewModel {
             windowStartId = Math.max(points.size() - windowSize, 0);
             List<Point> windowPointsRaw = getWindowPoints(points, windowSize);
             List<Point> preWindowPointsRaw = getPreWindowPoints(points, windowSize);
-            tailSmoothedPoints = Track.smooth(preWindowPointsRaw);
-            List<Point> windowSmoothedPoints = Track.smooth(windowPointsRaw);
+            tailSmoothedPoints = Track.Companion.smooth(preWindowPointsRaw);
+            List<Point> windowSmoothedPoints = Track.Companion.smooth(windowPointsRaw);
             smoothedPoints.addAll(tailSmoothedPoints);
             smoothedPoints.addAll(windowSmoothedPoints);
         } else {
@@ -144,21 +144,21 @@ public class MainViewModel extends ViewModel {
                 List<Point> windowPointsRaw = getWindowPoints(points, windowSize);
                 List<Point> secondHalfWindowPointsRaw = getWindowPoints(points, windowSize / 2);
                 List<Point> firstHalfWindowPointsRaw = getPreWindowPoints(windowPointsRaw, windowSize / 2);
-                List<Point> secondHalfWindowSmoothedPoints = Track.smooth(secondHalfWindowPointsRaw);
-                List<Point> firstHalfWindowSmoothedPoints = Track.smooth(firstHalfWindowPointsRaw);
+                List<Point> secondHalfWindowSmoothedPoints = Track.Companion.smooth(secondHalfWindowPointsRaw);
+                List<Point> firstHalfWindowSmoothedPoints = Track.Companion.smooth(firstHalfWindowPointsRaw);
                 tailSmoothedPoints.addAll(firstHalfWindowSmoothedPoints);
                 smoothedPoints.addAll(tailSmoothedPoints);
                 smoothedPoints.addAll(secondHalfWindowSmoothedPoints);
                 windowStartId = points.size() - windowSize / 2;
             } else {
                 List<Point> windowPointsRaw = getWindowPoints(points, windowSize);
-                List<Point> windowSmoothedPoints = Track.smooth(windowPointsRaw);
+                List<Point> windowSmoothedPoints = Track.Companion.smooth(windowPointsRaw);
                 smoothedPoints.addAll(tailSmoothedPoints);
                 smoothedPoints.addAll(windowSmoothedPoints);
             }
         }
-        track.setCurrentSpeed(Track.getCurrentSpeed(smoothedPoints));
-        track.setCurrentDistance(Point.getTrackDistance(smoothedPoints));
+        track.setCurrentSpeed(Track.Companion.getCurrentSpeed(smoothedPoints));
+        track.setCurrentDistance(Point.Companion.getTrackDistance(smoothedPoints));
         return smoothedPoints;
     }
 

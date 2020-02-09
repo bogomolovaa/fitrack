@@ -14,7 +14,7 @@ public class TrackTest {
         track1.setDistance(100);
         Track track2 = new Track();
         track2.setDistance(100);
-        Track sumTrack = Track.sumTracks(Arrays.asList(track1, track2));
+        Track sumTrack = Track.Companion.sumTracks(Arrays.asList(track1, track2));
         assertEquals(sumTrack.getDistance(), 200,0);
     }
 }

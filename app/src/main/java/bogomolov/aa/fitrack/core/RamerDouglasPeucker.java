@@ -11,13 +11,13 @@ public class RamerDouglasPeucker {
     private static double perpendicularDistance(double px, double py, double vx, double vy, double wx, double wy) {
         final double l2 = (vx - wx) * (vx - wx) + (vy - wy) * (vy - wy);
         if (l2 == 0)
-            return Point.distance(new Point(px, py), new Point(vx, vy));
+            return Point.Companion.distance(new Point(px, py), new Point(vx, vy));
         final double t = ((px - vx) * (wx - vx) + (py - vy) * (wy - vy)) / l2;
         if (t < 0)
-            return Point.distance(new Point(px, py), new Point(vx, vy));
+            return Point.Companion.distance(new Point(px, py), new Point(vx, vy));
         if (t > 1)
-            return Point.distance(new Point(px, py), new Point(wx, wy));
-        return Point.distance(new Point(px, py), new Point((vx + t * (wx - vx)), (vy + t * (wy - vy))));
+            return Point.Companion.distance(new Point(px, py), new Point(wx, wy));
+        return Point.Companion.distance(new Point(px, py), new Point((vx + t * (wx - vx)), (vy + t * (wy - vy))));
     }
 
     private static void douglasPeucker(List<Point> list, int s, int e, double epsilon, List<Point> resultList) {

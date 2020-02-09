@@ -146,7 +146,7 @@ public class StatsFragment extends Fragment {
             for (Track track : tracks)
                 if (track.getStartTime() >= date.getTime() && track.getStartTime() < toDate.getTime())
                     dayTracks.add(track);
-            sumTracks.add(dayTracks.size() > 0 ? Track.sumTracks(dayTracks) : null);
+            sumTracks.add(dayTracks.size() > 0 ? Track.Companion.sumTracks(dayTracks) : null);
         }
 
         List<BarEntry> entries = new ArrayList<>();

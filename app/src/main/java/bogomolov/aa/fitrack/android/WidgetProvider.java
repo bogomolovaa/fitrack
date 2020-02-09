@@ -41,12 +41,12 @@ public class WidgetProvider extends AppWidgetProvider {
 
             Rx.worker(() -> {
                 List<Track> tracks = repository.getFinishedTracks(DateUtils.getTodayRange(), null);
-                Track sumTrack = Track.sumTracks(tracks);
+                Track sumTrack = Track.Companion.sumTracks(tracks);
                 double distance = sumTrack.getDistance();
                 Track lastTrack = repository.getLastTrack();
                 if (lastTrack.isOpened()) {
-                    List<Point> smoothedPoints = Track.smooth(repository.getTrackPoints(lastTrack, Point.RAW));
-                    distance += Point.getTrackDistance(smoothedPoints);
+                    List<Point> smoothedPoints = Track.Companion.smooth(repository.getTrackPoints(lastTrack, Point.RAW));
+                    distance += Point.Companion.getTrackDistance(smoothedPoints);
                 }
                 String widgetText = context.getResources().getString(R.string.distance_km, distance / 1000);
 

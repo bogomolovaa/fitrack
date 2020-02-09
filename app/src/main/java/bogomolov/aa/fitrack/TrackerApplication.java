@@ -11,6 +11,7 @@ import dagger.android.HasAndroidInjector;
 
 import bogomolov.aa.fitrack.dagger.DaggerAppComponent;
 
+
 public class TrackerApplication extends Application implements HasAndroidInjector {
 
     @Inject

@@ -95,7 +95,7 @@ public class StatsViewModel extends ViewModel {
         worker(() -> {
             List<Track> tracks = reload ? repository.getFinishedTracks(datesRange, selectedTag.equals(NO_TAG) ? null : selectedTag) : StatsViewModel.this.tracks;
             StatsViewModel.this.tracks = tracks;
-            Track sumTrack = Track.sumTracks(tracks);
+            Track sumTrack = Track.Companion.sumTracks(tracks);
             trackLiveData.postValue(sumTrack);
             tracksLiveData.postValue(tracks);
         });

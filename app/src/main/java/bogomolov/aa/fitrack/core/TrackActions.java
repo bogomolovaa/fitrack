@@ -28,7 +28,7 @@ public class TrackActions {
                         break;
                     }
                 Point lastPoint = points.get(points.size() - 1);
-                double distance = Point.distance(firstPoint, lastPoint);
+                double distance = Point.Companion.distance(firstPoint, lastPoint);
                 if (distance > 50) {
                     startTrack(repository, lastPoint);
                 } else if (System.currentTimeMillis() - startLocationUpdateTime > 5 * 60 * 1000) {
@@ -40,13 +40,13 @@ public class TrackActions {
             List<Point> points = new ArrayList<>(repository.getTrackPoints(openedTrack, Point.RAW));
             trackPoints = points;
             Point lastPoint = points.get(points.size() - 1);
-            if (!(Point.distance(point, lastPoint) > 200 || System.currentTimeMillis() - lastPoint.getTime() <= 2 * UPDATE_INTERVAL)) {
+            if (!(Point.Companion.distance(point, lastPoint) > 200 || System.currentTimeMillis() - lastPoint.getTime() <= 2 * UPDATE_INTERVAL)) {
                 points.add(point);
                 lastPoint = point;
                 repository.addPoint(lastPoint);
             }
             for (int i = points.size() - 1; i >= 0; i--) {
-                if (Point.distance(lastPoint, points.get(i)) <= 50) {
+                if (Point.Companion.distance(lastPoint, points.get(i)) <= 50) {
                     if (lastPoint.getTime() - points.get(i).getTime() > 3 * 60 * 1000) {
                         trackPoints = trackPoints.subList(0, i + 1);
                         trackPoints.add(lastPoint);
@@ -69,7 +69,7 @@ public class TrackActions {
     public static void finishTrack(Repository repository,Context context, List<Point> points, Track openedTrack, long time) {
         if (points.size() == 0) return;
         Point lastPoint = points.get(points.size() - 1);
-        List<Point> smoothedPoints = Point.clonePoints(Track.smooth(points));
+        List<Point> smoothedPoints = Point.Companion.clonePoints(Track.Companion.smooth(points));
         for (Point point : smoothedPoints) {
             point.setSmoothed(Point.SMOOTHED);
             repository.addPoint(point);
@@ -78,7 +78,7 @@ public class TrackActions {
         openedTrack.setEndTime(time);
         openedTrack.setStartSmoothedPointId(smoothedPoints.get(0).getId());
         openedTrack.setEndSmoothedPointId(smoothedPoints.get(smoothedPoints.size() - 1).getId());
-        openedTrack.setDistance(Point.getTrackDistance(smoothedPoints));
+        openedTrack.setDistance(Point.Companion.getTrackDistance(smoothedPoints));
         repository.save(openedTrack);
         repository.deleteInnerRawPoints(openedTrack);
 
