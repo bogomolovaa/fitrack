@@ -10,11 +10,11 @@ import bogomolov.aa.fitrack.core.model.Track
 
 interface Repository {
 
-    val tags: List<Tag>
+    fun getTags(): List<Tag>
 
-    val lastTrack: Track?
+    fun getLastTrack(): Track?
 
-    val lastRawPoint: Point?
+    fun getLastRawPoint(): Point?
 
     fun save(track: Track)
 
