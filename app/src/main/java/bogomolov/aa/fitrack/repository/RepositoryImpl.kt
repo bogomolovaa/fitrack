@@ -28,20 +28,20 @@ constructor(private val db: AppDatabase) : Repository {
 
     override fun getLastRawPoint(): Point? = entityToModel(db.pointDao().getLastPoint(Point.RAW))
 
-    override fun save(track: Track) = db.trackDao().update(modelToEntity(track)!!)
+    override fun save(track: Track) = db.trackDao().update(modelToEntity(track))
 
     override fun updateTracks(tag: String, ids: List<Long>) = db.trackDao().updateTracks(tag, ids)
 
     override fun addTag(tag: Tag) {
-        tag.id = db.tagDao().insert(modelToEntity(tag)!!)
+        tag.id = db.tagDao().insert(modelToEntity(tag))
     }
 
     override fun addPoint(point: Point) {
-        point.id = db.pointDao().insert(modelToEntity(point)!!)
+        point.id = db.pointDao().insert(modelToEntity(point))
     }
 
     override fun addTrack(track: Track) {
-        track.id = db.trackDao().insert(modelToEntity(track)!!)
+        track.id = db.trackDao().insert(modelToEntity(track))
     }
 
     override fun getTracks(vararg ids: Long): List<Track> =
@@ -50,7 +50,7 @@ constructor(private val db: AppDatabase) : Repository {
     @Transaction
     override fun deleteTag(tag: Tag) {
         db.trackDao().updateTags(tag.name!!, null)
-        db.tagDao().delete(modelToEntity(tag)!!)
+        db.tagDao().delete(modelToEntity(tag))
     }
 
     override fun deleteTracks(vararg ids: Long) {
@@ -61,16 +61,16 @@ constructor(private val db: AppDatabase) : Repository {
         db.pointDao().deleteByIds(track.startPointId, track.endPointId, Point.RAW)
     }
 
-    override fun deletePointsAfterLastTrack(lastTrack: Track) {
-        db.pointDao().deleteByIdsGreater(lastTrack.endPointId, Point.RAW)
+    override fun deletePointsAfterLastTrack(lastTrack: Track?) {
+        db.pointDao().deleteByIdsGreater(lastTrack?.endPointId ?: 0, Point.RAW)
     }
 
     override fun close() {
         db.close()
     }
 
-    override fun getPointsAfterLastTrack(lastTrack: Track): List<Point> {
-        val points = db.pointDao().getPointsByIdsGreater(lastTrack.endPointId, Point.RAW)
+    override fun getPointsAfterLastTrack(lastTrack: Track?): List<Point> {
+        val points = db.pointDao().getPointsByIdsGreater(lastTrack?.endPointId ?: 0, Point.RAW)
         return entityToModel(points, Point::class.java)
     }
 

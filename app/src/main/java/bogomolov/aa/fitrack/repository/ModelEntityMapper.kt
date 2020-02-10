@@ -20,8 +20,7 @@ fun entityToModel(from: PointEntity?): Point? {
     return to
 }
 
-fun modelToEntity(from: Point?): PointEntity? {
-    if (from == null) return null
+fun modelToEntity(from: Point): PointEntity {
     val to = PointEntity()
     to.id = from.id
     to.smoothed = from.smoothed
@@ -39,8 +38,7 @@ fun entityToModel(from: TagEntity?): Tag? {
     return to
 }
 
-fun modelToEntity(from: Tag?): TagEntity? {
-    if (from == null) return null
+fun modelToEntity(from: Tag): TagEntity {
     val to = TagEntity()
     to.id = from.id
     to.name = from.name
@@ -62,8 +60,7 @@ fun entityToModel(from: TrackEntity?): Track? {
     return to
 }
 
-fun modelToEntity(from: Track?): TrackEntity? {
-    if (from == null) return null
+fun modelToEntity(from: Track): TrackEntity {
     val to = TrackEntity()
     to.id = from.id
     to.distance = from.distance

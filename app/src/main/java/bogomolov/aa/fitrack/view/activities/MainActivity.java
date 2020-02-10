@@ -28,14 +28,15 @@ import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.android.TrackerService;
-import bogomolov.aa.fitrack.android.TrackingScheduler;
-import bogomolov.aa.fitrack.android.Workarounds;
+import bogomolov.aa.fitrack.android.TrackingSchedulerKt;
+import bogomolov.aa.fitrack.android.WorkaroundsKt;
 import bogomolov.aa.fitrack.databinding.ActivityMainBinding;
 import bogomolov.aa.fitrack.view.fragments.SettingsFragment;
 import dagger.android.AndroidInjection;
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.HasAndroidInjector;
+
 
 public class MainActivity extends AppCompatActivity implements HasAndroidInjector {
     private ArrayList<String> permissionsToRequest;
@@ -93,15 +94,15 @@ public class MainActivity extends AppCompatActivity implements HasAndroidInjecto
         }
 
 
-        if (!Workarounds.isAutostartRequested(this)) {
+        if (!WorkaroundsKt.isAutostartRequested(this)) {
             new AlertDialog.Builder(this).setMessage(R.string.need_autostart_string).setPositiveButton("OK", (d, i) -> {
-                Workarounds.autostart(this);
+                WorkaroundsKt.autostart(this);
             }).setNegativeButton("DISMISS", (d, i) -> {
                 d.dismiss();
             }).show();
         }
 
-        TrackingScheduler.startActivityRecognition(this);
+        TrackingSchedulerKt.startActivityRecognition(this);
 
 
     }

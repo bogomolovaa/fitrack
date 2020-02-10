@@ -41,7 +41,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.android.MapSaver;
 import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentMainBinding;
 import bogomolov.aa.fitrack.core.model.Point;

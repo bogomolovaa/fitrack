@@ -40,9 +40,9 @@ interface Repository {
 
     fun getTrackPoints(track: Track, smoothed: Int): List<Point>
 
-    fun getPointsAfterLastTrack(lastTrack: Track): List<Point>
+    fun getPointsAfterLastTrack(lastTrack: Track?): List<Point>
 
-    fun deletePointsAfterLastTrack(lastTrack: Track)
+    fun deletePointsAfterLastTrack(lastTrack: Track?)
 
     fun close()
 

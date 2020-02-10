@@ -1,7 +1,7 @@
 package bogomolov.aa.fitrack.core
 
 import android.content.Context
-import bogomolov.aa.fitrack.android.MapSaver
+import bogomolov.aa.fitrack.android.saveUI
 import bogomolov.aa.fitrack.core.model.Point
 import bogomolov.aa.fitrack.core.model.Track
 import bogomolov.aa.fitrack.repository.Repository
@@ -10,7 +10,7 @@ import java.util.ArrayList
 const val MIN_TRACK_DISTANCE = 150;
 
 fun onNewPoint(point: Point, repository: Repository, context: Context, startLocationUpdateTime: Long, UPDATE_INTERVAL: Long): Boolean {
-    val lastTrack = repository.lastTrack
+    val lastTrack = repository.getLastTrack()
     val openedTrack = if (lastTrack != null && !lastTrack.isOpened()) null else lastTrack
     if (openedTrack == null) {
         repository.addPoint(point)
@@ -80,6 +80,6 @@ fun finishTrack(repository: Repository, context: Context, points: List<Point>, o
     if (openedTrack.distance < MIN_TRACK_DISTANCE) {
         repository.deleteTracks(openedTrack.id)
     } else {
-        MapSaver.saveUI(context, openedTrack, smoothedPoints, 600, 400)
+        saveUI(context, openedTrack, smoothedPoints, 600, 400)
     }
 }

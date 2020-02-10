@@ -24,10 +24,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.android.MapSaver;
 import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.databinding.TrackCardViewBinding;
 import bogomolov.aa.fitrack.view.fragments.TracksListFragment;
+
+import static bogomolov.aa.fitrack.android.MapSaverKt.getTrackImageFile;
 
 public class TracksPagedAdapter extends PagedListAdapter<Track, TracksPagedAdapter.TrackViewHolder> {
     private Set<Long> selectedIds;
@@ -102,7 +103,7 @@ public class TracksPagedAdapter extends PagedListAdapter<Track, TracksPagedAdapt
             binding.setTrack(track);
             binding.executePendingBindings();
             if (track != null) {
-                Bitmap bitmap = BitmapFactory.decodeFile(MapSaver.getTrackImageFile(adapter.tracksListFragment.getContext(), track));
+                Bitmap bitmap = BitmapFactory.decodeFile(getTrackImageFile(adapter.tracksListFragment.getContext(), track));
                 binding.trackImage.setImageBitmap(bitmap);
             }else{
                 binding.trackImage.setImageBitmap(null);
