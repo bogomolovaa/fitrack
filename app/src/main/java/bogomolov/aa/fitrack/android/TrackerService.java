@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.core.TrackActions;
+import bogomolov.aa.fitrack.core.TrackActionsKt;
 import bogomolov.aa.fitrack.core.model.Point;
 import bogomolov.aa.fitrack.repository.Repository;
 import bogomolov.aa.fitrack.view.activities.MainActivity;
@@ -198,7 +198,7 @@ public class TrackerService extends Service
                     if (location.getAccuracy() < MAX_LOCATION_ACCURACY) {
                         Point point = new Point(location.getTime(), location.getLatitude(), location.getLongitude());
                         worker(() -> {
-                            if (TrackActions.onNewPoint(point, repository, getApplicationContext(), startLocationUpdateTime, UPDATE_INTERVAL))
+                            if (TrackActionsKt.onNewPoint(point, repository, getApplicationContext(), startLocationUpdateTime, UPDATE_INTERVAL))
                                 stopServiceAndStartActivityRecognition();
                         });
                     }

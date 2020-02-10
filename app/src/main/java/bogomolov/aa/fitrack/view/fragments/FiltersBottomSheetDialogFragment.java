@@ -2,7 +2,6 @@ package bogomolov.aa.fitrack.view.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,20 +15,18 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
-import java.util.ArrayList;
-
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.core.DateUtils;
+import bogomolov.aa.fitrack.core.DateUtilsKt;
 import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FiltersDialogBinding;
 import bogomolov.aa.fitrack.viewmodels.StatsViewModel;
 import dagger.android.support.AndroidSupportInjection;
 
-import static bogomolov.aa.fitrack.core.DateUtils.getMonthRange;
-import static bogomolov.aa.fitrack.core.DateUtils.getTodayRange;
-import static bogomolov.aa.fitrack.core.DateUtils.getWeekRange;
+import static bogomolov.aa.fitrack.core.DateUtilsKt.getMonthRange;
+import static bogomolov.aa.fitrack.core.DateUtilsKt.getTodayRange;
+import static bogomolov.aa.fitrack.core.DateUtilsKt.getWeekRange;
 import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_MONTH;
 import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_SELECT;
 import static bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_TODAY;
@@ -76,7 +73,7 @@ public class FiltersBottomSheetDialogFragment extends BottomSheetDialogFragment 
                         viewModel.setTimeFilter(getMonthRange(), position);
                         break;
                     case FILTER_SELECT:
-                        DateUtils.selectDatesRange(getChildFragmentManager(), dates -> {
+                        DateUtilsKt.selectDatesRange(getChildFragmentManager(), dates -> {
                             viewModel.setTimeFilter(dates, position);
                         });
                         break;

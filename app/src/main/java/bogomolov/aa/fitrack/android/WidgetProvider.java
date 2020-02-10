@@ -13,7 +13,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import bogomolov.aa.fitrack.R;
-import bogomolov.aa.fitrack.core.DateUtils;
+import bogomolov.aa.fitrack.core.DateUtilsKt;
 import bogomolov.aa.fitrack.core.model.Point;
 import bogomolov.aa.fitrack.core.model.Track;
 import bogomolov.aa.fitrack.repository.Repository;
@@ -40,7 +40,7 @@ public class WidgetProvider extends AppWidgetProvider {
             PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 
             Rx.worker(() -> {
-                List<Track> tracks = repository.getFinishedTracks(DateUtils.getTodayRange(), null);
+                List<Track> tracks = repository.getFinishedTracks(DateUtilsKt.getTodayRange(), null);
                 Track sumTrack = Track.Companion.sumTracks(tracks);
                 double distance = sumTrack.getDistance();
                 Track lastTrack = repository.getLastTrack();

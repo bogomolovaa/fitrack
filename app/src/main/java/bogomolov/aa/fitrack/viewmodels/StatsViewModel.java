@@ -15,7 +15,7 @@ import bogomolov.aa.fitrack.core.model.Track;
 import io.reactivex.Observable;
 
 import static bogomolov.aa.fitrack.android.Rx.worker;
-import static bogomolov.aa.fitrack.core.DateUtils.getWeekRange;
+import static bogomolov.aa.fitrack.core.DateUtilsKt.getWeekRange;
 
 public class StatsViewModel extends ViewModel {
     private static final String NO_TAG = "-";

@@ -48,7 +48,10 @@ public class TracksListViewModel extends ViewModel {
 
     public void deleteTracks(Set<Long> selectedIds) {
         worker(() -> {
-            repository.deleteTracks(selectedIds.toArray(new Long[0]));
+            List<Long> idsList = new ArrayList<>(selectedIds);
+            long[] ids = new long[selectedIds.size()];
+            for(int i=0;i<idsList.size();i++) ids[i] = idsList.get(i);
+            repository.deleteTracks(ids);
             updateTracks(datesRange);
         });
     }

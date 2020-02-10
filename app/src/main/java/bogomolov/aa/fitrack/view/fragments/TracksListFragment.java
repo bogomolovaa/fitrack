@@ -15,9 +15,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.transition.TransitionInflater;
 
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -35,7 +33,7 @@ import javax.inject.Inject;
 import bogomolov.aa.fitrack.R;
 import bogomolov.aa.fitrack.dagger.ViewModelFactory;
 import bogomolov.aa.fitrack.databinding.FragmentTracksListBinding;
-import bogomolov.aa.fitrack.core.DateUtils;
+import bogomolov.aa.fitrack.core.DateUtilsKt;
 import bogomolov.aa.fitrack.core.model.Tag;
 import bogomolov.aa.fitrack.view.TagResultListener;
 import bogomolov.aa.fitrack.view.TracksPagedAdapter;
@@ -91,7 +89,7 @@ public class TracksListFragment extends Fragment implements TagResultListener {
         RecyclerView recyclerView = binding.trackRecycler;
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         if (viewModel.tracksLiveData.getValue() == null)
-            viewModel.updateTracks(DateUtils.getTodayRange());
+            viewModel.updateTracks(DateUtilsKt.getTodayRange());
 
         adapter = new TracksPagedAdapter(this);
         recyclerView.setAdapter(adapter);
@@ -122,19 +120,19 @@ public class TracksListFragment extends Fragment implements TagResultListener {
                 if (!spinnersCanClicked) return;
                 switch (i) {
                     case FILTER_TODAY:
-                        viewModel.updateTracks(DateUtils.getTodayRange());
+                        viewModel.updateTracks(DateUtilsKt.getTodayRange());
                         break;
                     case FILTER_WEEK:
-                        viewModel.updateTracks(DateUtils.getWeekRange());
+                        viewModel.updateTracks(DateUtilsKt.getWeekRange());
                         break;
                     case FILTER_MONTH:
-                        viewModel.updateTracks(DateUtils.getMonthRange());
+                        viewModel.updateTracks(DateUtilsKt.getMonthRange());
                         break;
                     case FILTER_SELECT:
-                        DateUtils.selectDatesRange(getChildFragmentManager(), dates -> viewModel.updateTracks(dates));
+                        DateUtilsKt.selectDatesRange(getChildFragmentManager(), dates -> viewModel.updateTracks(dates));
                         break;
                     default:
-                        viewModel.updateTracks(DateUtils.getTodayRange());
+                        viewModel.updateTracks(DateUtilsKt.getTodayRange());
                 }
                 canAnimate = true;
             }

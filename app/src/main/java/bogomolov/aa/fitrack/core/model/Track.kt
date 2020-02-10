@@ -1,6 +1,6 @@
 package bogomolov.aa.fitrack.core.model
 
-import bogomolov.aa.fitrack.core.RamerDouglasPeucker
+import bogomolov.aa.fitrack.core.douglasPeucker
 import bogomolov.aa.fitrack.core.model.Point.Companion.distance
 import java.text.SimpleDateFormat
 import java.util.*
@@ -25,7 +25,7 @@ class Track {
         const val EPSILON = 25.0
 
         fun smooth(rawPoints: List<Point>): List<Point> =
-                RamerDouglasPeucker.douglasPeucker(rawPoints, EPSILON)
+                douglasPeucker(rawPoints, EPSILON)
 
         fun sumTracks(tracks: List<Track>): Track {
             val sumTrack = Track()
