@@ -4,11 +4,8 @@ import androidx.fragment.app.FragmentManager
 import ru.slybeaver.slycalendarview.SlyCalendarDialog
 import java.util.*
 
-interface DatesSelector {
-    fun onSelect(dates: Array<Date>)
-}
 
-fun selectDatesRange(fm: FragmentManager, selector: DatesSelector) {
+fun selectDatesRange(fm: FragmentManager, selector: (Array<Date>) -> Unit) {
     SlyCalendarDialog()
             .setSingle(false)
             .setCallback(object : SlyCalendarDialog.Callback {
@@ -28,7 +25,7 @@ fun selectDatesRange(fm: FragmentManager, selector: DatesSelector) {
                         calendar.set(Calendar.MINUTE, 59)
                         calendar.set(Calendar.SECOND, 59)
                         val date2 = calendar.time
-                        selector.onSelect(arrayOf(date1, date2))
+                        selector(arrayOf(date1, date2))
                     }
                 }
             }).show(fm, "TAG_SLYCALENDAR")

@@ -18,11 +18,11 @@ import java.io.FileOutputStream
 fun getTrackImageFile(context: Context, track: Track): String =
         File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "track_" + track.id + ".png").absolutePath
 
-fun saveUI(context: Context, track: Track, points: List<Point?>?, width: Int, height: Int) {
+fun saveUI(context: Context, track: Track, points: List<Point>, width: Int, height: Int) {
     ui { save(context, track, points, width, height) }
 }
 
-private fun save(context: Context, track: Track, points: List<Point?>?, width: Int, height: Int) {
+private fun save(context: Context, track: Track, points: List<Point>, width: Int, height: Int) {
     val options = GoogleMapOptions()
             .compassEnabled(false)
             .mapToolbarEnabled(false)
