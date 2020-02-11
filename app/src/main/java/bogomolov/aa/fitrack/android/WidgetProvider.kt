@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import bogomolov.aa.fitrack.R
-import bogomolov.aa.fitrack.android.Rx.worker
 import bogomolov.aa.fitrack.core.getTodayRange
 import bogomolov.aa.fitrack.core.model.Point
 import bogomolov.aa.fitrack.core.model.Point.Companion.getTrackDistance

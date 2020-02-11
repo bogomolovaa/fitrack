@@ -50,7 +50,7 @@ private fun save(context: Context, track: Track, points: List<Point>, width: Int
             mMapView.buildDrawingCache(true)
             val b = Bitmap.createBitmap(mMapView.drawingCache)
             mMapView.isDrawingCacheEnabled = false
-            Rx.worker(Runnable { persistImage(b, getTrackImageFile(context, track)) })
+            worker { persistImage(b, getTrackImageFile(context, track)) }
         }
     }
 }

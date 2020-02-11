@@ -8,7 +8,6 @@ import javax.inject.Inject
 import bogomolov.aa.fitrack.repository.Repository
 import bogomolov.aa.fitrack.core.model.Tag
 
-import bogomolov.aa.fitrack.android.Rx.worker
 import bogomolov.aa.fitrack.android.worker
 
 

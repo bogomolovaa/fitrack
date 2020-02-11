@@ -21,7 +21,6 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.preference.PreferenceManager
 import bogomolov.aa.fitrack.R
-import bogomolov.aa.fitrack.android.Rx.worker
 import bogomolov.aa.fitrack.core.model.Point
 import bogomolov.aa.fitrack.core.onNewPoint
 import bogomolov.aa.fitrack.repository.Repository
@@ -137,7 +136,7 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
                     val location = locationResult.lastLocation
                     if (location != null && location.getAccuracy() < MAX_LOCATION_ACCURACY) {
                         val point = Point(location.getTime(), location.getLatitude(), location.getLongitude())
-                        worker(Runnable { if (onNewPoint(point, repository, applicationContext, startLocationUpdateTime, UPDATE_INTERVAL)) stopServiceAndStartActivityRecognition() })
+                        worker { if (onNewPoint(point, repository, applicationContext, startLocationUpdateTime, UPDATE_INTERVAL)) stopServiceAndStartActivityRecognition() }
                     }
                 }
             }

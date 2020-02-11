@@ -10,7 +10,6 @@ import android.widget.ArrayAdapter
 import android.widget.Spinner
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
@@ -26,11 +25,11 @@ import dagger.android.support.AndroidSupportInjection
 import bogomolov.aa.fitrack.core.getMonthRange
 import bogomolov.aa.fitrack.core.getTodayRange
 import bogomolov.aa.fitrack.core.getWeekRange
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_MONTH
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_SELECT
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_TODAY
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_WEEK
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.TIME_STEP_DAY
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.FILTER_MONTH
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.FILTER_SELECT
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.FILTER_TODAY
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.FILTER_WEEK
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.TIME_STEP_DAY
 
 class FiltersBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private lateinit var viewModel: StatsViewModel

@@ -11,7 +11,6 @@ import bogomolov.aa.fitrack.core.model.Tag
 import bogomolov.aa.fitrack.core.model.Track
 import bogomolov.aa.fitrack.view.TagResultListener
 
-import bogomolov.aa.fitrack.android.Rx.worker
 import bogomolov.aa.fitrack.android.worker
 
 

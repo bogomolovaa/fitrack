@@ -13,7 +13,6 @@ import bogomolov.aa.fitrack.core.model.Tag
 import bogomolov.aa.fitrack.core.model.Track
 import io.reactivex.Observable
 
-import bogomolov.aa.fitrack.android.Rx.worker
 import bogomolov.aa.fitrack.android.worker
 import bogomolov.aa.fitrack.core.getWeekRange
 

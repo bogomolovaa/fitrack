@@ -59,7 +59,7 @@ class TagSelectionDialog : DialogFragment() {
         }
 
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
-            if (selectedToDeleteTag != null) viewModel.deleteTag(selectedToDeleteTag)
+            if (selectedToDeleteTag != null) viewModel.deleteTag(selectedToDeleteTag!!)
             actionMode!!.finish()
             return true
         }

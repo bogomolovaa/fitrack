@@ -40,14 +40,14 @@ import bogomolov.aa.fitrack.core.model.Track
 import bogomolov.aa.fitrack.viewmodels.StatsViewModel
 import dagger.android.support.AndroidSupportInjection
 
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_MONTH
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_TODAY
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.FILTER_WEEK
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.PARAM_DISTANCE
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.PARAM_SPEED
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.PARAM_TIME
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.TIME_STEP_DAY
-import bogomolov.aa.fitrack.viewmodels.StatsViewModel.TIME_STEP_WEEK
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.FILTER_MONTH
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.FILTER_TODAY
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.FILTER_WEEK
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.PARAM_DISTANCE
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.PARAM_SPEED
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.PARAM_TIME
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.TIME_STEP_DAY
+import bogomolov.aa.fitrack.viewmodels.StatsViewModel.Companion.TIME_STEP_WEEK
 
 
 class StatsFragment : Fragment() {

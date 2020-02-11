@@ -17,7 +17,6 @@ import bogomolov.aa.fitrack.core.model.Point
 import bogomolov.aa.fitrack.core.model.Track
 import bogomolov.aa.fitrack.android.TrackerService
 
-import bogomolov.aa.fitrack.android.Rx.worker
 import bogomolov.aa.fitrack.android.worker
 
 class MainViewModel @Inject

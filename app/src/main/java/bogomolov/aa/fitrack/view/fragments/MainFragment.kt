@@ -107,8 +107,8 @@ class MainFragment : Fragment(), OnMapReadyCallback {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_track_start -> viewModel.startTrack(context)
-            R.id.menu_track_stop -> viewModel.stopTrack(context)
+            R.id.menu_track_start -> viewModel.startTrack(context!!)
+            R.id.menu_track_stop -> viewModel.stopTrack(context!!)
         }
         return true
     }
