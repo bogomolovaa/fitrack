@@ -2,6 +2,7 @@ package bogomolov.aa.fitrack.viewmodels
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 
 import javax.inject.Inject
 
@@ -18,14 +19,14 @@ constructor(private val repository: Repository) : ViewModel() {
     private var tags: MutableList<Tag>? = null
 
     init {
-        worker {
+        worker(viewModelScope) {
             tags = repository.getTags() as MutableList<Tag>?
             tagsLiveData.postValue(tags)
         }
     }
 
     fun onNewTag() {
-        worker {
+        worker(viewModelScope) {
             val tagName = newName.value
             if (tagName != null) {
                 val tag = Tag(tagName)
@@ -37,7 +38,7 @@ constructor(private val repository: Repository) : ViewModel() {
     }
 
     fun deleteTag(tag: Tag) {
-        worker {
+        worker(viewModelScope) {
             repository.deleteTag(tag)
             tags!!.remove(tag)
             tagsLiveData.postValue(tags)

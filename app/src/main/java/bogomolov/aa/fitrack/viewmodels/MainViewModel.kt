@@ -6,6 +6,7 @@ import android.os.HandlerThread
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 
 import java.util.ArrayList
 
@@ -51,7 +52,7 @@ constructor(private val repository: Repository) : ViewModel() {
 
     fun startTrack(context: Context) {
         if (TrackerService.working) {
-            worker{
+            worker(viewModelScope){
                 val lastPoint = repository.getLastRawPoint()
                 if (lastPoint != null) {
                     startTrack(repository, lastPoint)
@@ -64,7 +65,7 @@ constructor(private val repository: Repository) : ViewModel() {
     }
 
     fun stopTrack(context: Context) {
-        worker{
+        worker(viewModelScope){
             val lastTrack = repository.getLastTrack()
             if (lastTrack != null && lastTrack.isOpened()) {
                 finishTrack(repository, context, repository.getTrackPoints(lastTrack, Point.RAW), lastTrack, System.currentTimeMillis())

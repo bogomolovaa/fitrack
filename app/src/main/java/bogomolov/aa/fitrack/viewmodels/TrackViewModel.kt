@@ -2,6 +2,7 @@ package bogomolov.aa.fitrack.viewmodels
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 
 import javax.inject.Inject
 
@@ -20,7 +21,7 @@ constructor(private val repository: Repository) : ViewModel(), TagResultListener
     var trackPoints = MutableLiveData<List<Point>>()
 
     fun setTrack(trackId: Long) {
-        worker{
+        worker(viewModelScope){
             val track = repository.getTracks(trackId)[0]
             trackLiveData.postValue(track)
             trackPoints.postValue(repository.getTrackPoints(track, Point.SMOOTHED))
@@ -32,7 +33,7 @@ constructor(private val repository: Repository) : ViewModel(), TagResultListener
         if (tag != null && track != null) {
             track.tag = tag.name
             trackLiveData.postValue(track)
-            worker{ repository.save(track) }
+            worker(viewModelScope){ repository.save(track) }
         }
     }
 }

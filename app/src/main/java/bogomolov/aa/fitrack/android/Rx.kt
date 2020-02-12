@@ -5,9 +5,9 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.*
 
-fun worker(runnable: suspend CoroutineScope.() -> Unit) {
+fun worker(scope: CoroutineScope = GlobalScope, runnable: suspend CoroutineScope.() -> Unit) {
     //Completable.fromRunnable(runnable).subscribeOn(Schedulers.io()).subscribe()
-    GlobalScope.launch(context = Dispatchers.IO, block =  runnable)
+    scope.launch(context = Dispatchers.IO, block = runnable)
 }
 
 fun ui(runnable: () -> Unit) {

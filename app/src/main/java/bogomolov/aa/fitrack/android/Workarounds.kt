@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 
 private const val AUTOSTART_REQUESTED = "autostart_requested"
@@ -40,9 +41,9 @@ fun autostart(context: Context) {
             } else if ("Honor".equals(manufacturer, ignoreCase = true)) {
                 intent.component = ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity")
             }
-            val editor = preferences.edit()
-            editor.putBoolean(AUTOSTART_REQUESTED, true)
-            editor.apply()
+            preferences.edit {
+                putBoolean(AUTOSTART_REQUESTED, true)
+            }
             val list = context.packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
             if (list.size > 0) {
                 context.startActivity(intent)

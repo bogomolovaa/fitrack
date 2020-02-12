@@ -2,6 +2,8 @@ package bogomolov.aa.fitrack.viewmodels
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
+import androidx.lifecycle.viewModelScope
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -21,7 +23,9 @@ constructor(private val repository: Repository) : ViewModel() {
 
     var trackLiveData = MutableLiveData<Track>()
     var selectedPeriod = MutableLiveData<String>()
-    var tagEntries = MutableLiveData<Array<String>>()
+    var tagEntries = liveData {
+        emit(getTagNames(repository.getTags()))
+    }
     var tracksLiveData = MutableLiveData<List<Track>>()
 
     var selectedTagLiveData = MutableLiveData<Int>()
@@ -38,8 +42,6 @@ constructor(private val repository: Repository) : ViewModel() {
 
 
     init {
-        worker { tagEntries.postValue(getTagNames(repository.getTags())) }
-
         selectedTagLiveData.observeForever { id ->
             if (tagEntries.value != null && id != selectedTagId) {
                 selectedTag = tagEntries.value!![id]
@@ -72,11 +74,13 @@ constructor(private val repository: Repository) : ViewModel() {
         val endDateString = SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[1])
         selectedPeriod.setValue("$startDateString - $endDateString")
 
-        worker {
+        worker(viewModelScope) {
             val tracks =
-                    if (reload)
+                    if (reload) {
                         repository.getFinishedTracks(datesRange, if (selectedTag == NO_TAG) null else selectedTag)
-                    else this@StatsViewModel.tracks
+                    }else {
+                        this@StatsViewModel.tracks
+                    }
             this@StatsViewModel.tracks = tracks
             val sumTrack = Track.sumTracks(tracks!!)
             trackLiveData.postValue(sumTrack)
@@ -88,19 +92,19 @@ constructor(private val repository: Repository) : ViewModel() {
             Observable.fromIterable(tags).startWith(Tag(NO_TAG)).map<String> { it.name }.toList().blockingGet().toTypedArray()
 
     companion object {
-        private val NO_TAG = "-"
+        private const val NO_TAG = "-"
 
-        val PARAM_DISTANCE = 0
-        val PARAM_SPEED = 1
-        val PARAM_TIME = 2
+        const val PARAM_DISTANCE = 0
+        const val PARAM_SPEED = 1
+        const val PARAM_TIME = 2
 
-        val TIME_STEP_DAY = 0
-        val TIME_STEP_WEEK = 1
+        const val TIME_STEP_DAY = 0
+        const val TIME_STEP_WEEK = 1
 
-        val FILTER_TODAY = 0
-        val FILTER_WEEK = 1
-        val FILTER_MONTH = 2
-        val FILTER_SELECT = 3
+        const val FILTER_TODAY = 0
+        const val FILTER_WEEK = 1
+        const val FILTER_MONTH = 2
+        const val FILTER_SELECT = 3
     }
 
 }
