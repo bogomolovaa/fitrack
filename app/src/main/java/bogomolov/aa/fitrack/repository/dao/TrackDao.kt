@@ -11,8 +11,8 @@ import bogomolov.aa.fitrack.repository.entities.TrackEntity
 @Dao
 interface TrackDao {
 
-    @get:Query("SELECT * from TrackEntity where id = (SELECT max(id) from TrackEntity)")
-    val lastTrack: TrackEntity
+    @Query("SELECT * from TrackEntity where id = (SELECT max(id) from TrackEntity)")
+    fun getLastTrack(): TrackEntity
 
     @Insert
     fun insert(trackEntity: TrackEntity): Long

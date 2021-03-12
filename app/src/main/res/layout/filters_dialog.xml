@@ -3,7 +3,7 @@
     <data>
         <variable
             name="viewModel"
-            type="bogomolov.aa.fitrack.viewmodels.StatsViewModel" />
+            type="bogomolov.aa.fitrack.features.stats.StatsViewModel" />
     </data>
     <TableLayout
         android:layout_width="match_parent"
@@ -51,7 +51,7 @@
                 android:layout_weight="1"
                 android:text="@string/stats_filters_period"
                 android:textSize="18sp" />
-            <bogomolov.aa.fitrack.view.ReselectableSpinner
+            <bogomolov.aa.fitrack.features.shared.ReselectableSpinner
                 android:id="@+id/stats_spinner_period"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"

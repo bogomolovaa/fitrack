@@ -3,9 +3,7 @@ package bogomolov.aa.fitrack.repository.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-
 import bogomolov.aa.fitrack.repository.entities.PointEntity
-import bogomolov.aa.fitrack.repository.entities.TrackEntity
 
 @Dao
 interface PointDao {

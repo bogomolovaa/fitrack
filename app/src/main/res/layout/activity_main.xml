@@ -7,10 +7,9 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".view.activities.MainActivity">
+    tools:context=".features.main.MainActivity">
 
-    <bogomolov.aa.fitrack.view.DrawerMotionLayout
-        app:layoutDescription="@xml/motion_scene"
+    <bogomolov.aa.fitrack.features.shared.DrawerMotionLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -35,7 +34,7 @@
 
         </RelativeLayout>
 
-    </bogomolov.aa.fitrack.view.DrawerMotionLayout>
+    </bogomolov.aa.fitrack.features.shared.DrawerMotionLayout>
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"

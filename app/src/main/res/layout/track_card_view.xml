@@ -8,7 +8,7 @@
 
         <variable
             name="track"
-            type="bogomolov.aa.fitrack.core.model.Track" />
+            type="bogomolov.aa.fitrack.domain.model.Track" />
     </data>
 
     <com.google.android.material.card.MaterialCardView

@@ -3,13 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <data>
-        <variable name="viewModel" type="bogomolov.aa.fitrack.viewmodels.TrackViewModel"/>
+        <variable name="viewModel" type="bogomolov.aa.fitrack.features.tracks.track.TrackViewModel"/>
     </data>
 
 <androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".view.fragments.TrackViewFragment">
+    tools:context=".features.tracks.track.TrackViewFragment">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar_track_view"

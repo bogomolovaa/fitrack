@@ -6,13 +6,13 @@
     <data>
         <variable
             name="viewModel"
-            type="bogomolov.aa.fitrack.viewmodels.TracksListViewModel" />
+            type="bogomolov.aa.fitrack.features.tracks.list.TracksListViewModel" />
     </data>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".view.fragments.TracksListFragment">
+        tools:context=".features.tracks.list.TracksListFragment">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/track_list_appbar"
@@ -28,7 +28,7 @@
                 android:minHeight="?attr/actionBarSize"
                 android:theme="?attr/actionBarTheme">
 
-                <bogomolov.aa.fitrack.view.ReselectableSpinner
+                <bogomolov.aa.fitrack.features.shared.ReselectableSpinner
                     android:id="@+id/tracks_time_spinner"
                     android:layout_width="115dp"
                     android:layout_height="34dp"

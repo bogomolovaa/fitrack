@@ -10,9 +10,9 @@ import bogomolov.aa.fitrack.repository.entities.PointEntity
 import bogomolov.aa.fitrack.repository.entities.TagEntity
 import bogomolov.aa.fitrack.repository.entities.TrackEntity
 
-const val DB_NAME = "tracker_db"
+const val DB_NAME = "fitrack_db"
 
-@Database(entities = [PointEntity::class, TagEntity::class, TrackEntity::class], version = 1)
+@Database(entities = [PointEntity::class, TagEntity::class, TrackEntity::class], version = 5)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun pointDao(): PointDao
@@ -20,6 +20,4 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun tagDao(): TagDao
 
     abstract fun trackDao(): TrackDao
-
-
 }

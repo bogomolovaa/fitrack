@@ -1,13 +1,12 @@
 package bogomolov.aa.fitrack.repository
 
-import java.util.ArrayList
-
-import bogomolov.aa.fitrack.core.model.Point
-import bogomolov.aa.fitrack.core.model.Tag
-import bogomolov.aa.fitrack.core.model.Track
+import bogomolov.aa.fitrack.domain.model.Point
+import bogomolov.aa.fitrack.domain.model.Tag
+import bogomolov.aa.fitrack.domain.model.Track
 import bogomolov.aa.fitrack.repository.entities.PointEntity
 import bogomolov.aa.fitrack.repository.entities.TagEntity
 import bogomolov.aa.fitrack.repository.entities.TrackEntity
+import java.util.*
 
 fun entityToModel(from: PointEntity?): Point? {
     if (from == null) return null

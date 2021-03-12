@@ -31,7 +31,7 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAFSVnjH4nw259Pwmsu-87S9p6tzp77p90" />
 
-        <receiver android:name=".android.WidgetProvider">
+        <receiver android:name=".features.main.WidgetProvider">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -41,11 +41,11 @@
 
 
         <service
-            android:name=".android.TrackerService"
+            android:name=".features.main.TrackerService"
             android:exported="false" />
 
         <activity
-            android:name=".view.activities.MainActivity"
+            android:name=".features.main.MainActivity"
             android:label="@string/title_tracking">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -1,0 +1,45 @@
+package bogomolov.aa.fitrack.domain
+
+import bogomolov.aa.fitrack.domain.model.Point
+import bogomolov.aa.fitrack.domain.model.distance
+import java.util.*
+
+fun douglasPeucker(list: List<Point>, epsilon: Double): List<Point> {
+    if (list.size < 3) return list
+    val resultList = ArrayList<Point>()
+    douglasPeucker(list, 0, list.size, epsilon, resultList)
+    return resultList
+}
+
+private fun perpendicularDistance(px: Double, py: Double, vx: Double, vy: Double, wx: Double, wy: Double): Double {
+    val l2 = (vx - wx) * (vx - wx) + (vy - wy) * (vy - wy)
+    if (l2 == 0.0)
+        return distance(Point(px, py), Point(vx, vy))
+    val t = ((px - vx) * (wx - vx) + (py - vy) * (wy - vy)) / l2
+    if (t < 0)
+        return distance(Point(px, py), Point(vx, vy))
+    return if (t > 1) distance(Point(px, py), Point(wx, wy)) else distance(Point(px, py), Point(vx + t * (wx - vx), vy + t * (wy - vy)))
+}
+
+private fun douglasPeucker(list: List<Point>, start: Int, e: Int, epsilon: Double, resultList: MutableList<Point>){
+    var dmax = 0.0
+    var index = 0
+
+    val end = e-1
+    for(i in start+1 until end){
+        val p = list[i]
+        val v = list[start]
+        val w = list[end]
+        val d = perpendicularDistance(p.lat, p.lng, v.lat, v.lng, w.lat, w.lng)
+        if(d > dmax){
+            index = i
+            dmax = d
+        }
+        if(dmax > epsilon){
+            douglasPeucker(list, start, index, epsilon, resultList)
+            douglasPeucker(list, index, e, epsilon, resultList)
+        }else{
+            resultList.add(list[start])
+        }
+    }
+}

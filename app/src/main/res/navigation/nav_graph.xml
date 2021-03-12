@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/mainFragment"
-        android:name="bogomolov.aa.fitrack.view.fragments.MainFragment"
+        android:name="bogomolov.aa.fitrack.features.main.MainFragment"
         android:label="@string/title_tracking"
         tools:layout="@layout/fragment_main" >
         <action
@@ -22,7 +22,7 @@
     </fragment>
     <fragment
         android:id="@+id/tracksListFragment"
-        android:name="bogomolov.aa.fitrack.view.fragments.TracksListFragment"
+        android:name="bogomolov.aa.fitrack.features.tracks.list.TracksListFragment"
         android:label="@string/title_tracks"
         tools:layout="@layout/fragment_tracks_list" >
         <action
@@ -31,17 +31,17 @@
     </fragment>
     <fragment
         android:id="@+id/statsFragment"
-        android:name="bogomolov.aa.fitrack.view.fragments.StatsFragment"
+        android:name="bogomolov.aa.fitrack.features.stats.StatsFragment"
         android:label="@string/title_stats"
         tools:layout="@layout/fragment_stats" />
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="bogomolov.aa.fitrack.view.fragments.SettingsFragment"
+        android:name="bogomolov.aa.fitrack.features.settings.SettingsFragment"
         android:label="@string/title_settings"
         tools:layout="@layout/fragment_settings" />
     <fragment
         android:id="@+id/trackViewFragment"
-        android:name="bogomolov.aa.fitrack.view.fragments.TrackViewFragment"
+        android:name="bogomolov.aa.fitrack.features.tracks.track.TrackViewFragment"
         android:label=""
         tools:layout="@layout/fragment_track_view" >
         <argument

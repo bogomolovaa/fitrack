@@ -7,13 +7,13 @@
 
         <variable
             name="viewModel"
-            type="bogomolov.aa.fitrack.viewmodels.StatsViewModel" />
+            type="bogomolov.aa.fitrack.features.stats.StatsViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".view.fragments.StatsFragment">
+        tools:context=".features.stats.StatsFragment">
 
         <com.github.mikephil.charting.charts.BarChart
             android:id="@+id/chart"

@@ -1,15 +1,11 @@
 package bogomolov.aa.fitrack
 
 import android.app.Application
-
-import javax.inject.Inject
-
-import bogomolov.aa.fitrack.dagger.AppComponent
+import bogomolov.aa.fitrack.di.DaggerAppComponent
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
-
-import bogomolov.aa.fitrack.dagger.DaggerAppComponent
+import javax.inject.Inject
 
 
 class TrackerApplication : Application(), HasAndroidInjector {
