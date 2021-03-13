@@ -1,5 +1,6 @@
 package bogomolov.aa.fitrack.domain.model
 
+import android.annotation.SuppressLint
 import bogomolov.aa.fitrack.domain.douglasPeucker
 import java.text.SimpleDateFormat
 import java.util.*
@@ -16,9 +17,6 @@ data class Track(
     var tag: String? = null
 ) {
     var distance = 0.0
-    var currentSpeed = 0.0
-    var currentDistance = 0.0
-
 
     fun getTimeString(): String {
         val time = if (isOpened()) System.currentTimeMillis() else endTime
@@ -31,8 +29,9 @@ data class Track(
         return "%02d".format(hours) + ":" + "%02d".format(minutes) + ":" + "%02d".format(seconds);
     }
 
+    @SuppressLint("SimpleDateFormat")
     fun getName(): String =
-        SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.ENGLISH).format(Date(startTime))
+        SimpleDateFormat("dd.MM.yyyy HH:mm").format(Date(startTime))
 
     fun isOpened(): Boolean = endTime == 0L
 
@@ -41,7 +40,7 @@ data class Track(
         return 3.6 * distance / ((time - startTime) / 1000.0)
     }
 
-    fun getSpeedForCurrentDistance(): Double {
+    fun getSpeed(currentDistance: Double): Double {
         val time = if (isOpened()) System.currentTimeMillis() else endTime
         return currentDistance / ((time - startTime) / 1000.0)
     }

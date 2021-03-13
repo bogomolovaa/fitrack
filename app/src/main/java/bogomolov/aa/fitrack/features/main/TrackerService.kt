@@ -48,7 +48,7 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
     private var prevLocation: Location? = null
     private lateinit var locationCallback: LocationCallback
     private var startTime: Long = 0
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+    private val coroutineScope = CoroutineScope(Dispatchers.IO + Job())
 
     @Inject
     lateinit var useCases: UseCases

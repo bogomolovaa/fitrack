@@ -8,7 +8,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.observe
 import androidx.navigation.Navigation
 import androidx.navigation.ui.NavigationUI
 import androidx.transition.TransitionInflater
@@ -16,7 +15,7 @@ import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.FragmentTrackViewBinding
 import bogomolov.aa.fitrack.di.ViewModelFactory
 import bogomolov.aa.fitrack.domain.model.Point
-import bogomolov.aa.fitrack.features.main.MainFragment
+import bogomolov.aa.fitrack.features.main.toPolylineCoordinates
 import bogomolov.aa.fitrack.features.tracks.tags.TagSelectionDialog
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -55,9 +54,9 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
         val view = binding.root
 
 
-        val trackId = (arguments!!.get("trackId") as Long?)!!
+        val trackId = (requireArguments().get("trackId") as Long?)!!
         viewModel.setTrack(trackId)
-        viewModel.trackLiveData.observe(this) { track ->
+        viewModel.trackLiveData.observe(viewLifecycleOwner) { track ->
             (activity as AppCompatActivity).supportActionBar!!.setTitle("")
             startPostponedEnterTransition()
         }
@@ -67,7 +66,7 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
         (activity as AppCompatActivity).setSupportActionBar(toolbar)
         setHasOptionsMenu(true)
 
-        val navController = Navigation.findNavController(activity!!, R.id.nav_host_fragment)
+        val navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
         NavigationUI.setupWithNavController(toolbar, navController)
 
         binding.trackTextTag.setOnClickListener { v -> showTagSelection() }
@@ -75,7 +74,7 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
         val mapFragment = childFragmentManager.findFragmentById(R.id.map_track_view) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
 
-        viewModel.trackPoints.observe(this, { points -> updateMap(googleMap, points) })
+        viewModel.trackPoints.observe(viewLifecycleOwner, { points -> updateMap(googleMap, points) })
 
         return view
     }
@@ -132,7 +131,7 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
                     googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(lastPoint.lat, lastPoint.lng), 15f))
                 }
 
-                googleMap.addPolyline(PolylineOptions().color(-0x10000).clickable(false).add(*MainFragment.toPolylineCoordinates(smoothedPoints)))
+                googleMap.addPolyline(PolylineOptions().color(-0x10000).clickable(false).addAll(toPolylineCoordinates(smoothedPoints)))
             }
         }
     }

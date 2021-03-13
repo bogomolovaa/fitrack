@@ -25,13 +25,13 @@ constructor(
     val avgSpeed = MutableLiveData<String>()
     val speed = MutableLiveData<String>()
     val canStartLiveData = MutableLiveData<Boolean>().also { it.value = true }
-    val lastPointLiveData = MutableLiveData<Point>()
+    val lastPointLiveData = MutableLiveData<Point?>()
     private var tailSmoothedPoints: MutableList<Point>? = null
     private var windowStartId: Int = 0
 
 
     var currentTrack: Track? = null
-    lateinit var rawPoints: MutableList<Point>
+    private lateinit var rawPoints: MutableList<Point>
     lateinit var smoothedPoints: MutableList<Point>
     private var updateJob: Job? = null
 
@@ -60,38 +60,33 @@ constructor(
             while (true) {
                 val track = repository.getLastTrack().also { currentTrack = it }
                 val point = repository.getLastRawPoint()
-                if (point != null) {
-                    rawPoints = ArrayList()
-                    smoothedPoints = ArrayList()
-                    if (track != null && track.isOpened()) {
-                        rawPoints.addAll(repository.getTrackPoints(track, RAW))
-                        Log.i("test", "rawPoints")
-                        for (point1 in rawPoints) Log.i("test", "$point1")
-                        smoothedPoints.addAll(getSmoothedPoints(rawPoints))
-                        track.currentSpeed = getCurrentSpeed(smoothedPoints)
-                        track.currentDistance = getTrackDistance(smoothedPoints)
-                        Log.i("test", "smoothedPoints")
-                        for (point1 in smoothedPoints) Log.i("test", "$point1")
-                    }
-                    if (track != null && track.isOpened()) {
-                        distance.postValue(track.currentDistance.toInt().toString() + " m")
-                        time.postValue(track.getTimeString())
-                        speed.postValue(String.format("%.1f", 3.6 * track.currentSpeed) + " km/h")
-                        avgSpeed.postValue(
-                            String.format(
-                                "%.1f",
-                                3.6 * track.getSpeedForCurrentDistance()
-                            ) + " km/h"
-                        )
-                    } else {
-                        canStartLiveData.postValue(true)
-                        distance.postValue("")
-                        time.postValue("")
-                        speed.postValue("")
-                        avgSpeed.postValue("")
-                    }
-                    lastPointLiveData.postValue(point)
+                rawPoints = ArrayList()
+                smoothedPoints = ArrayList()
+                if (track != null && track.isOpened()) {
+                    rawPoints.addAll(repository.getTrackPoints(track, RAW))
+                    smoothedPoints.addAll(getSmoothedPoints(rawPoints))
+                    val currentSpeed = getCurrentSpeed(smoothedPoints)
+                    val currentDistance = getTrackDistance(smoothedPoints)
+                    Log.i(
+                        "test",
+                        "rawPoints ${rawPoints.size} smoothedPoints ${smoothedPoints.size}"
+                    )
+
+                    distance.postValue(currentDistance.toInt().toString() + " m")
+                    time.postValue(track.getTimeString())
+                    speed.postValue(String.format("%.1f", 3.6 * currentSpeed) + " km/h")
+                    avgSpeed.postValue(
+                        String.format("%.1f", 3.6 * track.getSpeed(currentDistance)) + " km/h"
+                    )
+                    if (canStartLiveData.value == true) canStartLiveData.postValue(false)
+                } else {
+                    if (canStartLiveData.value == false) canStartLiveData.postValue(true)
+                    distance.postValue("")
+                    time.postValue("")
+                    speed.postValue("")
+                    avgSpeed.postValue("")
                 }
+                lastPointLiveData.postValue(point)
                 delay(1000)
             }
         }
@@ -114,26 +109,21 @@ constructor(
             val windowPointsRaw = getWindowPoints(points, windowSize)
             val preWindowPointsRaw = getPreWindowPoints(points, windowSize)
             tailSmoothedPoints = smooth(preWindowPointsRaw) as MutableList<Point>
-            val windowSmoothedPoints = smooth(windowPointsRaw)
             smoothedPoints.addAll(tailSmoothedPoints!!)
-            smoothedPoints.addAll(windowSmoothedPoints)
+            smoothedPoints.addAll(smooth(windowPointsRaw))
         } else {
             val windowSize = points.size - windowStartId
+            val windowPointsRaw = getWindowPoints(points, windowSize)
             if (windowSize >= WINDOW_MAX_SIZE) {
-                val windowPointsRaw = getWindowPoints(points, windowSize)
                 val secondHalfWindowPointsRaw = getWindowPoints(points, windowSize / 2)
                 val firstHalfWindowPointsRaw = getPreWindowPoints(windowPointsRaw, windowSize / 2)
-                val secondHalfWindowSmoothedPoints = smooth(secondHalfWindowPointsRaw)
-                val firstHalfWindowSmoothedPoints = smooth(firstHalfWindowPointsRaw)
-                tailSmoothedPoints!!.addAll(firstHalfWindowSmoothedPoints)
+                tailSmoothedPoints!!.addAll(smooth(firstHalfWindowPointsRaw))
                 smoothedPoints.addAll(tailSmoothedPoints!!)
-                smoothedPoints.addAll(secondHalfWindowSmoothedPoints)
+                smoothedPoints.addAll(smooth(secondHalfWindowPointsRaw))
                 windowStartId = points.size - windowSize / 2
             } else {
-                val windowPointsRaw = getWindowPoints(points, windowSize)
-                val windowSmoothedPoints = smooth(windowPointsRaw)
                 smoothedPoints.addAll(tailSmoothedPoints!!)
-                smoothedPoints.addAll(windowSmoothedPoints)
+                smoothedPoints.addAll(smooth(windowPointsRaw))
             }
         }
         return smoothedPoints

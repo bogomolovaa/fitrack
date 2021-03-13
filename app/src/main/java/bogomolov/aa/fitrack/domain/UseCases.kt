@@ -17,7 +17,7 @@ class UseCases @Inject constructor(
     suspend fun onNewPoint(point: Point, startTime: Long, updateInterval: Long): Boolean {
         val lastTrack = repository.getLastTrack()
         Log.i("test", "onNewPoint $point lastTrack $lastTrack")
-        val openedTrack = if (lastTrack != null && !lastTrack.isOpened()) null else lastTrack
+        val openedTrack = if (lastTrack?.isOpened() == true) lastTrack else null
         if (openedTrack == null) {
             repository.addPoint(point)
             val points = repository.getPointsAfterLastTrack(lastTrack)
@@ -77,7 +77,10 @@ class UseCases @Inject constructor(
         val points = points1 ?: repository.getTrackPoints(openedTrack, RAW)
         if (points.isEmpty()) return
         val lastPoint = points[points.size - 1]
-        val smoothedPoints = clonePoints(smooth(points))
+        Log.i("test","finishTrack points ${points.size}")
+        val smoothed = smooth(points)
+        Log.i("test","smoothed ${smoothed.size}")
+        val smoothedPoints = clonePoints(smoothed)
         for (point in smoothedPoints) {
             point.smoothed = SMOOTHED
             repository.addPoint(point)

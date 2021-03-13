@@ -3,6 +3,7 @@ package bogomolov.aa.fitrack.features.main
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -130,26 +131,17 @@ class MainFragment : Fragment(), OnMapReadyCallback {
                 }
             }
 
-            if (track != null) {
-                canStart = !track.isOpened()
-                requireActivity().invalidateOptionsMenu()
-            }
             if (track != null && track.isOpened()) {
-                val rotation = if (smoothedPoints.size > 1)
+                currentPositionMarker!!.rotation = if (smoothedPoints.size > 1)
                     angleFromCoordinate(
                         smoothedPoints[smoothedPoints.size - 2],
                         smoothedPoints[smoothedPoints.size - 1]
                     ) else 0f
-                currentPositionMarker!!.rotation = rotation
-                if (trackSmoothedPolyline == null) {
-                    trackSmoothedPolyline = googleMap!!.addPolyline(
-                        PolylineOptions().color(-0x10000)
-                            .clickable(false).add(*toPolylineCoordinates(smoothedPoints))
-                    )
-                } else {
-                    trackSmoothedPolyline!!.points =
-                        Arrays.asList(*toPolylineCoordinates(smoothedPoints))
-                }
+                if (trackSmoothedPolyline == null) trackSmoothedPolyline =
+                    googleMap!!.addPolyline(PolylineOptions().color(-0x10000).clickable(false))
+                Log.i("test", "smoothedPoints $track")
+                for (point1 in smoothedPoints) Log.i("test", "$point1")
+                trackSmoothedPolyline!!.points = toPolylineCoordinates(smoothedPoints)
             } else {
                 if (trackSmoothedPolyline != null) {
                     trackSmoothedPolyline!!.remove()
@@ -172,24 +164,19 @@ class MainFragment : Fragment(), OnMapReadyCallback {
         super.onStop()
         viewModel.stopUpdating()
     }
+}
 
-    companion object {
+fun toPolylineCoordinates(points: List<Point>) = points.map { LatLng(it.lat, it.lng) }
 
-        private fun angleFromCoordinate(point1: Point, point2: Point): Float {
-            val f1 = Math.toRadians(point1.lat)
-            val f2 = Math.toRadians(point2.lat)
-            val l1 = Math.toRadians(point1.lng)
-            val l2 = Math.toRadians(point2.lng)
+private fun angleFromCoordinate(point1: Point, point2: Point): Float {
+    val f1 = Math.toRadians(point1.lat)
+    val f2 = Math.toRadians(point2.lat)
+    val l1 = Math.toRadians(point1.lng)
+    val l2 = Math.toRadians(point2.lng)
 
-            val y = Math.sin(l2 - l1) * Math.cos(f2)
-            val x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(l2 - l1)
+    val y = Math.sin(l2 - l1) * Math.cos(f2)
+    val x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(l2 - l1)
 
-            val brng = Math.toDegrees(Math.atan2(y, x))
-            return (brng - 90).toFloat()
-        }
-
-        fun toPolylineCoordinates(points: List<Point>): Array<LatLng> =
-            Array(points.size) { i -> LatLng(points[i].lat, points[i].lng) }
-    }
-
+    val brng = Math.toDegrees(Math.atan2(y, x))
+    return (brng - 90).toFloat()
 }

@@ -8,6 +8,7 @@ import bogomolov.aa.fitrack.domain.MapSaver
 import bogomolov.aa.fitrack.domain.model.Point
 import bogomolov.aa.fitrack.domain.model.Track
 import bogomolov.aa.fitrack.features.main.MainFragment
+import bogomolov.aa.fitrack.features.main.toPolylineCoordinates
 import bogomolov.aa.fitrack.features.tracks.track.TrackViewFragment
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMapOptions
@@ -41,7 +42,7 @@ class MapSaverImpl @Inject constructor(
                 mapView.layout(0, 0, width, height)
                 TrackViewFragment.updateMap(googleMap, points)
                 googleMap.moveCamera(CameraUpdateFactory.zoomTo(18f))
-                for (latLng in MainFragment.toPolylineCoordinates(points)) {
+                for (latLng in toPolylineCoordinates(points)) {
                     var isVisible = googleMap.projection.visibleRegion.latLngBounds.contains(latLng)
                     while (!isVisible) {
                         googleMap.moveCamera(CameraUpdateFactory.zoomOut())
