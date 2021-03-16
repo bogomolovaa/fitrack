@@ -39,7 +39,7 @@ constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val lastPoint = repository.getLastRawPoint()
             if (lastPoint != null) {
-                useCases.startTrack(lastPoint)
+                useCases.startTrack(lastPoint, System.currentTimeMillis())
                 canStartLiveData.postValue(false)
             }
         }
@@ -49,6 +49,7 @@ constructor(
         viewModelScope.launch(Dispatchers.IO) {
             if (currentTrack != null && currentTrack!!.isOpened()) {
                 useCases.finishTrack(openedTrack = currentTrack!!)
+                currentTrack = null
                 canStartLiveData.postValue(true)
             }
         }

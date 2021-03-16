@@ -168,7 +168,7 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
                     if (location.accuracy < MAX_LOCATION_ACCURACY) {
                         val point = Point(location.time, location.latitude, location.longitude)
                         coroutineScope.launch(Dispatchers.IO) {
-                            if (useCases.onNewPoint(point, startTime, UPDATE_INTERVAL))
+                            if (useCases.onNewPoint(point, startTime))
                                 stopServiceAndStartActivityRecognition()
                         }
                     }

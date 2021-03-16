@@ -60,7 +60,7 @@ class SettingsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeL
     }
 
     class SettingsFragmentView : PreferenceFragmentCompat() {
-        override fun onCreatePreferences(savedInstanceState: Bundle, rootKey: String) {
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
         }
     }

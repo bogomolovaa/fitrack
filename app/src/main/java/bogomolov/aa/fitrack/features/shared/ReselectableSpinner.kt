@@ -12,8 +12,7 @@ class ReselectableSpinner(context: Context, attrs: AttributeSet) : Spinner(conte
 
     override fun setSelection(position: Int) {
         super.setSelection(position)
-        if (listener != null)
-            listener!!.onItemSelected(null, null, position, 0)
+        listener?.onItemSelected(null, null, position, 0)
     }
 
     override fun setOnItemSelectedListener(listener: OnItemSelectedListener?) {

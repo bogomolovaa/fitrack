@@ -6,24 +6,21 @@ import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.databinding.DataBindingUtil
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.Navigation
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.FragmentMainBinding
 import bogomolov.aa.fitrack.di.ViewModelFactory
 import bogomolov.aa.fitrack.domain.model.Point
-import bogomolov.aa.fitrack.domain.model.Track
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import dagger.android.support.AndroidSupportInjection
-import java.util.*
 import javax.inject.Inject
 
 
@@ -36,6 +33,7 @@ class MainFragment : Fragment(), OnMapReadyCallback {
     private var currentPositionMarker: Marker? = null
     private var zoomed: Boolean = false
     private var canStart: Boolean = false
+    private lateinit var binding: FragmentMainBinding
 
 
     override fun onAttach(context: Context) {
@@ -47,24 +45,16 @@ class MainFragment : Fragment(), OnMapReadyCallback {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        val binding = DataBindingUtil.inflate<FragmentMainBinding>(
-            inflater,
-            R.layout.fragment_main,
-            container,
-            false
-        )
-        binding.lifecycleOwner = this
-        val view = binding.root
-        binding.viewModel = viewModel
+    ) = FragmentMainBinding.inflate(inflater, container, false).also { binding = it }.root
 
-        val toolbar = binding.toolbar
-        (activity as AppCompatActivity).setSupportActionBar(toolbar)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
         setHasOptionsMenu(true)
 
-        val navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
+        val navController = findNavController()
         val drawerLayout = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout)
-        NavigationUI.setupWithNavController(toolbar, navController, drawerLayout)
+        NavigationUI.setupWithNavController(binding.toolbar, navController, drawerLayout)
 
         viewModel.canStartLiveData.observe(viewLifecycleOwner) {
             canStart = it
@@ -78,15 +68,24 @@ class MainFragment : Fragment(), OnMapReadyCallback {
             childFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment?
         mapFragment!!.getMapAsync(this)
 
-        return view
+        viewModel.distance.observe(viewLifecycleOwner) {
+            binding.textDistance.text = it
+        }
+        viewModel.time.observe(viewLifecycleOwner) {
+            binding.textTime.text = it
+        }
+        viewModel.avgSpeed.observe(viewLifecycleOwner) {
+            binding.textAvgSpeed.text = it
+        }
+        viewModel.speed.observe(viewLifecycleOwner) {
+            binding.textSpeed.text = it
+        }
     }
-
 
     override fun onPrepareOptionsMenu(menu: Menu) {
         menu.findItem(R.id.menu_track_start).isVisible = canStart
         menu.findItem(R.id.menu_track_stop).isVisible = !canStart
     }
-
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.start_stop, menu)
@@ -120,7 +119,8 @@ class MainFragment : Fragment(), OnMapReadyCallback {
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.direction_arrow))
                     )
                 } else {
-                    currentPositionMarker!!.position = latLng
+                    Log.i("test","updateView position ${latLng.latitude} ${latLng.longitude}")
+                    currentPositionMarker?.position = latLng
                 }
 
                 if (!zoomed) {
@@ -139,8 +139,8 @@ class MainFragment : Fragment(), OnMapReadyCallback {
                     ) else 0f
                 if (trackSmoothedPolyline == null) trackSmoothedPolyline =
                     googleMap!!.addPolyline(PolylineOptions().color(-0x10000).clickable(false))
-                Log.i("test", "smoothedPoints $track")
-                for (point1 in smoothedPoints) Log.i("test", "$point1")
+                //Log.i("test", "smoothedPoints $track")
+                //for (point1 in smoothedPoints) Log.i("test", "$point1")
                 trackSmoothedPolyline!!.points = toPolylineCoordinates(smoothedPoints)
             } else {
                 if (trackSmoothedPolyline != null) {

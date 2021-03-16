@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-    <data>
-        <variable name="viewModel" type="bogomolov.aa.fitrack.features.tracks.track.TrackViewModel"/>
-    </data>
-
-<androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".features.tracks.track.TrackViewFragment">
 
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar_track_view"
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorPrimary"
@@ -21,18 +16,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" >
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/track_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text='@{viewModel.trackLiveData.name}'
             android:textAlignment="viewStart"
             android:textColor="#000000"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:transitionName='@{"track_name_"+viewModel.trackLiveData.id}'
             tools:layout_editor_absoluteX="16dp"
             tools:layout_editor_absoluteY="12dp"
             tools:text="Track name" />
@@ -41,18 +34,19 @@
 
 
     <FrameLayout
+        android:id="@+id/mapLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:transitionName='@{"track_image_"+viewModel.trackLiveData.id}'
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar_track_view">
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
         <fragment
             android:id="@+id/map_track_view"
             class="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent" />
     </FrameLayout>
 
     <LinearLayout
@@ -66,57 +60,52 @@
         android:paddingBottom="4dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar_track_view">
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
 
         <TextView
             android:id="@+id/track_text_distance"
-            android:transitionName='@{"track_distance_"+viewModel.trackLiveData.id}'
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:padding="5dp"
-            android:text='@{(int)viewModel.trackLiveData.distance + " m"}'
             android:textAlignment="viewStart"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            tools:text="1000 m" />
 
         <TextView
             android:id="@+id/track_text_time"
-            android:transitionName='@{"track_time_"+viewModel.trackLiveData.id}'
             android:layout_width="0dip"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:padding="5dp"
-            android:text="@{viewModel.trackLiveData.timeString}"
             android:textAlignment="center"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            tools:text="29:39" />
 
         <TextView
             android:id="@+id/track_text_avg_speed"
-            android:transitionName='@{"track_speed_"+viewModel.trackLiveData.id}'
             android:layout_width="0dip"
             android:layout_height="match_parent"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
             android:padding="5dp"
-            android:text='@{String.format("%.1f", viewModel.trackLiveData.getSpeed()) + " km/h"}'
             android:textAlignment="viewEnd"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            tools:text="5 km/h" />
 
     </LinearLayout>
 
     <TextView
         android:id="@+id/track_text_tag"
-        android:transitionName='@{"track_tag_"+viewModel.trackLiveData.id}'
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:text='@{viewModel.trackLiveData.tag ?? @string/set_tag}'
+        android:text="@string/set_tag"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/track_linear_layout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-</layout>

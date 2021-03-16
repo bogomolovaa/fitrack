@@ -1,7 +1,9 @@
 package bogomolov.aa.fitrack.features.tracks.list
 
+import android.annotation.SuppressLint
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,9 +20,10 @@ import bogomolov.aa.fitrack.repository.getTrackImageFile
 import com.google.android.material.card.MaterialCardView
 import java.util.*
 
-class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) : PagedListAdapter<Track, TracksPagedAdapter.TrackViewHolder>(
-    DIFF_CALLBACK
-) {
+class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
+    PagedListAdapter<Track, TracksPagedAdapter.TrackViewHolder>(
+        DIFF_CALLBACK
+    ) {
     val selectedIds: MutableSet<Long> = HashSet()
     private var checkMode = false
 
@@ -33,7 +36,8 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) : P
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder {
-        val trackCardViewBinding = TrackCardViewBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val trackCardViewBinding =
+            TrackCardViewBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         val cv = trackCardViewBinding.trackCardView
         return TrackViewHolder(cv, trackCardViewBinding, this)
     }
@@ -49,22 +53,35 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) : P
         holder.bind(track)
     }
 
-    class TrackViewHolder(val cardView: CardView, private val binding: TrackCardViewBinding, private val adapter: TracksPagedAdapter) :
-            RecyclerView.ViewHolder(cardView), View.OnClickListener, View.OnLongClickListener {
+    class TrackViewHolder(
+        val cardView: CardView,
+        private val binding: TrackCardViewBinding,
+        private val adapter: TracksPagedAdapter
+    ) :
+        RecyclerView.ViewHolder(cardView), View.OnClickListener, View.OnLongClickListener {
 
         init {
             cardView.setOnClickListener(this)
             cardView.setOnLongClickListener(this)
         }
 
+        @SuppressLint("SetTextI18n")
         fun bind(track: Track?) {
-            binding.track = track
-            binding.executePendingBindings()
             if (track != null) {
                 val bitmap = BitmapFactory.decodeFile(getTrackImageFile(cardView.context, track))
                 binding.trackImage.setImageBitmap(bitmap)
-            } else {
-                binding.trackImage.setImageBitmap(null)
+
+                binding.cardTextName.text = track.getName()
+                binding.cardTextName.transitionName = "track_name_${track.id}"
+                binding.cardTextDistance.text = "${track.distance.toInt()} m"
+                binding.cardTextDistance.transitionName = "track_distance_${track.id}"
+                binding.cardTextTime.text = track.getTimeString()
+                binding.cardTextTime.transitionName = "track_time_${track.id}"
+                binding.cardTextAvgSpeed.text = "${String.format("%.1f", track.getSpeed())} km/h"
+                binding.cardTextAvgSpeed.transitionName = "track_speed_${track.id}"
+                binding.cardTagName.text = track.tag
+                binding.cardTagName.transitionName = "track_tag_${track.id}"
+                binding.trackImage.transitionName = "track_image_${track.id}"
             }
         }
 
@@ -85,14 +102,25 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) : P
                     val bundle = Bundle()
                     bundle.putLong("trackId", track.id)
                     val extras = FragmentNavigator.Extras.Builder()
-                            .addSharedElement(binding.cardTextDistance, binding.cardTextDistance.transitionName)
-                            .addSharedElement(binding.cardTextTime, binding.cardTextTime.transitionName)
-                            .addSharedElement(binding.cardTextAvgSpeed, binding.cardTextAvgSpeed.transitionName)
-                            .addSharedElement(binding.cardTextName, binding.cardTextName.transitionName)
-                            .addSharedElement(binding.cardTagName, binding.cardTagName.transitionName)
-                            .addSharedElement(binding.trackImage, binding.trackImage.transitionName)
-                            .build()
-                    Navigation.findNavController(v).navigate(R.id.action_tracksListFragment_to_trackViewFragment, bundle, null, extras)
+                        .addSharedElement(
+                            binding.cardTextDistance,
+                            binding.cardTextDistance.transitionName
+                        )
+                        .addSharedElement(binding.cardTextTime, binding.cardTextTime.transitionName)
+                        .addSharedElement(
+                            binding.cardTextAvgSpeed,
+                            binding.cardTextAvgSpeed.transitionName
+                        )
+                        .addSharedElement(binding.cardTextName, binding.cardTextName.transitionName)
+                        .addSharedElement(binding.cardTagName, binding.cardTagName.transitionName)
+                        .addSharedElement(binding.trackImage, binding.trackImage.transitionName)
+                        .build()
+                    Navigation.findNavController(v).navigate(
+                        R.id.action_tracksListFragment_to_trackViewFragment,
+                        bundle,
+                        null,
+                        extras
+                    )
                 }
             }
         }

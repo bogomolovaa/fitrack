@@ -1,6 +1,7 @@
 package bogomolov.aa.fitrack.domain.model
 
 import android.annotation.SuppressLint
+import android.util.Log
 import bogomolov.aa.fitrack.domain.douglasPeucker
 import java.text.SimpleDateFormat
 import java.util.*

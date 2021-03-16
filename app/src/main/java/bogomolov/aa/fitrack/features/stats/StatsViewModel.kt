@@ -1,5 +1,7 @@
 package bogomolov.aa.fitrack.features.stats
 
+import android.annotation.SuppressLint
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.liveData
@@ -19,97 +21,88 @@ import kotlin.collections.ArrayList
 
 class StatsViewModel @Inject
 constructor(private val repository: Repository) : ViewModel() {
-
     var trackLiveData = MutableLiveData<Track>()
     var selectedPeriod = MutableLiveData<String>()
-    var tagEntries = liveData {
-        viewModelScope.launch(Dispatchers.IO) {
-            emit(getTagNames(repository.getTags()))
-        }
-    }
+    var tagEntries = MutableLiveData<Array<String>>()
     var tracksLiveData = MutableLiveData<List<Track>>()
 
-    var selectedTagLiveData = MutableLiveData<Int>()
-    var selectedTimeStepLiveData = MutableLiveData<Int>()
-    var selectedParamLiveData = MutableLiveData<Int>()
-
-    private var tracks: List<Track>? = null
     var datesRange = getWeekRange()
     private var selectedTag = NO_TAG
-    var selectedTagId: Int = 0
+    private var selectedTagId: Int = 0
     var selectedTimeFilter = FILTER_WEEK
     var selectedParam = PARAM_DISTANCE
     var selectedTimeStep = TIME_STEP_DAY
 
-
     init {
-        selectedTagLiveData.observeForever { id ->
-            if (tagEntries.value != null && id != selectedTagId) {
-                selectedTag = tagEntries.value!![id]
-                selectedTagId = id
-                updateView(true)
-            }
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.i("test", "liveData tags start")
+            val tags = repository.getTags()
+            Log.i("test", "tags: $tags")
+            tagEntries.postValue(getTagNames(tags))
         }
-        selectedTimeStepLiveData.observeForever { id ->
-            if (id != selectedTimeStep) {
-                selectedTimeStep = id
-                updateView(true)
-            }
+    }
+
+
+    fun setParam(id: Int) {
+        if (id != selectedParam) {
+            selectedParam = id
+            updateView()
         }
-        selectedParamLiveData.observeForever { id ->
-            if (id != selectedParam) {
-                selectedParam = id
-                updateView(true)
-            }
+    }
+
+    fun setTimeStep(id: Int) {
+        if (id != selectedTimeStep) {
+            selectedTimeStep = id
+            updateView()
+        }
+    }
+
+    fun setTag(id: Int) {
+        if (tagEntries.value != null && id != selectedTagId) {
+            selectedTag = tagEntries.value!![id]
+            selectedTagId = id
+            updateView()
         }
     }
 
     fun setTimeFilter(datesRange: Array<Date>, selectedTimeFilter: Int) {
         this.datesRange = datesRange
         this.selectedTimeFilter = selectedTimeFilter
-        updateView(true)
+        updateView()
     }
 
-    fun updateView(reload: Boolean) {
+    @SuppressLint("SimpleDateFormat")
+    fun updateView() {
         val startDateString = SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[0])
         val endDateString = SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[1])
-        selectedPeriod.setValue("$startDateString - $endDateString")
+        selectedPeriod.value = "$startDateString - $endDateString"
 
         viewModelScope.launch(Dispatchers.IO) {
             val tracks =
-                if (reload) {
-                    repository.getFinishedTracks(
-                        datesRange,
-                        if (selectedTag == NO_TAG) null else selectedTag
-                    )
-                } else {
-                    this@StatsViewModel.tracks
-                }
-            this@StatsViewModel.tracks = tracks
-            val sumTrack = sumTracks(tracks!!)
+                repository.getFinishedTracks(
+                    datesRange,
+                    if (selectedTag == NO_TAG) null else selectedTag
+                )
+            val sumTrack = sumTracks(tracks)
             trackLiveData.postValue(sumTrack)
-            tracksLiveData.postValue(tracks!!)
+            tracksLiveData.postValue(tracks)
         }
     }
 
-
     private fun getTagNames(tags: List<Tag>) =
         ArrayList(tags).apply { add(0, Tag(name = NO_TAG)) }.map { it.name!! }.toTypedArray()
-
-    companion object {
-        private const val NO_TAG = "-"
-
-        const val PARAM_DISTANCE = 0
-        const val PARAM_SPEED = 1
-        const val PARAM_TIME = 2
-
-        const val TIME_STEP_DAY = 0
-        const val TIME_STEP_WEEK = 1
-
-        const val FILTER_TODAY = 0
-        const val FILTER_WEEK = 1
-        const val FILTER_MONTH = 2
-        const val FILTER_SELECT = 3
-    }
-
 }
+
+private const val NO_TAG = "-"
+
+const val PARAM_DISTANCE = 0
+const val PARAM_SPEED = 1
+const val PARAM_TIME = 2
+
+const val TIME_STEP_DAY = 0
+const val TIME_STEP_WEEK = 1
+
+const val FILTER_TODAY = 0
+const val FILTER_WEEK = 1
+const val FILTER_MONTH = 2
+const val FILTER_SELECT = 3

@@ -8,9 +8,8 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import androidx.appcompat.widget.Toolbar
-import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.DialogFragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.FragmentTagSelectionBinding
 import bogomolov.aa.fitrack.di.ViewModelFactory
@@ -23,15 +22,13 @@ class TagSelectionDialog : DialogFragment() {
     private lateinit var toolbar: Toolbar
     private lateinit var listView: ListView
 
+    @Inject
+    internal lateinit var viewModelFactory: ViewModelFactory
+    private val viewModel: TagSelectionViewModel by viewModels { viewModelFactory }
+
     private var selectedTag: Tag? = null
     private var selectedToDeleteTag: Tag? = null
     var tagResultListener: TagResultListener? = null
-
-    private lateinit var viewModel: TagSelectionViewModel
-
-    @Inject
-    internal lateinit  var viewModelFactory: ViewModelFactory
-
 
     private val callback = object : ActionMode.Callback {
 
@@ -61,17 +58,19 @@ class TagSelectionDialog : DialogFragment() {
         super.onAttach(context)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        viewModel = ViewModelProvider(this, viewModelFactory).get(TagSelectionViewModel::class.java)
-        val binding = DataBindingUtil.inflate<FragmentTagSelectionBinding>(inflater, R.layout.fragment_tag_selection, container, false)
-        binding.viewModel = viewModel
-        binding.lifecycleOwner = this
-        val view = binding.root
-
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val binding = FragmentTagSelectionBinding.inflate(inflater, container, false)
 
         listView = binding.tagListView
         viewModel.tagsLiveData.observe(this) { tags ->
-            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, tags)
+            val adapter = ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_list_item_1,
+                tags.map { it.name })
             listView.adapter = adapter
         }
 
@@ -79,9 +78,9 @@ class TagSelectionDialog : DialogFragment() {
         toolbar.setTitle(R.string.title_select_tag)
 
         val closeButton = binding.tagsBackButton
-        closeButton.setOnClickListener { v -> dismiss() }
+        closeButton.setOnClickListener { dismiss() }
 
-        listView.setOnItemLongClickListener { adapterView: AdapterView<*>, v: View, position: Int, l: Long ->
+        listView.setOnItemLongClickListener { _, _, position, _ ->
             if (actionMode == null) {
                 actionMode = toolbar.startActionMode(callback)
                 selectedToDeleteTag = viewModel.tagsLiveData.value!![position]
@@ -100,15 +99,13 @@ class TagSelectionDialog : DialogFragment() {
             }
         }
 
-
-        val textInputAddTag = binding.tagNameEditLayout
-        val textAddTag = binding.tagNameEditText
-        textInputAddTag.setEndIconOnClickListener { v ->
-            viewModel.onNewTag()
-            textAddTag.setText("")
+        binding.tagNameEditLayout.setEndIconOnClickListener {
+            val tagName = binding.tagNameEditText.text.toString()
+            viewModel.onNewTag(tagName)
+            binding.tagNameEditText.setText("")
         }
 
-        return view
+        return binding.root
     }
 
     override fun onDismiss(dialog: DialogInterface) {

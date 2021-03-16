@@ -1,5 +1,6 @@
 package bogomolov.aa.fitrack.features.tracks.tags
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,24 +13,23 @@ import javax.inject.Inject
 
 class TagSelectionViewModel @Inject
 constructor(private val repository: Repository) : ViewModel() {
-    var newName = MutableLiveData<String>()
     var tagsLiveData = MutableLiveData<List<Tag>>()
-    private var tags: MutableList<Tag>? = null
+    private var tags = ArrayList<Tag>()
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            tags = repository.getTags() as MutableList<Tag>?
+            tags.addAll(repository.getTags())
             tagsLiveData.postValue(tags)
         }
     }
 
-    fun onNewTag() {
+    fun onNewTag(tagName: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val tagName = newName.value
-            if (tagName != null) {
+            Log.i("test", "tagName $tagName")
+            if (tagName.isNotEmpty()) {
                 val tag = Tag(name = tagName)
                 repository.addTag(tag)
-                tags!!.add(tag)
+                tags.add(tag)
                 tagsLiveData.postValue(tags)
             }
         }
@@ -38,7 +38,7 @@ constructor(private val repository: Repository) : ViewModel() {
     fun deleteTag(tag: Tag) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.deleteTag(tag)
-            tags!!.remove(tag)
+            tags.remove(tag)
             tagsLiveData.postValue(tags)
         }
     }

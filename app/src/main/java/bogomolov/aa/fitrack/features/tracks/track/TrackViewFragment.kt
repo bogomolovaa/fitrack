@@ -1,13 +1,13 @@
 package bogomolov.aa.fitrack.features.tracks.track
 
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
 import androidx.navigation.ui.NavigationUI
 import androidx.transition.TransitionInflater
@@ -29,11 +29,11 @@ import javax.inject.Inject
 
 
 class TrackViewFragment : Fragment(), OnMapReadyCallback {
-    private lateinit var viewModel: TrackViewModel
-    private var googleMap: GoogleMap? = null
-
     @Inject
     internal lateinit var viewModelFactory: ViewModelFactory
+    private val viewModel: TrackViewModel by viewModels { viewModelFactory }
+    private var googleMap: GoogleMap? = null
+
 
     override fun onAttach(context: Context) {
         AndroidSupportInjection.inject(this)
@@ -42,41 +42,58 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
-        sharedElementReturnTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
+        sharedElementEnterTransition =
+            TransitionInflater.from(context).inflateTransition(android.R.transition.move)
+        sharedElementReturnTransition =
+            TransitionInflater.from(context).inflateTransition(android.R.transition.move)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        viewModel = ViewModelProvider(this, viewModelFactory).get(TrackViewModel::class.java)
-        val binding = DataBindingUtil.inflate<FragmentTrackViewBinding>(inflater, R.layout.fragment_track_view, container, false)
-        binding.viewModel = viewModel
-        binding.lifecycleOwner = this
-        val view = binding.root
-
+    @SuppressLint("SetTextI18n")
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val binding = FragmentTrackViewBinding.inflate(inflater, container, false)
+        (activity as AppCompatActivity).supportActionBar?.title = ""
 
         val trackId = (requireArguments().get("trackId") as Long?)!!
         viewModel.setTrack(trackId)
         viewModel.trackLiveData.observe(viewLifecycleOwner) { track ->
-            (activity as AppCompatActivity).supportActionBar!!.setTitle("")
+            binding.trackName.text = track.getName()
+            binding.trackName.transitionName = "track_name_${track.id}"
+            binding.mapLayout.transitionName = "track_image_${track.id}"
+            binding.trackTextDistance.text = "${track.distance.toInt()} m"
+            binding.trackTextDistance.transitionName = "track_distance_${track.id}"
+            binding.trackTextTime.text = track.getTimeString()
+            binding.trackTextTime.transitionName = "track_time_${track.id}"
+            binding.trackTextAvgSpeed.text = "${String.format("%.1f", track.getSpeed())} km/h"
+            binding.trackTextAvgSpeed.transitionName = "track_speed_${track.id}"
+            binding.trackTextTag.text =
+                track.tag ?: requireContext().resources.getString(R.string.set_tag)
+            binding.trackTextTag.transitionName = "track_tag_${track.id}"
             startPostponedEnterTransition()
         }
         postponeEnterTransition()
 
-        val toolbar = binding.toolbarTrackView
-        (activity as AppCompatActivity).setSupportActionBar(toolbar)
+        (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
         setHasOptionsMenu(true)
 
         val navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
-        NavigationUI.setupWithNavController(toolbar, navController)
+        NavigationUI.setupWithNavController(binding.toolbar, navController)
 
         binding.trackTextTag.setOnClickListener { v -> showTagSelection() }
 
-        val mapFragment = childFragmentManager.findFragmentById(R.id.map_track_view) as SupportMapFragment?
+        val mapFragment =
+            childFragmentManager.findFragmentById(R.id.map_track_view) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
 
-        viewModel.trackPoints.observe(viewLifecycleOwner, { points -> updateMap(googleMap, points) })
+        viewModel.trackPoints.observe(viewLifecycleOwner) { points ->
+            updateMap(googleMap, points)
+        }
 
-        return view
+
+        return binding.root
     }
 
     private fun showTagSelection() {
@@ -128,10 +145,20 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
                     googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
                 } catch (e: Exception) {
                     val lastPoint = smoothedPoints[smoothedPoints.size - 1]
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(lastPoint.lat, lastPoint.lng), 15f))
+                    googleMap.moveCamera(
+                        CameraUpdateFactory.newLatLngZoom(
+                            LatLng(
+                                lastPoint.lat,
+                                lastPoint.lng
+                            ), 15f
+                        )
+                    )
                 }
 
-                googleMap.addPolyline(PolylineOptions().color(-0x10000).clickable(false).addAll(toPolylineCoordinates(smoothedPoints)))
+                googleMap.addPolyline(
+                    PolylineOptions().color(-0x10000).clickable(false)
+                        .addAll(toPolylineCoordinates(smoothedPoints))
+                )
             }
         }
     }

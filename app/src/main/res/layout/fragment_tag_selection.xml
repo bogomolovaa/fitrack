@@ -1,74 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <data>
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/tag_selection_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme">
 
-        <variable
-            name="viewModel"
-            type="bogomolov.aa.fitrack.features.tracks.tags.TagSelectionViewModel" />
-    </data>
+
+        <ImageView
+            android:id="@+id/tags_back_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginEnd="12dp"
+            app:srcCompat="@drawable/close_button" />
+
+    </androidx.appcompat.widget.Toolbar>
+
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/tag_selection_toolbar"
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tag_name_edit_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
-            android:minHeight="?attr/actionBarSize"
-            android:theme="?attr/actionBarTheme">
+            android:hint="@string/create_new_tag_hint"
+            app:boxBackgroundColor="#FFFFFF"
+            app:endIconContentDescription="@string/create_new_tag_hint"
+            app:endIconDrawable="@drawable/add_icon"
+            app:endIconMode="custom">
 
-
-            <ImageView
-                android:id="@+id/tags_back_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginEnd="12dp"
-                app:srcCompat="@drawable/close_button" />
-
-        </androidx.appcompat.widget.Toolbar>
-
-
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tag_name_edit_layout"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/tag_name_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/create_new_tag_hint"
-                app:boxBackgroundColor="#FFFFFF"
-                app:endIconContentDescription="@string/create_new_tag_hint"
-                app:endIconDrawable="@drawable/add_icon"
-                app:endIconMode="custom">
+                android:text="" />
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/tag_name_edit_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@={viewModel.newName}" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-
-        </LinearLayout>
-
-        <ListView
-            android:id="@+id/tag_list_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:choiceMode="singleChoice"
-            android:listSelector="@color/colorPrimaryAlpha" />
+        </com.google.android.material.textfield.TextInputLayout>
 
 
     </LinearLayout>
-</layout>
+
+    <ListView
+        android:id="@+id/tag_list_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:choiceMode="singleChoice"
+        android:listSelector="@color/colorPrimaryAlpha" />
+
+
+</LinearLayout>

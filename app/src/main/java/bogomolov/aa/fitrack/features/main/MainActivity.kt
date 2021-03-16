@@ -10,8 +10,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
-import androidx.databinding.DataBindingUtil
-import androidx.navigation.Navigation
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import androidx.preference.PreferenceManager
@@ -43,12 +42,13 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
 
-        val binding =
-            DataBindingUtil.setContentView<ActivityMainBinding>(this, R.layout.activity_main)
-        val navController = Navigation.findNavController(this, R.id.nav_host_fragment)
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
         AppBarConfiguration.Builder(navController.graph).setOpenableLayout(binding.drawerLayout)
             .build()
-
         NavigationUI.setupWithNavController(binding.navView, navController)
 
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -79,6 +79,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
 
         startActivityRecognition(this)
     }
+
 
     private fun startTrackerService() {
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
