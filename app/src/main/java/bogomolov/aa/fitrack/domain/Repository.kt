@@ -42,4 +42,6 @@ interface Repository {
 
     fun deletePointsAfterLastTrack(lastTrack: Track?)
 
+    fun deletePointsInRange(startId: Long, endId: Long)
+
 }

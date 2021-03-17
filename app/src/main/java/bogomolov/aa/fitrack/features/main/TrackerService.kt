@@ -11,11 +11,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.hardware.SensorManager
+import android.hardware.SensorManager.SENSOR_DELAY_NORMAL
 import android.location.Location
-import android.os.Build
-import android.os.Bundle
-import android.os.IBinder
-import android.os.Looper
+import android.os.*
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -23,8 +22,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.preference.PreferenceManager
+import androidx.room.RoomSQLiteQuery.acquire
 import bogomolov.aa.fitrack.R
-import bogomolov.aa.fitrack.android.startActivityRecognition
+import bogomolov.aa.fitrack.features.main.startActivityRecognition
 import bogomolov.aa.fitrack.domain.Repository
 import bogomolov.aa.fitrack.domain.UseCases
 import bogomolov.aa.fitrack.domain.model.Point
@@ -39,8 +39,10 @@ import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
 import kotlinx.coroutines.*
 import javax.inject.Inject
+import kotlin.math.abs
 
 private const val NOTIFICATION_CHANNEL_ID = "fitrack_channel"
+private const val NO_MOTION_TIMEOUT = 20 * 1000L
 
 class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListener, LocationListener,
     HasAndroidInjector {
@@ -49,6 +51,7 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
     private lateinit var locationCallback: LocationCallback
     private var startTime: Long = 0
     private val coroutineScope = CoroutineScope(Dispatchers.IO + Job())
+    private lateinit var sensorManager: SensorManager
 
     @Inject
     lateinit var useCases: UseCases
@@ -97,16 +100,17 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
         startForeground(1, notificationBuilder.build())
         googleApiClient = GoogleApiClient.Builder(applicationContext).addApi(LocationServices.API)
             .addConnectionCallbacks(this).addOnConnectionFailedListener(this).build()
+
     }
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        if (intent.action == START_SERVICE_ACTION) {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent == null || intent.action == START_SERVICE_ACTION) {
             googleApiClient.connect()
             working = true
         } else if (intent.action == STOP_SERVICE_ACTION) {
             stopTrackingService()
         }
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     private fun stopTrackingService() {
@@ -168,8 +172,7 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
                     if (location.accuracy < MAX_LOCATION_ACCURACY) {
                         val point = Point(location.time, location.latitude, location.longitude)
                         coroutineScope.launch(Dispatchers.IO) {
-                            if (useCases.onNewPoint(point, startTime))
-                                stopServiceAndStartActivityRecognition()
+                            useCases.onNewPoint(point, startTime)
                         }
                     }
                 }
@@ -177,11 +180,6 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
         }
         LocationServices.getFusedLocationProviderClient(this)
             .requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
-    }
-
-    private fun stopServiceAndStartActivityRecognition() {
-        stopTrackingService()
-        startActivityRecognition(this)
     }
 
     override fun onConnectionSuspended(i: Int) {}
@@ -192,6 +190,10 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
         super.onDestroy()
         coroutineScope.cancel()
         stopLocationUpdates()
+        runBlocking(Dispatchers.IO) {
+            useCases.onStopTracking()
+        }
+        startActivityRecognition(applicationContext)
     }
 
     private fun stopLocationUpdates() {

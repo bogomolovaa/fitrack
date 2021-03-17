@@ -54,6 +54,10 @@ constructor(private val db: AppDatabase) : Repository {
         db.pointDao().deleteByIds(track.startPointId, track.endPointId, RAW)
     }
 
+    override fun deletePointsInRange(startId: Long, endId: Long) {
+        db.pointDao().deleteByIds(startId, endId, RAW)
+    }
+
     override fun deletePointsAfterLastTrack(lastTrack: Track?) {
         db.pointDao().deleteByIdsGreater(lastTrack?.endPointId ?: 0, RAW)
     }

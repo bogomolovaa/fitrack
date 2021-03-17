@@ -1,7 +1,5 @@
 package bogomolov.aa.fitrack.domain.model
 
-import java.util.*
-
 data class Point(
     var id: Long = 0,
     var time: Long = 0,
@@ -51,9 +49,3 @@ fun distance(point1: Point, point2: Point): Double {
 
 fun getTrackDistance(points: List<Point>): Double =
     if (points.size > 1) points.zipWithNext().map { distance(it.first, it.second) }.sum() else 0.0;
-
-fun clonePoints(points: List<Point>): List<Point> {
-    val cloned: MutableList<Point> = ArrayList()
-    for (point in points) cloned.add(point.copy(id = 0))
-    return cloned
-}

@@ -116,7 +116,7 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
                         .addSharedElement(binding.trackImage, binding.trackImage.transitionName)
                         .build()
                     Navigation.findNavController(v).navigate(
-                        R.id.action_tracksListFragment_to_trackViewFragment,
+                        R.id.trackViewFragment,
                         bundle,
                         null,
                         extras

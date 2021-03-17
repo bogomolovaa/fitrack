@@ -7,13 +7,13 @@ import android.view.View
 import bogomolov.aa.fitrack.domain.MapSaver
 import bogomolov.aa.fitrack.domain.model.Point
 import bogomolov.aa.fitrack.domain.model.Track
-import bogomolov.aa.fitrack.features.main.MainFragment
 import bogomolov.aa.fitrack.features.main.toPolylineCoordinates
 import bogomolov.aa.fitrack.features.tracks.track.TrackViewFragment
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.MapView
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -57,12 +57,9 @@ class MapSaverImpl @Inject constructor(
                     )
                     mapView.layout(0, 0, width, height)
                     mapView.buildDrawingCache(true)
-                    val b = Bitmap.createBitmap(mapView.drawingCache)
-                    Log.i("MapSaver","mapView.drawingCache is null ${mapView.drawingCache == null}")
+                    val bitmap = Bitmap.createBitmap(mapView.drawingCache)
                     mapView.isDrawingCacheEnabled = false
-                    launch(Dispatchers.IO) {
-                        saveImage(b, getTrackImageFile(context, track))
-                    }
+                    saveImage(bitmap, getTrackImageFile(context, track))
                 }
             }
         }
@@ -70,9 +67,8 @@ class MapSaverImpl @Inject constructor(
 
 
     private fun saveImage(bitmap: Bitmap, fileName: String) {
-        val imageFile = File(fileName)
         try {
-            val os = FileOutputStream(imageFile)
+            val os = FileOutputStream(File(fileName))
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, os)
             os.flush()
             os.close()

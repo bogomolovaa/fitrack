@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
@@ -15,7 +16,6 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import androidx.preference.PreferenceManager
 import bogomolov.aa.fitrack.R
-import bogomolov.aa.fitrack.android.startActivityRecognition
 import bogomolov.aa.fitrack.databinding.ActivityMainBinding
 import bogomolov.aa.fitrack.features.settings.SettingsFragment
 import com.google.android.gms.common.ConnectionResult
@@ -53,6 +53,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
 
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
         permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            permissions.add(Manifest.permission.ACTIVITY_RECOGNITION)
         permissionsToRequest = permissionsToRequest(permissions)
 
 
@@ -60,7 +62,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (permissionsToRequest.size > 0) {
+            if (permissionsToRequest.isNotEmpty()) {
                 requestPermissions(permissionsToRequest.toTypedArray(), ALL_PERMISSIONS_RESULT)
             } else {
                 startTrackerService()
@@ -72,11 +74,12 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
 
         if (!isAutostartRequested(this)) {
             AlertDialog.Builder(this).setMessage(R.string.need_autostart_string)
-                .setPositiveButton("OK") { d, i -> autostart(this) }
-                .setNegativeButton("DISMISS") { d, i -> d.dismiss() }
+                .setPositiveButton("OK") { _, _ -> autostart(this) }
+                .setNegativeButton("DISMISS") { d, _ -> d.dismiss() }
                 .show()
         }
 
+        Log.i("test", "startActivityRecognition from MainActivity")
         startActivityRecognition(this)
     }
 
@@ -128,7 +131,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
                     if (shouldShowRequestPermissionRationale(permissionsRejected[0])) {
                         AlertDialog.Builder(this)
                             .setMessage("These permissions are mandatory to get your location. You need to allow them.")
-                            .setPositiveButton("OK") { d, i ->
+                            .setPositiveButton("OK") { _, _ ->
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
                                     requestPermissions(
                                         permissionsRejected.toTypedArray(),
