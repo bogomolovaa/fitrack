@@ -6,7 +6,6 @@ import bogomolov.aa.fitrack.domain.douglasPeucker
 import java.text.SimpleDateFormat
 import java.util.*
 
-
 data class Track(
     var id: Long = 0,
     var startPointId: Long = 0,

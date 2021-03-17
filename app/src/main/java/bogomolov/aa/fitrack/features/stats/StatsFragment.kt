@@ -71,14 +71,11 @@ class StatsFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.stats_filters -> FiltersBottomSheetDialogFragment(viewModel).show(
+        if (item.itemId == R.id.stats_filters)
+            FiltersBottomSheetDialogFragment(viewModel).show(
                 childFragmentManager,
                 "Filters bottom sheet"
             )
-            else -> {
-            }
-        }
         return true
     }
 

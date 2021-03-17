@@ -1,6 +1,5 @@
 package bogomolov.aa.fitrack.features.tracks.tags
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,7 +8,6 @@ import bogomolov.aa.fitrack.domain.model.Tag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 
 class TagSelectionViewModel @Inject
 constructor(private val repository: Repository) : ViewModel() {
@@ -25,7 +23,6 @@ constructor(private val repository: Repository) : ViewModel() {
 
     fun onNewTag(tagName: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            Log.i("test", "tagName $tagName")
             if (tagName.isNotEmpty()) {
                 val tag = Tag(name = tagName)
                 repository.addTag(tag)

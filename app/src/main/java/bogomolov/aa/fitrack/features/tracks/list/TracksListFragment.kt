@@ -23,13 +23,12 @@ import dagger.android.support.AndroidSupportInjection
 import javax.inject.Inject
 
 class TracksListFragment : Fragment(), TagResultListener {
-    private lateinit var adapter: TracksPagedAdapter
-    private var actionMode: ActionMode? = null
-    private lateinit var toolbar: Toolbar
-
     @Inject
     internal lateinit var viewModelFactory: ViewModelFactory
     private val viewModel: TracksListViewModel by viewModels { viewModelFactory }
+    private lateinit var adapter: TracksPagedAdapter
+    private var actionMode: ActionMode? = null
+    private lateinit var toolbar: Toolbar
     private var spinnersCanClicked = false
 
     private val callback = object : ActionMode.Callback {
@@ -39,20 +38,17 @@ class TracksListFragment : Fragment(), TagResultListener {
             return true
         }
 
-        override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
-            return false
-        }
+        override fun onPrepareActionMode(mode: ActionMode, menu: Menu) = false
 
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             when (item.itemId) {
                 R.id.menu_track_delete -> {
                     viewModel.deleteTracks(adapter.selectedIds)
-                    actionMode!!.finish()
+                    actionMode?.finish()
                 }
                 R.id.menu_track_tag -> {
-                    val dialog = TagSelectionDialog()
-                    dialog.tagResultListener = this@TracksListFragment
-                    dialog.show(childFragmentManager, "TagSelectionDialog")
+                    TagSelectionDialog(this@TracksListFragment)
+                        .show(childFragmentManager, "TagSelectionDialog")
                 }
             }
             return true
@@ -62,7 +58,6 @@ class TracksListFragment : Fragment(), TagResultListener {
             adapter.disableCheckMode()
             actionMode = null
         }
-
     }
 
     override fun onAttach(context: Context) {
@@ -83,7 +78,6 @@ class TracksListFragment : Fragment(), TagResultListener {
 
         val recyclerView = binding.trackRecycler
         recyclerView.layoutManager = LinearLayoutManager(context)
-        if (viewModel.tracksLiveData.value == null) viewModel.updateTracks(getTodayRange())
 
         adapter = TracksPagedAdapter(this)
         recyclerView.adapter = adapter
@@ -110,7 +104,12 @@ class TracksListFragment : Fragment(), TagResultListener {
 
         val filterSpinner = binding.tracksTimeSpinner
         filterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(adapterView: AdapterView<*>?, view: View?, i: Int, l: Long) {
+            override fun onItemSelected(
+                adapterView: AdapterView<*>?,
+                view: View?,
+                i: Int,
+                l: Long
+            ) {
                 if (!spinnersCanClicked) return
                 when (i) {
                     FILTER_TODAY -> viewModel.updateTracks(getTodayRange())
@@ -142,7 +141,7 @@ class TracksListFragment : Fragment(), TagResultListener {
 
     override fun onTagSelectionResult(tag: Tag?) {
         if (tag != null) viewModel.setTag(tag, adapter.selectedIds)
-        if (actionMode != null) actionMode!!.finish()
+        actionMode?.finish()
     }
 }
 

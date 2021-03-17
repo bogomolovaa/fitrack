@@ -11,8 +11,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.hardware.SensorManager
-import android.hardware.SensorManager.SENSOR_DELAY_NORMAL
 import android.location.Location
 import android.os.*
 import android.util.Log
@@ -22,13 +20,13 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.preference.PreferenceManager
-import androidx.room.RoomSQLiteQuery.acquire
 import bogomolov.aa.fitrack.R
-import bogomolov.aa.fitrack.features.main.startActivityRecognition
 import bogomolov.aa.fitrack.domain.Repository
 import bogomolov.aa.fitrack.domain.UseCases
 import bogomolov.aa.fitrack.domain.model.Point
-import bogomolov.aa.fitrack.features.settings.SettingsFragment
+import bogomolov.aa.fitrack.features.settings.KEY_SERVICE_STARTED
+import bogomolov.aa.fitrack.features.settings.KEY_TRACKING_ENABLED
+import bogomolov.aa.fitrack.features.settings.setSetting
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks
@@ -39,7 +37,6 @@ import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
 import kotlinx.coroutines.*
 import javax.inject.Inject
-import kotlin.math.abs
 
 private const val NOTIFICATION_CHANNEL_ID = "fitrack_channel"
 private const val NO_MOTION_TIMEOUT = 20 * 1000L
@@ -49,9 +46,7 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
     private lateinit var googleApiClient: GoogleApiClient
     private var prevLocation: Location? = null
     private lateinit var locationCallback: LocationCallback
-    private var startTime: Long = 0
     private val coroutineScope = CoroutineScope(Dispatchers.IO + Job())
-    private lateinit var sensorManager: SensorManager
 
     @Inject
     lateinit var useCases: UseCases
@@ -106,7 +101,7 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent == null || intent.action == START_SERVICE_ACTION) {
             googleApiClient.connect()
-            working = true
+            setSetting(KEY_SERVICE_STARTED,true, applicationContext)
         } else if (intent.action == STOP_SERVICE_ACTION) {
             stopTrackingService()
         }
@@ -116,14 +111,13 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
     private fun stopTrackingService() {
         stopForeground(true)
         stopSelf()
-        working = false
     }
 
     override fun onConnected(bundle: Bundle?) {
         if (!hasPermission(ACCESS_FINE_LOCATION) && !hasPermission(ACCESS_COARSE_LOCATION)) {
             Toast.makeText(
                 this,
-                "You need to enable permissions to display location !",
+                "You need to enable permissions to display location!",
                 Toast.LENGTH_SHORT
             ).show()
             return
@@ -153,26 +147,20 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         startWidgetUpdating()
-        startTime = System.currentTimeMillis()
         val locationRequest = LocationRequest.create()
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         locationRequest.interval = UPDATE_INTERVAL
         locationRequest.fastestInterval = FASTEST_INTERVAL
-
         locationCallback = object : LocationCallback() {
 
             override fun onLocationResult(locationResult: LocationResult) {
-                Log.i(
-                    "test",
-                    "onLocationResult [${locationResult.lastLocation.latitude}, ${locationResult.lastLocation.longitude}] accuracy${locationResult.lastLocation.accuracy}"
-                )
                 if (areNotEqual(prevLocation, locationResult.lastLocation)) {
                     val location = locationResult.lastLocation
                     prevLocation = location
                     if (location.accuracy < MAX_LOCATION_ACCURACY) {
                         val point = Point(location.time, location.latitude, location.longitude)
                         coroutineScope.launch(Dispatchers.IO) {
-                            useCases.onNewPoint(point, startTime)
+                            useCases.onNewPoint(point)
                         }
                     }
                 }
@@ -194,6 +182,7 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
             useCases.onStopTracking()
         }
         startActivityRecognition(applicationContext)
+        setSetting(KEY_SERVICE_STARTED,false, applicationContext)
     }
 
     private fun stopLocationUpdates() {
@@ -208,22 +197,17 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
     override fun onBind(intent: Intent): IBinder? {
         return null
     }
-
-    companion object {
-        var working = false
-    }
 }
 
 const val START_SERVICE_ACTION = "start"
 const val STOP_SERVICE_ACTION = "stop"
 private const val MAX_LOCATION_ACCURACY = 50.0
-const val UPDATE_INTERVAL = 1000L
+private const val UPDATE_INTERVAL = 1000L
 private const val FASTEST_INTERVAL = 1000L
 
-fun startTrackerService(action: String, context: Context) {
-    val prefs = PreferenceManager.getDefaultSharedPreferences(context).edit()
-    prefs.putBoolean(SettingsFragment.KEY_TRACKING, action == START_SERVICE_ACTION)
-    prefs.apply()
+fun trackerService(action: String, context: Context) {
+    val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+    if (!prefs.getBoolean(KEY_TRACKING_ENABLED, true) && action == START_SERVICE_ACTION) return
     val intent = Intent(context, TrackerService::class.java)
     intent.action = action
     ContextCompat.startForegroundService(context, intent)

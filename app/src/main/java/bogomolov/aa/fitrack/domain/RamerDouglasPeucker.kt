@@ -1,11 +1,7 @@
 package bogomolov.aa.fitrack.domain
 
-import android.util.Log
 import bogomolov.aa.fitrack.domain.model.Point
 import bogomolov.aa.fitrack.domain.model.distance
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.LinkedHashSet
 
 fun douglasPeucker(list: List<Point>, epsilon: Double): List<Point> {
     if (list.size < 3) return list

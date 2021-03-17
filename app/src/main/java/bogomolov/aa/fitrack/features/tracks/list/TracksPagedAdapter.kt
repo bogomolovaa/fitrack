@@ -3,7 +3,6 @@ package bogomolov.aa.fitrack.features.tracks.list
 import android.annotation.SuppressLint
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,12 +20,9 @@ import com.google.android.material.card.MaterialCardView
 import java.util.*
 
 class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
-    PagedListAdapter<Track, TracksPagedAdapter.TrackViewHolder>(
-        DIFF_CALLBACK
-    ) {
+    PagedListAdapter<Track, TracksPagedAdapter.TrackViewHolder>(DIFF_CALLBACK) {
     val selectedIds: MutableSet<Long> = HashSet()
     private var checkMode = false
-
 
     fun disableCheckMode() {
         selectedIds.clear()
@@ -34,14 +30,12 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
         notifyDataSetChanged()
     }
 
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder {
         val trackCardViewBinding =
             TrackCardViewBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         val cv = trackCardViewBinding.trackCardView
         return TrackViewHolder(cv, trackCardViewBinding, this)
     }
-
 
     override fun onBindViewHolder(holder: TrackViewHolder, position: Int) {
         val track = getItem(position)
@@ -70,7 +64,6 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
             if (track != null) {
                 val bitmap = BitmapFactory.decodeFile(getTrackImageFile(cardView.context, track))
                 binding.trackImage.setImageBitmap(bitmap)
-
                 binding.cardTextName.text = track.getName()
                 binding.cardTextName.transitionName = "track_name_${track.id}"
                 binding.cardTextDistance.text = "${track.distance.toInt()} m"
@@ -84,7 +77,6 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
                 binding.trackImage.transitionName = "track_image_${track.id}"
             }
         }
-
 
         override fun onClick(v: View) {
             if (adapterPosition == RecyclerView.NO_POSITION) return
@@ -134,16 +126,12 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
             return true
         }
     }
+}
 
-    companion object {
+private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Track>() {
+    override fun areItemsTheSame(track1: Track, track2: Track): Boolean =
+        track1.id == track2.id
 
-        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Track>() {
-            override fun areItemsTheSame(track1: Track, track2: Track): Boolean =
-                track1.id == track2.id
-
-            override fun areContentsTheSame(track1: Track, track2: Track): Boolean =
-                track1.id == track2.id
-
-        }
-    }
+    override fun areContentsTheSame(track1: Track, track2: Track): Boolean =
+        track1.id == track2.id
 }

@@ -1,6 +1,5 @@
 package bogomolov.aa.fitrack.features.main
 
-
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -15,6 +14,8 @@ import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.FragmentMainBinding
 import bogomolov.aa.fitrack.di.ViewModelFactory
 import bogomolov.aa.fitrack.domain.model.Point
+import bogomolov.aa.fitrack.features.settings.KEY_SERVICE_STARTED
+import bogomolov.aa.fitrack.features.settings.getSetting
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -22,7 +23,6 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import dagger.android.support.AndroidSupportInjection
 import javax.inject.Inject
-
 
 class MainFragment : Fragment(), OnMapReadyCallback {
     @Inject
@@ -34,7 +34,6 @@ class MainFragment : Fragment(), OnMapReadyCallback {
     private var zoomed: Boolean = false
     private var canStart: Boolean = false
     private lateinit var binding: FragmentMainBinding
-
 
     override fun onAttach(context: Context) {
         AndroidSupportInjection.inject(this)
@@ -60,25 +59,12 @@ class MainFragment : Fragment(), OnMapReadyCallback {
             canStart = it
             requireActivity().invalidateOptionsMenu()
         }
-        viewModel.lastPointLiveData.observe(viewLifecycleOwner) { point ->
-            updateView(point)
-        }
-
         val mapFragment =
             childFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment?
         mapFragment!!.getMapAsync(this)
 
-        viewModel.distance.observe(viewLifecycleOwner) {
-            binding.textDistance.text = it
-        }
-        viewModel.time.observe(viewLifecycleOwner) {
-            binding.textTime.text = it
-        }
-        viewModel.avgSpeed.observe(viewLifecycleOwner) {
-            binding.textAvgSpeed.text = it
-        }
-        viewModel.speed.observe(viewLifecycleOwner) {
-            binding.textSpeed.text = it
+        viewModel.stateLiveData.observe(viewLifecycleOwner) {
+            updateView(it)
         }
     }
 
@@ -95,52 +81,54 @@ class MainFragment : Fragment(), OnMapReadyCallback {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_track_start -> {
-                if (TrackerService.working) {
-                    viewModel.startTrack()
-                } else {
-                    startTrackerService(START_SERVICE_ACTION, requireContext())
-                }
+                if (!getSetting(KEY_SERVICE_STARTED, requireContext()))
+                    trackerService(START_SERVICE_ACTION, requireContext())
+                viewModel.startTrack()
             }
             R.id.menu_track_stop -> viewModel.stopTrack()
         }
         return true
     }
 
-    private fun updateView(point: Point?) {
-        val track = viewModel.currentTrack
-        val smoothedPoints = viewModel.smoothedPoints
+    private fun updateView(state: MainState) {
+        binding.textDistance.text = state.distance
+        binding.textTime.text = state.time
+        binding.textAvgSpeed.text = state.avgSpeed
+        binding.textSpeed.text = state.speed
+        val point = state.lastPoint
+        val track = state.currentTrack
+        val smoothedPoints = state.smoothedPoints
+        val googleMap = this.googleMap
         if (googleMap != null) {
             if (point != null) {
                 val latLng = LatLng(point.lat, point.lng)
                 if (currentPositionMarker == null) {
-                    currentPositionMarker = googleMap!!.addMarker(
+                    currentPositionMarker = googleMap.addMarker(
                         MarkerOptions().position(latLng).flat(true)
                             .anchor(0.5f, 0.5f)
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.direction_arrow))
                     )
                 } else {
-                    Log.i("test","updateView position ${latLng.latitude} ${latLng.longitude}")
-                    currentPositionMarker?.position = latLng
+                    Log.i("test", "updateView position ${latLng.latitude} ${latLng.longitude}")
+                    currentPositionMarker!!.position = latLng
                 }
 
                 if (!zoomed) {
-                    googleMap!!.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18f))
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18f))
                     zoomed = true
                 } else if (track != null && track.isOpened()) {
-                    googleMap!!.moveCamera(CameraUpdateFactory.newLatLng(latLng))
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
                 }
             }
 
-            if (track != null && track.isOpened()) {
+            if (track != null && track.isOpened() && smoothedPoints != null) {
                 currentPositionMarker!!.rotation = if (smoothedPoints.size > 1)
                     angleFromCoordinate(
                         smoothedPoints[smoothedPoints.size - 2],
                         smoothedPoints[smoothedPoints.size - 1]
                     ) else 0f
                 if (trackSmoothedPolyline == null) trackSmoothedPolyline =
-                    googleMap!!.addPolyline(PolylineOptions().color(-0x10000).clickable(false))
-                //Log.i("test", "smoothedPoints $track")
-                //for (point1 in smoothedPoints) Log.i("test", "$point1")
+                    googleMap.addPolyline(PolylineOptions().color(-0x10000).clickable(false))
                 trackSmoothedPolyline!!.points = toPolylineCoordinates(smoothedPoints)
             } else {
                 if (trackSmoothedPolyline != null) {

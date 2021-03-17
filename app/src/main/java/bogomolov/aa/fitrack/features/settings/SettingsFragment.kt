@@ -1,6 +1,7 @@
 package bogomolov.aa.fitrack.features.settings
 
 
+import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -16,12 +17,16 @@ import androidx.preference.PreferenceManager
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.features.main.START_SERVICE_ACTION
 import bogomolov.aa.fitrack.features.main.STOP_SERVICE_ACTION
-import bogomolov.aa.fitrack.features.main.startTrackerService
+import bogomolov.aa.fitrack.features.main.trackerService
 
 
 class SettingsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListener {
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
 
         val toolbar = view.findViewById<Toolbar>(R.id.toolbar_settings)
@@ -32,30 +37,30 @@ class SettingsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeL
 
         val settingsFragment = SettingsFragmentView()
         childFragmentManager
-                .beginTransaction()
-                .replace(R.id.settings, settingsFragment)
-                .commit()
+            .beginTransaction()
+            .replace(R.id.settings, settingsFragment)
+            .commit()
 
         return view
     }
 
     override fun onResume() {
         super.onResume()
-        val preferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        preferences.registerOnSharedPreferenceChangeListener(this)
+        PreferenceManager.getDefaultSharedPreferences(requireContext())
+            .registerOnSharedPreferenceChangeListener(this)
     }
 
     override fun onPause() {
         super.onPause()
-        val preferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        preferences.unregisterOnSharedPreferenceChangeListener(this)
+        PreferenceManager.getDefaultSharedPreferences(requireContext())
+            .unregisterOnSharedPreferenceChangeListener(this)
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        if (key == KEY_TRACKING) {
+        if (key == KEY_TRACKING_ENABLED) {
             val isTracking = sharedPreferences.getBoolean(key, true)
             val action = if (isTracking) START_SERVICE_ACTION else STOP_SERVICE_ACTION
-            startTrackerService(action, requireContext())
+            trackerService(action, requireContext())
         }
     }
 
@@ -64,9 +69,16 @@ class SettingsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeL
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
         }
     }
-
-    companion object {
-        const val KEY_TRACKING = "tracking"
-    }
-
 }
+
+const val KEY_TRACKING_ENABLED = "tracking_enabled"
+const val KEY_SERVICE_STARTED = "started"
+const val KEY_AUTOSTART = "autostart_requested"
+
+fun setSetting(key: String, value: Boolean, context: Context) {
+    val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+    prefs.edit().putBoolean(key, value).apply()
+}
+
+fun getSetting(key: String, context: Context) =
+    PreferenceManager.getDefaultSharedPreferences(context).getBoolean(key, true)

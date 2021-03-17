@@ -9,18 +9,13 @@ import javax.inject.Inject
 
 
 class TrackerApplication : Application(), HasAndroidInjector {
-
     @Inject
     internal lateinit var androidInjector: DispatchingAndroidInjector<Any>
 
-
     override fun onCreate() {
         super.onCreate()
-
         DaggerAppComponent.builder().application(this).build().inject(this)
     }
 
-    override fun androidInjector(): AndroidInjector<Any> {
-        return androidInjector
-    }
+    override fun androidInjector() = androidInjector
 }

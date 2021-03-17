@@ -1,6 +1,5 @@
 package bogomolov.aa.fitrack.features.tracks.track
 
-
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
@@ -26,7 +25,6 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
 import dagger.android.support.AndroidSupportInjection
 import javax.inject.Inject
-
 
 class TrackViewFragment : Fragment(), OnMapReadyCallback {
     @Inject
@@ -55,7 +53,12 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
         savedInstanceState: Bundle?
     ): View {
         val binding = FragmentTrackViewBinding.inflate(inflater, container, false)
+        (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
         (activity as AppCompatActivity).supportActionBar?.title = ""
+        setHasOptionsMenu(true)
+        val navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
+        NavigationUI.setupWithNavController(binding.toolbar, navController)
+        postponeEnterTransition()
 
         val trackId = (requireArguments().get("trackId") as Long?)!!
         viewModel.setTrack(trackId)
@@ -74,32 +77,19 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
             binding.trackTextTag.transitionName = "track_tag_${track.id}"
             startPostponedEnterTransition()
         }
-        postponeEnterTransition()
-
-        (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
-        setHasOptionsMenu(true)
-
-        val navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
-        NavigationUI.setupWithNavController(binding.toolbar, navController)
-
         binding.trackTextTag.setOnClickListener { v -> showTagSelection() }
-
         val mapFragment =
             childFragmentManager.findFragmentById(R.id.map_track_view) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
-
         viewModel.trackPoints.observe(viewLifecycleOwner) { points ->
             updateMap(googleMap, points)
         }
-
 
         return binding.root
     }
 
     private fun showTagSelection() {
-        val dialog = TagSelectionDialog()
-        dialog.tagResultListener = viewModel
-        dialog.show(childFragmentManager, "TagSelectionDialog")
+        TagSelectionDialog(viewModel).show(childFragmentManager, "TagSelectionDialog")
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -108,9 +98,7 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.track_view_set_tag_item -> showTagSelection()
-        }
+        if (item.itemId == R.id.track_view_set_tag_item) showTagSelection()
         return true
     }
 
@@ -123,7 +111,7 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
     companion object {
 
         fun updateMap(googleMap: GoogleMap?, smoothedPoints: List<Point>) {
-            if (googleMap != null && smoothedPoints.size > 0) {
+            if (googleMap != null && smoothedPoints.isNotEmpty()) {
                 var minLat = 1000.0
                 var maxLat = 0.0
                 var minLng = 1000.0
@@ -146,12 +134,7 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
                 } catch (e: Exception) {
                     val lastPoint = smoothedPoints[smoothedPoints.size - 1]
                     googleMap.moveCamera(
-                        CameraUpdateFactory.newLatLngZoom(
-                            LatLng(
-                                lastPoint.lat,
-                                lastPoint.lng
-                            ), 15f
-                        )
+                        CameraUpdateFactory.newLatLngZoom(LatLng(lastPoint.lat, lastPoint.lng), 15f)
                     )
                 }
 

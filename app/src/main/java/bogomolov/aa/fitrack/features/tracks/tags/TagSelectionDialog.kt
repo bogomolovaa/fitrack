@@ -17,18 +17,15 @@ import bogomolov.aa.fitrack.domain.model.Tag
 import dagger.android.support.AndroidSupportInjection
 import javax.inject.Inject
 
-class TagSelectionDialog : DialogFragment() {
-    private var actionMode: ActionMode? = null
-    private lateinit var toolbar: Toolbar
-    private lateinit var listView: ListView
-
+class TagSelectionDialog(private val tagResultListener: TagResultListener) : DialogFragment() {
     @Inject
     internal lateinit var viewModelFactory: ViewModelFactory
     private val viewModel: TagSelectionViewModel by viewModels { viewModelFactory }
-
+    private var actionMode: ActionMode? = null
+    private lateinit var toolbar: Toolbar
+    private lateinit var listView: ListView
     private var selectedTag: Tag? = null
     private var selectedToDeleteTag: Tag? = null
-    var tagResultListener: TagResultListener? = null
 
     private val callback = object : ActionMode.Callback {
 
@@ -37,9 +34,7 @@ class TagSelectionDialog : DialogFragment() {
             return true
         }
 
-        override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
-            return false
-        }
+        override fun onPrepareActionMode(mode: ActionMode, menu: Menu) = false
 
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             if (selectedToDeleteTag != null) viewModel.deleteTag(selectedToDeleteTag!!)
@@ -50,7 +45,6 @@ class TagSelectionDialog : DialogFragment() {
         override fun onDestroyActionMode(mode: ActionMode) {
             actionMode = null
         }
-
     }
 
     override fun onAttach(context: Context) {
@@ -110,12 +104,12 @@ class TagSelectionDialog : DialogFragment() {
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
-        if (tagResultListener != null) tagResultListener!!.onTagSelectionResult(selectedTag)
+        tagResultListener.onTagSelectionResult(selectedTag)
     }
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
-        if (tagResultListener != null) tagResultListener!!.onTagSelectionResult(null)
+        tagResultListener.onTagSelectionResult(null)
     }
 
 }

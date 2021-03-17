@@ -30,7 +30,7 @@ constructor(private val repository: Repository) : ViewModel(), TagResultListener
         val track = trackLiveData.value
         if (tag != null && track != null) {
             track.tag = tag.name
-            trackLiveData.postValue(track)
+            trackLiveData.value = track
             viewModelScope.launch(Dispatchers.IO){
                 repository.save(track)
             }

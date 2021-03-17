@@ -87,5 +87,4 @@ constructor(private val db: AppDatabase) : Repository {
         val factory = db.trackDao().getFinishedTracksDataSource(datesRange[0].time, datesRange[1].time)
         return factory.map { entityToModel(it) }
     }
-
 }

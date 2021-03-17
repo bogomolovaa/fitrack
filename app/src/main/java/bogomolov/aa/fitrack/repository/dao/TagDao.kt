@@ -18,5 +18,4 @@ interface TagDao {
 
     @Delete
     fun delete(tagEntity: TagEntity)
-
 }

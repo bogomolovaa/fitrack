@@ -42,7 +42,6 @@ constructor(private val repository: Repository) : ViewModel() {
         }
     }
 
-
     fun setParam(id: Int) {
         if (id != selectedParam) {
             selectedParam = id

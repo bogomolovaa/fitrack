@@ -94,5 +94,3 @@ fun <Q> modelToEntity(fromList: List<*>, toClass: Class<Q>): List<Q> {
         for (fromEntity in fromList) toList.add(modelToEntity(fromEntity as Track) as Q)
     return toList
 }
-
-

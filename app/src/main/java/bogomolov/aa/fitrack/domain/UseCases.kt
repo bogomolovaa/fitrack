@@ -4,12 +4,10 @@ import android.util.Log
 import bogomolov.aa.fitrack.domain.model.*
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.max
 
 const val MIN_TRACK_DISTANCE = 150f
-const val STAY_RADIUS = 50.0
+const val STAY_DIAMETER = 50.0
 const val STAY_TIMEOUT = 3 * 60 * 1000L
-const val STOP_TRACKING_TIMEOUT = 5 * 60 * 1000L
 
 @Singleton
 class UseCases @Inject constructor(
@@ -17,7 +15,7 @@ class UseCases @Inject constructor(
     private val mapSaver: MapSaver
 ) {
 
-    suspend fun onNewPoint(newPoint: Point, startTrackingTime: Long) {
+    suspend fun onNewPoint(newPoint: Point) {
         repository.addPoint(newPoint)
         val lastTrack = repository.getLastTrack()
         Log.i("test", "onNewPoint $newPoint lastTrack $lastTrack")
@@ -28,20 +26,15 @@ class UseCases @Inject constructor(
         }
     }
 
-    fun onStopTracking() {
-        repository.deletePointsAfterLastTrack(repository.getLastTrack())
-    }
-
-    fun shouldStop(startTrackingTime: Long): Boolean {
+    suspend fun onStopTracking() {
         val lastTrack = repository.getLastTrack()
-        val now = System.currentTimeMillis()
-        val lastTrackEndTime = lastTrack?.endTime ?: 0
-        return now - max(startTrackingTime, lastTrackEndTime) > STOP_TRACKING_TIMEOUT
+        if (lastTrack?.isOpened() == true) finishTrack(openedTrack = lastTrack)
+        repository.deletePointsAfterLastTrack(lastTrack)
     }
 
     private suspend fun tryFinish(openedTrack: Track): Boolean {
         val points = repository.getTrackPoints(openedTrack, RAW).toMutableList()
-        getStopMotionPoint(points, STAY_RADIUS, STAY_TIMEOUT)?.let { point ->
+        getStopMotionPoint(points, STAY_DIAMETER, STAY_TIMEOUT)?.let { point ->
             val trackPoints = points.subList(0, points.indexOf(point) + 1)
             repository.deletePointsInRange(point.id, points.last().id)
             trackPoints.add(points.last())
@@ -53,24 +46,31 @@ class UseCases @Inject constructor(
 
     private fun tryStart(lastTrack: Track?): Boolean {
         val points = repository.getPointsAfterLastTrack(lastTrack)
-        getStartMotionPoint(points, STAY_RADIUS, STAY_TIMEOUT)?.let { point ->
+        getStartMotionPoint(points, STAY_DIAMETER, STAY_TIMEOUT)?.let { point ->
             startTrack(point)
             return true
         }
         return false
     }
 
-    private fun getStopMotionPoint(points: List<Point>, radius: Double, timeout: Long) =
-        kotlin.runCatching {
-            points.last {
-                points.last().time - it.time > timeout && distance(points.last(), it) <= radius
-            }
-        }.getOrNull()
+    private fun getStopMotionPoint(points: List<Point>, diameter: Double, timeout: Long): Point? {
+        if (points.size < 2) return null
+        var sumDistance = 0.0
+        for (i in (points.size - 2) downTo  0) {
+            sumDistance += distance(points[i + 1], points[i])
+            if (points.last().time - points[i].time > timeout
+                && distance(points.last(), points[i]) <= diameter
+                && sumDistance < 2 * diameter
+            ) return points[i]
+            if (points.last().time - points[i].time > 2 * timeout) break
+        }
+        return null
+    }
 
-    private fun getStartMotionPoint(points: List<Point>, radius: Double, timeout: Long) =
+    private fun getStartMotionPoint(points: List<Point>, diameter: Double, timeout: Long) =
         kotlin.runCatching {
             points.first {
-                points.last().time - it.time < timeout && distance(points.last(), it) > radius
+                points.last().time - it.time < timeout && distance(points.last(), it) > diameter
             }
         }.getOrNull()
 
@@ -96,7 +96,7 @@ class UseCases @Inject constructor(
         openedTrack.endTime = time
         openedTrack.startSmoothedPointId = smoothedPoints.first().id
         openedTrack.endSmoothedPointId = smoothedPoints.last().id
-        openedTrack.distance = getTrackDistance(smoothedPoints)
+        openedTrack.distance = sumDistance(smoothedPoints)
         repository.save(openedTrack)
         repository.deleteInnerRawPoints(openedTrack)
         if (openedTrack.distance < MIN_TRACK_DISTANCE) {

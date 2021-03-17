@@ -10,9 +10,8 @@ import android.widget.RemoteViews
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.domain.Repository
 import bogomolov.aa.fitrack.domain.getTodayRange
-import bogomolov.aa.fitrack.domain.model.Point
 import bogomolov.aa.fitrack.domain.model.RAW
-import bogomolov.aa.fitrack.domain.model.getTrackDistance
+import bogomolov.aa.fitrack.domain.model.sumDistance
 import bogomolov.aa.fitrack.domain.model.smooth
 import bogomolov.aa.fitrack.domain.model.sumTracks
 import dagger.android.AndroidInjection
@@ -50,7 +49,7 @@ class WidgetProvider : AppWidgetProvider() {
                 val lastTrack = repository.getLastTrack()
                 if (lastTrack!!.isOpened()) {
                     val smoothedPoints = smooth(repository.getTrackPoints(lastTrack, RAW))
-                    distance += getTrackDistance(smoothedPoints)
+                    distance += sumDistance(smoothedPoints)
                 }
                 val widgetText = context.resources.getString(R.string.distance_km, distance / 1000)
                 val views = RemoteViews(context.packageName, R.layout.widget_layout)

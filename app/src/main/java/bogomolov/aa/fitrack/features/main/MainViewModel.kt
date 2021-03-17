@@ -1,7 +1,5 @@
 package bogomolov.aa.fitrack.features.main
 
-import android.annotation.SuppressLint
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,25 +13,34 @@ import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
+private const val WINDOW_MAX_SIZE = 50
+private const val UPDATE_INTERVAL = 1000L
+
+data class MainState(
+    var currentTrack: Track? = null,
+    var smoothedPoints: MutableList<Point>? = null,
+    var distance: String = "",
+    var time: String = "",
+    var avgSpeed: String = "",
+    var speed: String = "",
+    var lastPoint: Point? = null,
+)
+
 class MainViewModel @Inject
 constructor(
     private val repository: Repository,
     private val useCases: UseCases
 ) : ViewModel() {
-    val distance = MutableLiveData<String>()
-    val time = MutableLiveData<String>()
-    val avgSpeed = MutableLiveData<String>()
-    val speed = MutableLiveData<String>()
-    val canStartLiveData = MutableLiveData<Boolean>().also { it.value = true }
-    val lastPointLiveData = MutableLiveData<Point?>()
+    val canStartLiveData = MutableLiveData(true)
+    val stateLiveData = MutableLiveData(MainState())
     private var tailSmoothedPoints: MutableList<Point>? = null
     private var windowStartId: Int = 0
-
-
-    var currentTrack: Track? = null
     private lateinit var rawPoints: MutableList<Point>
-    lateinit var smoothedPoints: MutableList<Point>
     private var updateJob: Job? = null
+
+    private fun updateState(change: MainState.() -> MainState) {
+        stateLiveData.postValue(stateLiveData.value?.change())
+    }
 
     fun startTrack() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -47,48 +54,42 @@ constructor(
 
     fun stopTrack() {
         viewModelScope.launch(Dispatchers.IO) {
-            if (currentTrack != null && currentTrack!!.isOpened()) {
-                useCases.finishTrack(openedTrack = currentTrack!!)
-                currentTrack = null
+            val currentTrack = stateLiveData.value?.currentTrack
+            if (currentTrack?.isOpened() == true) {
+                useCases.finishTrack(openedTrack = currentTrack)
                 canStartLiveData.postValue(true)
             }
         }
     }
 
-    @SuppressLint("NullSafeMutableLiveData")
     fun startUpdating() {
         updateJob = viewModelScope.launch(Dispatchers.IO) {
             while (true) {
-                val track = repository.getLastTrack().also { currentTrack = it }
+                val newState = MainState()
+                val track = repository.getLastTrack()
+                newState.currentTrack = track
                 val point = repository.getLastRawPoint()
+                newState.lastPoint = point
                 rawPoints = ArrayList()
-                smoothedPoints = ArrayList()
+                val smoothedPoints = ArrayList<Point>()
                 if (track != null && track.isOpened()) {
                     rawPoints.addAll(repository.getTrackPoints(track, RAW))
                     smoothedPoints.addAll(getSmoothedPoints(rawPoints))
                     val currentSpeed = getCurrentSpeed(smoothedPoints)
-                    val currentDistance = getTrackDistance(smoothedPoints)
-                    Log.i(
-                        "test",
-                        "rawPoints ${rawPoints.size} smoothedPoints ${smoothedPoints.size}"
-                    )
-
-                    distance.postValue(currentDistance.toInt().toString() + " m")
-                    time.postValue(track.getTimeString())
-                    speed.postValue(String.format("%.1f", 3.6 * currentSpeed) + " km/h")
-                    avgSpeed.postValue(
+                    val currentDistance = sumDistance(smoothedPoints)
+                    newState.distance = currentDistance.toInt().toString() + " m"
+                    newState.time = track.getTimeString()
+                    newState.speed = String.format("%.1f", 3.6 * currentSpeed) + " km/h"
+                    newState.avgSpeed =
                         String.format("%.1f", 3.6 * track.getSpeed(currentDistance)) + " km/h"
-                    )
                     if (canStartLiveData.value == true) canStartLiveData.postValue(false)
                 } else {
                     if (canStartLiveData.value == false) canStartLiveData.postValue(true)
-                    distance.postValue("")
-                    time.postValue("")
-                    speed.postValue("")
-                    avgSpeed.postValue("")
                 }
-                lastPointLiveData.postValue(point)
-                delay(1000)
+                newState.smoothedPoints = smoothedPoints
+                updateState { newState }
+                stateLiveData.postValue(newState)
+                delay(UPDATE_INTERVAL)
             }
         }
     }
@@ -137,5 +138,3 @@ constructor(
     private fun getPreWindowPoints(points: List<Point>, windowSize: Int): List<Point> =
         if (points.size > windowSize) points.subList(0, points.size - windowSize) else ArrayList()
 }
-
-private const val WINDOW_MAX_SIZE = 50
