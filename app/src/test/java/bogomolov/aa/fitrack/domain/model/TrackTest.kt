@@ -17,7 +17,6 @@ class TrackTest {
         assertEquals(sumTrack.distance, 200.0, 0.0)
     }
 
-
     @Test
     fun test_RamerDouglasPeucker() {
         val points = listOf(

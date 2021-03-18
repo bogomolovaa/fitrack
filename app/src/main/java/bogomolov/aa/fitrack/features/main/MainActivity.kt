@@ -61,15 +61,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
 
         if (!checkPlayServices()) finish()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (permissionsToRequest.isNotEmpty()) {
-                requestPermissions(permissionsToRequest.toTypedArray(), ALL_PERMISSIONS_RESULT)
-            } else {
-                trackerService(START_SERVICE_ACTION, this)
-            }
-        } else {
-            trackerService(START_SERVICE_ACTION, this)
-        }
+
 
         if (!isAutostartRequested()) {
             AlertDialog.Builder(this).setMessage(R.string.need_autostart_string)
@@ -81,10 +73,28 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
         startWatching()
     }
 
-    fun startWatching() {
+    private fun startService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (permissionsToRequest.isNotEmpty()) {
+                requestPermissions(permissionsToRequest.toTypedArray(), ALL_PERMISSIONS_RESULT)
+            } else {
+                trackerService(START_SERVICE_ACTION, this)
+            }
+        } else {
+            trackerService(START_SERVICE_ACTION, this)
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        startService()
+    }
+
+
+    private fun startWatching() {
         startActivityRecognition(this)
         val workRequest = PeriodicWorkRequestBuilder<IdleWorker>(15, TimeUnit.MINUTES)
-            .build()
+            .setInitialDelay(5, TimeUnit.MINUTES).build()
         WorkManager.getInstance(application).enqueueUniquePeriodicWork(
             "IdleWorker",
             ExistingPeriodicWorkPolicy.REPLACE,
