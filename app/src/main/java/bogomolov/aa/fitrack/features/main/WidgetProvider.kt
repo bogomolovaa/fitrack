@@ -11,8 +11,8 @@ import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.domain.Repository
 import bogomolov.aa.fitrack.domain.getTodayRange
 import bogomolov.aa.fitrack.domain.model.RAW
-import bogomolov.aa.fitrack.domain.model.sumDistance
 import bogomolov.aa.fitrack.domain.model.smooth
+import bogomolov.aa.fitrack.domain.model.sumDistance
 import bogomolov.aa.fitrack.domain.model.sumTracks
 import dagger.android.AndroidInjection
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +24,7 @@ fun updateWidget(context: Context) {
     val intent = Intent(context, WidgetProvider::class.java)
     intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
     val ids = AppWidgetManager.getInstance(context)
-            .getAppWidgetIds(ComponentName(context, WidgetProvider::class.java))
+        .getAppWidgetIds(ComponentName(context, WidgetProvider::class.java))
     intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
     context.sendBroadcast(intent)
 }
@@ -38,16 +38,19 @@ class WidgetProvider : AppWidgetProvider() {
         super.onReceive(context, intent)
     }
 
-    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
         for (appWidgetId in appWidgetIds) {
             val intent = Intent(context, MainActivity::class.java)
             val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
             GlobalScope.launch(Dispatchers.IO) {
-                val tracks = repository.getFinishedTracks(getTodayRange(), null)
-                val sumTrack = sumTracks(tracks)
+                val sumTrack = sumTracks(repository.getFinishedTracks(getTodayRange()))
                 var distance = sumTrack.distance
                 val lastTrack = repository.getLastTrack()
-                if (lastTrack!!.isOpened()) {
+                if (lastTrack?.isOpened() == true) {
                     val smoothedPoints = smooth(repository.getTrackPoints(lastTrack, RAW))
                     distance += sumDistance(smoothedPoints)
                 }
@@ -59,8 +62,4 @@ class WidgetProvider : AppWidgetProvider() {
             }
         }
     }
-
-
-
-
 }

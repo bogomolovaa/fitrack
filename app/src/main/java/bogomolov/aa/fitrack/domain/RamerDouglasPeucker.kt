@@ -25,7 +25,7 @@ private fun douglasPeucker(
         val p = list[i]
         val v = list[s]
         val w = list[end]
-        val d = perpendicularDistance(p.lat, p.lng, v.lat, v.lng, w.lat, w.lng)
+        val d = perpendicularDistance(p, v, w)
         if (d > dmax) {
             index = i
             dmax = d
@@ -44,22 +44,14 @@ private fun douglasPeucker(
     }
 }
 
-private fun perpendicularDistance(
-    px: Double,
-    py: Double,
-    vx: Double,
-    vy: Double,
-    wx: Double,
-    wy: Double
-): Double {
-    val l2 = (vx - wx) * (vx - wx) + (vy - wy) * (vy - wy)
-    if (l2 == 0.0) return distance(Point(px, py), Point(vx, vy))
-    val t = ((px - vx) * (wx - vx) + (py - vy) * (wy - vy)) / l2
-    if (t < 0) return distance(Point(px, py), Point(vx, vy))
-    return if (t > 1) distance(Point(px, py), Point(wx, wy)) else distance(
-        Point(px, py), Point(
-            vx + t * (wx - vx),
-            vy + t * (wy - vy)
-        )
+private fun perpendicularDistance(p: Point, v: Point, w: Point): Double {
+    val l2 = (v.lat - w.lat) * (v.lat - w.lat) + (v.lng - w.lng) * (v.lng - w.lng)
+    if (l2 == 0.0) return distance(point(p.lat, p.lng), point(v.lat, v.lng))
+    val t = ((p.lat - v.lat) * (w.lat - v.lat) + (p.lng - v.lng) * (w.lng - v.lng)) / l2
+    if (t < 0) return distance(point(p.lat, p.lng), point(v.lat, v.lng))
+    return if (t > 1) distance(point(p.lat, p.lng), point(w.lat, w.lng)) else distance(
+        point(p.lat, p.lng), point(v.lat + t * (w.lat - v.lat), v.lng + t * (w.lng - v.lng))
     )
 }
+
+private fun point(lat: Double, lng: Double) = Point(lat = lat, lng = lng)

@@ -75,9 +75,7 @@ class UseCases @Inject constructor(
         }.getOrNull()
 
     fun startTrack(lastPoint: Point, startTime: Long? = null) {
-        val track = Track()
-        track.startPointId = lastPoint.id
-        track.startTime = startTime ?: lastPoint.time
+        val track = Track(startPointId = lastPoint.id, startTime = startTime ?: lastPoint.time)
         repository.addTrack(track)
     }
 
@@ -86,7 +84,6 @@ class UseCases @Inject constructor(
         openedTrack: Track,
         time: Long = System.currentTimeMillis()
     ) {
-        Log.i("test", "finishTrack $openedTrack")
         val points = points1 ?: repository.getTrackPoints(openedTrack, RAW)
         if (points.isEmpty()) return
         val smoothed = smooth(points)

@@ -61,8 +61,6 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
 
         if (!checkPlayServices()) finish()
 
-
-
         if (!isAutostartRequested()) {
             AlertDialog.Builder(this).setMessage(R.string.need_autostart_string)
                 .setPositiveButton("OK") { _, _ -> autostart() }
@@ -90,7 +88,6 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
         startService()
     }
 
-
     private fun startWatching() {
         startActivityRecognition(this)
         val workRequest = PeriodicWorkRequestBuilder<IdleWorker>(15, TimeUnit.MINUTES)
@@ -117,7 +114,6 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
     private fun checkPlayServices(): Boolean {
         val apiAvailability = GoogleApiAvailability.getInstance()
         val resultCode = apiAvailability.isGooglePlayServicesAvailable(this)
-
         if (resultCode != ConnectionResult.SUCCESS) {
             if (apiAvailability.isUserResolvableError(resultCode)) {
                 apiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST)
@@ -135,14 +131,13 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
         grantResults: IntArray
     ) {
         if (requestCode == ALL_PERMISSIONS_RESULT) {
-            for (perm in permissionsToRequest) if (!hasPermission(perm)) permissionsRejected.add(
-                perm
-            )
+            for (perm in permissionsToRequest)
+                if (!hasPermission(perm)) permissionsRejected.add(perm)
             if (permissionsRejected.size > 0) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (shouldShowRequestPermissionRationale(permissionsRejected[0])) {
                         AlertDialog.Builder(this)
-                            .setMessage("These permissions are mandatory to get your location. You need to allow them.")
+                            .setMessage(resources.getString(R.string.mandatory_permission_string))
                             .setPositiveButton("OK") { _, _ ->
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
                                     requestPermissions(
@@ -159,41 +154,19 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
     }
 
     private fun isAutostartRequested(): Boolean {
-        if (BAD_MANUFACTURES.find { it == Build.MANUFACTURER.toLowerCase() } == null) return true
+        if (MANUFACTURES.find { it == Build.MANUFACTURER.toLowerCase() } == null) return true
         return getSetting(KEY_AUTOSTART, this)
     }
 
     private fun autostart() {
         val requested = getSetting(KEY_AUTOSTART, this)
         if (!requested) {
-            val manufacturer = Build.MANUFACTURER
             try {
                 val intent = Intent()
-                if ("xiaomi".equals(manufacturer, ignoreCase = true)) {
-                    intent.component = ComponentName(
-                        "com.miui.securitycenter",
-                        "com.miui.permcenter.autostart.AutoStartManagementActivity"
-                    )
-                } else if ("oppo".equals(manufacturer, ignoreCase = true)) {
-                    intent.component = ComponentName(
-                        "com.coloros.safecenter",
-                        "com.coloros.safecenter.permission.startup.StartupAppListActivity"
-                    )
-                } else if ("vivo".equals(manufacturer, ignoreCase = true)) {
-                    intent.component = ComponentName(
-                        "com.vivo.permissionmanager",
-                        "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"
-                    )
-                } else if ("Letv".equals(manufacturer, ignoreCase = true)) {
-                    intent.component = ComponentName(
-                        "com.letv.android.letvsafe",
-                        "com.letv.android.letvsafe.AutobootManageActivity"
-                    )
-                } else if ("Honor".equals(manufacturer, ignoreCase = true)) {
-                    intent.component = ComponentName(
-                        "com.huawei.systemmanager",
-                        "com.huawei.systemmanager.optimize.process.ProtectActivity"
-                    )
+                val name = MANUFACTURES.find { it.equals(Build.MANUFACTURER, ignoreCase = true) }
+                if (name != null) {
+                    val id = MANUFACTURES.indexOf(name)
+                    intent.component = ComponentName(PACKAGES[id], CLASSES[id])
                 }
                 setSetting(KEY_AUTOSTART, true, this)
                 val list = packageManager.queryIntentActivities(
@@ -208,6 +181,21 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
     }
 }
 
+private val MANUFACTURES = listOf("xiaomi", "oppo", "vivo", "Letv", "Honor")
+private val PACKAGES = listOf(
+    "com.miui.securitycenter",
+    "com.coloros.safecenter",
+    "com.vivo.permissionmanager",
+    "com.letv.android.letvsafe",
+    "com.huawei.systemmanager",
+)
+private val CLASSES = listOf(
+    "com.miui.permcenter.autostart.AutoStartManagementActivity",
+    "com.coloros.safecenter.permission.startup.StartupAppListActivity",
+    "com.vivo.permissionmanager.activity.BgStartUpManagerActivity",
+    "com.letv.android.letvsafe.AutobootManageActivity",
+    "com.huawei.systemmanager.optimize.process.ProtectActivity"
+)
+
 private const val ALL_PERMISSIONS_RESULT = 1011
 private const val PLAY_SERVICES_RESOLUTION_REQUEST = 9000
-private val BAD_MANUFACTURES = listOf("xiaomi", "oppo", "vivo", "Letv", "Honor")

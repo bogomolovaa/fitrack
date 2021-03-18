@@ -63,7 +63,7 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
         val trackId = (requireArguments().get("trackId") as Long?)!!
         viewModel.setTrack(trackId)
         viewModel.trackLiveData.observe(viewLifecycleOwner) { track ->
-            binding.trackName.text = track.getName()
+            binding.trackName.text = track.name()
             binding.trackName.transitionName = "track_name_${track.id}"
             binding.mapLayout.transitionName = "track_image_${track.id}"
             binding.trackTextDistance.text = "${track.distance.toInt()} m"
@@ -77,7 +77,7 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
             binding.trackTextTag.transitionName = "track_tag_${track.id}"
             startPostponedEnterTransition()
         }
-        binding.trackTextTag.setOnClickListener { v -> showTagSelection() }
+        binding.trackTextTag.setOnClickListener { _ -> showTagSelection() }
         val mapFragment =
             childFragmentManager.findFragmentById(R.id.map_track_view) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
@@ -89,7 +89,7 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun showTagSelection() {
-        TagSelectionDialog(viewModel).show(childFragmentManager, "TagSelectionDialog")
+        TagSelectionDialog(viewModel::setTag).show(childFragmentManager, "")
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -107,42 +107,39 @@ class TrackViewFragment : Fragment(), OnMapReadyCallback {
         val points = viewModel.trackPoints.value
         if (points != null) updateMap(googleMap, points)
     }
+}
 
-    companion object {
-
-        fun updateMap(googleMap: GoogleMap?, smoothedPoints: List<Point>) {
-            if (googleMap != null && smoothedPoints.isNotEmpty()) {
-                var minLat = 1000.0
-                var maxLat = 0.0
-                var minLng = 1000.0
-                var maxLng = 0.0
-                for (point in smoothedPoints) {
-                    if (point.lat < minLat) minLat = point.lat
-                    if (point.lng < minLng) minLng = point.lng
-                    if (point.lat > maxLat) maxLat = point.lat
-                    if (point.lng > maxLng) maxLng = point.lng
-                }
-                val builder = LatLngBounds.Builder()
-                builder.include(LatLng(minLat, maxLng))
-                builder.include(LatLng(maxLat, maxLng))
-                builder.include(LatLng(maxLat, minLng))
-                builder.include(LatLng(minLat, minLng))
-                val padding = 50
-                val bounds = builder.build()
-                try {
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
-                } catch (e: Exception) {
-                    val lastPoint = smoothedPoints[smoothedPoints.size - 1]
-                    googleMap.moveCamera(
-                        CameraUpdateFactory.newLatLngZoom(LatLng(lastPoint.lat, lastPoint.lng), 15f)
-                    )
-                }
-
-                googleMap.addPolyline(
-                    PolylineOptions().color(-0x10000).clickable(false)
-                        .addAll(toPolylineCoordinates(smoothedPoints))
-                )
-            }
+fun updateMap(googleMap: GoogleMap?, smoothedPoints: List<Point>) {
+    if (googleMap != null && smoothedPoints.isNotEmpty()) {
+        var minLat = 1000.0
+        var maxLat = 0.0
+        var minLng = 1000.0
+        var maxLng = 0.0
+        for (point in smoothedPoints) {
+            if (point.lat < minLat) minLat = point.lat
+            if (point.lng < minLng) minLng = point.lng
+            if (point.lat > maxLat) maxLat = point.lat
+            if (point.lng > maxLng) maxLng = point.lng
         }
+        val builder = LatLngBounds.Builder()
+        builder.include(LatLng(minLat, maxLng))
+        builder.include(LatLng(maxLat, maxLng))
+        builder.include(LatLng(maxLat, minLng))
+        builder.include(LatLng(minLat, minLng))
+        val padding = 50
+        val bounds = builder.build()
+        try {
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
+        } catch (e: Exception) {
+            val lastPoint = smoothedPoints[smoothedPoints.size - 1]
+            googleMap.moveCamera(
+                CameraUpdateFactory.newLatLngZoom(LatLng(lastPoint.lat, lastPoint.lng), 15f)
+            )
+        }
+
+        googleMap.addPolyline(
+            PolylineOptions().color(-0x10000).clickable(false)
+                .addAll(toPolylineCoordinates(smoothedPoints))
+        )
     }
 }

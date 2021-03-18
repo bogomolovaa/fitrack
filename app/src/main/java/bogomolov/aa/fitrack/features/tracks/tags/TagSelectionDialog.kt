@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.*
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import androidx.appcompat.widget.Toolbar
@@ -17,7 +16,7 @@ import bogomolov.aa.fitrack.domain.model.Tag
 import dagger.android.support.AndroidSupportInjection
 import javax.inject.Inject
 
-class TagSelectionDialog(private val tagResultListener: TagResultListener) : DialogFragment() {
+class TagSelectionDialog(private val onTagSelection: (Tag?)->Unit) : DialogFragment() {
     @Inject
     internal lateinit var viewModelFactory: ViewModelFactory
     private val viewModel: TagSelectionViewModel by viewModels { viewModelFactory }
@@ -26,26 +25,6 @@ class TagSelectionDialog(private val tagResultListener: TagResultListener) : Dia
     private lateinit var listView: ListView
     private var selectedTag: Tag? = null
     private var selectedToDeleteTag: Tag? = null
-
-    private val callback = object : ActionMode.Callback {
-
-        override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
-            mode.menuInflater.inflate(R.menu.tag_selection_menu, menu)
-            return true
-        }
-
-        override fun onPrepareActionMode(mode: ActionMode, menu: Menu) = false
-
-        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
-            if (selectedToDeleteTag != null) viewModel.deleteTag(selectedToDeleteTag!!)
-            actionMode!!.finish()
-            return true
-        }
-
-        override fun onDestroyActionMode(mode: ActionMode) {
-            actionMode = null
-        }
-    }
 
     override fun onAttach(context: Context) {
         AndroidSupportInjection.inject(this)
@@ -84,7 +63,7 @@ class TagSelectionDialog(private val tagResultListener: TagResultListener) : Dia
             true
         }
 
-        listView.setOnItemClickListener { adapterView: AdapterView<*>, v: View, position: Int, l: Long ->
+        listView.setOnItemClickListener { _, _, position, _ ->
             if (actionMode == null) {
                 selectedTag = listView.getItemAtPosition(position) as Tag
                 dismiss()
@@ -104,12 +83,31 @@ class TagSelectionDialog(private val tagResultListener: TagResultListener) : Dia
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
-        tagResultListener.onTagSelectionResult(selectedTag)
+        onTagSelection(selectedTag)
     }
 
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
-        tagResultListener.onTagSelectionResult(null)
+        onTagSelection(null)
     }
 
+    private val callback = object : ActionMode.Callback {
+
+        override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+            mode.menuInflater.inflate(R.menu.tag_selection_menu, menu)
+            return true
+        }
+
+        override fun onPrepareActionMode(mode: ActionMode, menu: Menu) = false
+
+        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+            if (selectedToDeleteTag != null) viewModel.deleteTag(selectedToDeleteTag!!)
+            actionMode?.finish()
+            return true
+        }
+
+        override fun onDestroyActionMode(mode: ActionMode) {
+            actionMode = null
+        }
+    }
 }

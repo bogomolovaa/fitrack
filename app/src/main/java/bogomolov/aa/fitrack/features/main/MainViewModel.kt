@@ -18,7 +18,7 @@ private const val UPDATE_INTERVAL = 1000L
 
 data class MainState(
     var currentTrack: Track? = null,
-    var smoothedPoints: MutableList<Point>? = null,
+    var smoothedPoints: List<Point>? = null,
     var distance: String = "",
     var time: String = "",
     var avgSpeed: String = "",

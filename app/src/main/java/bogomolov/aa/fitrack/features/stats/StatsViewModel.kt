@@ -1,96 +1,62 @@
 package bogomolov.aa.fitrack.features.stats
 
-import android.annotation.SuppressLint
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import bogomolov.aa.fitrack.domain.Repository
 import bogomolov.aa.fitrack.domain.getWeekRange
 import bogomolov.aa.fitrack.domain.model.Tag
 import bogomolov.aa.fitrack.domain.model.Track
 import bogomolov.aa.fitrack.domain.model.sumTracks
-import io.reactivex.Observable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
 class StatsViewModel @Inject
 constructor(private val repository: Repository) : ViewModel() {
-    var trackLiveData = MutableLiveData<Track>()
-    var selectedPeriod = MutableLiveData<String>()
-    var tagEntries = MutableLiveData<Array<String>>()
-    var tracksLiveData = MutableLiveData<List<Track>>()
-
+    val sumTrackLiveData = MutableLiveData<Track>()
+    val tracksLiveData = MutableLiveData<List<Track>>()
+    val tagEntries = MutableLiveData<Array<String>>()
     var datesRange = getWeekRange()
-    private var selectedTag = NO_TAG
-    private var selectedTagId: Int = 0
-    var selectedTimeFilter = FILTER_WEEK
-    var selectedParam = PARAM_DISTANCE
-    var selectedTimeStep = TIME_STEP_DAY
+    var timeFilter = FILTER_WEEK
+    var param = PARAM_DISTANCE
+    var timeStep = TIME_STEP_DAY
+    var tagIndex = 0
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            Log.i("test", "liveData tags start")
-            val tags = repository.getTags()
-            Log.i("test", "tags: $tags")
-            tagEntries.postValue(getTagNames(tags))
+            tagEntries.postValue(getTagNames(repository.getTags()))
         }
-    }
-
-    fun setParam(id: Int) {
-        if (id != selectedParam) {
-            selectedParam = id
-            updateView()
-        }
-    }
-
-    fun setTimeStep(id: Int) {
-        if (id != selectedTimeStep) {
-            selectedTimeStep = id
-            updateView()
-        }
+        reloadTracks()
     }
 
     fun setTag(id: Int) {
-        if (tagEntries.value != null && id != selectedTagId) {
-            selectedTag = tagEntries.value!![id]
-            selectedTagId = id
-            updateView()
+        if (id != tagIndex) {
+            tagIndex = id
+            reloadTracks()
         }
     }
 
     fun setTimeFilter(datesRange: Array<Date>, selectedTimeFilter: Int) {
         this.datesRange = datesRange
-        this.selectedTimeFilter = selectedTimeFilter
-        updateView()
+        this.timeFilter = selectedTimeFilter
+        reloadTracks()
     }
 
-    @SuppressLint("SimpleDateFormat")
-    fun updateView() {
-        val startDateString = SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[0])
-        val endDateString = SimpleDateFormat("dd.MM.yyyy HH:mm").format(datesRange[1])
-        selectedPeriod.value = "$startDateString - $endDateString"
-
+    private fun reloadTracks() {
         viewModelScope.launch(Dispatchers.IO) {
-            val tracks =
-                repository.getFinishedTracks(
-                    datesRange,
-                    if (selectedTag == NO_TAG) null else selectedTag
-                )
-            val sumTrack = sumTracks(tracks)
-            trackLiveData.postValue(sumTrack)
+            val tag = if (tagIndex == 0) null else tagEntries.value?.get(tagIndex)
+            val tracks = repository.getFinishedTracks(datesRange, tag)
+            sumTrackLiveData.postValue(sumTracks(tracks))
             tracksLiveData.postValue(tracks)
         }
     }
-
-    private fun getTagNames(tags: List<Tag>) =
-        ArrayList(tags).apply { add(0, Tag(name = NO_TAG)) }.map { it.name!! }.toTypedArray()
 }
+
+private fun getTagNames(tags: List<Tag>) =
+    ArrayList(tags).apply { add(0, Tag(name = NO_TAG)) }.map { it.name }.toTypedArray()
 
 private const val NO_TAG = "-"
 

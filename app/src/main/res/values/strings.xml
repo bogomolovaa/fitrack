@@ -63,6 +63,7 @@
     <string name="privacy">Privacy Policy</string>
 
 
-    <string name="need_autostart_string">The app must be in autostart white list. Please, do it manually in settings.</string>
+    <string name="mandatory_permission_string">Location permissions are mandatory to continue</string>
+    <string name="need_autostart_string">The app must be in autostart white list. Please, turn on it manually in settings</string>
 
 </resources>

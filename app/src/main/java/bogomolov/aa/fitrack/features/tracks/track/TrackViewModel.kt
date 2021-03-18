@@ -1,5 +1,6 @@
 package bogomolov.aa.fitrack.features.tracks.track
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,13 +9,12 @@ import bogomolov.aa.fitrack.domain.model.Point
 import bogomolov.aa.fitrack.domain.model.SMOOTHED
 import bogomolov.aa.fitrack.domain.model.Tag
 import bogomolov.aa.fitrack.domain.model.Track
-import bogomolov.aa.fitrack.features.tracks.tags.TagResultListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class TrackViewModel @Inject
-constructor(private val repository: Repository) : ViewModel(), TagResultListener {
+constructor(private val repository: Repository) : ViewModel() {
     var trackLiveData = MutableLiveData<Track>()
     var trackPoints = MutableLiveData<List<Point>>()
 
@@ -26,11 +26,12 @@ constructor(private val repository: Repository) : ViewModel(), TagResultListener
         }
     }
 
-    override fun onTagSelectionResult(tag: Tag?) {
+    @SuppressLint("NullSafeMutableLiveData")
+    fun setTag(tag: Tag?) {
         val track = trackLiveData.value
         if (tag != null && track != null) {
             track.tag = tag.name
-            trackLiveData.value = track
+            trackLiveData.postValue(track)
             viewModelScope.launch(Dispatchers.IO){
                 repository.save(track)
             }

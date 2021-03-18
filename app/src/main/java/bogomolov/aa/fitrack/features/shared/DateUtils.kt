@@ -4,7 +4,6 @@ import androidx.fragment.app.FragmentManager
 import ru.slybeaver.slycalendarview.SlyCalendarDialog
 import java.util.*
 
-
 fun selectDatesRange(fm: FragmentManager, selector: (Array<Date>) -> Unit) {
     SlyCalendarDialog()
             .setSingle(false)

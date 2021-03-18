@@ -26,16 +26,13 @@ constructor(private val repository: Repository) : ViewModel() {
 
     fun setTag(tag: Tag, selectedIds: Set<Long>) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.updateTracks(tag.name!!, ArrayList(selectedIds))
+            repository.updateTracks(tag.name, selectedIds.toList())
         }
     }
 
     fun deleteTracks(selectedIds: Set<Long>) {
         viewModelScope.launch(Dispatchers.IO) {
-            val idsList = ArrayList(selectedIds)
-            val ids = LongArray(selectedIds.size)
-            for (i in idsList.indices) ids[i] = idsList[i]
-            repository.deleteTracks(*ids)
+            repository.deleteTracks(*selectedIds.toLongArray())
         }
     }
 }

@@ -18,7 +18,7 @@ interface Repository {
 
     fun updateTracks(tag: String, ids: List<Long>)
 
-    fun getFinishedTracks(datesRange: Array<Date>, tag: String?): List<Track>
+    fun getFinishedTracks(datesRange: Array<Date>, tag: String? = null): List<Track>
 
     fun getFinishedTracksDataSource(datesRange: Array<Date>): DataSource.Factory<Int, Track>
 
@@ -43,5 +43,4 @@ interface Repository {
     fun deletePointsAfterLastTrack(lastTrack: Track?)
 
     fun deletePointsInRange(startId: Long, endId: Long)
-
 }

@@ -5,20 +5,20 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Spinner
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.FiltersDialogBinding
 import bogomolov.aa.fitrack.domain.getMonthRange
 import bogomolov.aa.fitrack.domain.getTodayRange
 import bogomolov.aa.fitrack.domain.getWeekRange
 import bogomolov.aa.fitrack.domain.selectDatesRange
+import bogomolov.aa.fitrack.features.shared.onSelection
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.android.support.AndroidSupportInjection
 
 class FiltersBottomSheetDialogFragment(
-    private var viewModel: StatsViewModel
+    private val statsFragment: StatsFragment,
+    private val viewModel: StatsViewModel
 ) : BottomSheetDialogFragment() {
     private var spinnersCanClicked: Boolean = false
 
@@ -33,7 +33,7 @@ class FiltersBottomSheetDialogFragment(
         savedInstanceState: Bundle?
     ): View {
         val binding = FiltersDialogBinding.inflate(inflater, container, false)
-        val periodSpinner = binding.statsSpinnerPeriod
+        val periodSpinner = binding.spinnerPeriod
         periodSpinner.onSelection { id ->
             if (spinnersCanClicked)
                 when (id) {
@@ -45,15 +45,14 @@ class FiltersBottomSheetDialogFragment(
                     }
                 }
         }
-
         viewModel.tagEntries.observe(viewLifecycleOwner) {
-            binding.statsSpinnerTimeStep.adapter =
+            binding.spinnerTag.adapter =
                 ArrayAdapter<CharSequence>(
                     requireContext(), R.layout.support_simple_spinner_dropdown_item, it
                 )
+            binding.spinnerTag.setSelection(viewModel.tagIndex, false)
         }
-
-        binding.statsSpinnerTimeStep.adapter =
+        binding.spinnerTimeStep.adapter =
             object : ArrayAdapter<CharSequence>(
                 requireContext(),
                 R.layout.support_simple_spinner_dropdown_item,
@@ -67,39 +66,33 @@ class FiltersBottomSheetDialogFragment(
             }
 
         viewModel.tagEntries.observe(viewLifecycleOwner) {
-            binding.statsSpinnerTag.adapter = ArrayAdapter<CharSequence>(
+            binding.spinnerTag.adapter = ArrayAdapter<CharSequence>(
                 requireContext(),
                 R.layout.support_simple_spinner_dropdown_item,
                 it
             )
         }
 
-        binding.statsSpinnerParam.onSelection { viewModel.setParam(it) }
-        binding.statsSpinnerTimeStep.onSelection { viewModel.setTimeStep(it) }
-        binding.statsSpinnerTag.onSelection { viewModel.setTag(it) }
-
-        requireActivity().window.decorView.postDelayed(
-            { spinnersCanClicked = true }, 500
-        )
-        periodSpinner.setSelection(viewModel.selectedTimeFilter, false)
+        binding.spinnerParam.onSelection {
+            if (spinnersCanClicked) {
+                viewModel.param = it
+                statsFragment.updateChart()
+            }
+        }
+        binding.spinnerTimeStep.onSelection {
+            if (spinnersCanClicked) {
+                viewModel.timeStep = it
+                statsFragment.updateChart()
+            }
+        }
+        binding.spinnerTag.onSelection {
+            if (spinnersCanClicked) viewModel.setTag(it)
+        }
+        requireActivity().window.decorView.postDelayed({ spinnersCanClicked = true }, 500)
+        periodSpinner.setSelection(viewModel.timeFilter, false)
+        binding.spinnerParam.setSelection(viewModel.param, false)
+        binding.spinnerTimeStep.setSelection(viewModel.timeStep, false)
 
         return binding.root
     }
-
-    private fun Spinner.onSelection(selected: (Int) -> Unit) {
-        onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                selected(position)
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-            }
-        }
-    }
-
 }

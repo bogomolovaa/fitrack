@@ -7,7 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.cardview.widget.CardView
-import androidx.navigation.Navigation
+import androidx.navigation.Navigation.findNavController
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
@@ -40,10 +40,7 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
     override fun onBindViewHolder(holder: TrackViewHolder, position: Int) {
         val track = getItem(position)
         val cardView = holder.cardView as MaterialCardView
-        if (track != null) {
-            val selected = selectedIds.contains(track.id)
-            cardView.isChecked = selected
-        }
+        if (track != null) cardView.isChecked = selectedIds.contains(track.id)
         holder.bind(track)
     }
 
@@ -51,8 +48,7 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
         val cardView: CardView,
         private val binding: TrackCardViewBinding,
         private val adapter: TracksPagedAdapter
-    ) :
-        RecyclerView.ViewHolder(cardView), View.OnClickListener, View.OnLongClickListener {
+    ) : RecyclerView.ViewHolder(cardView), View.OnClickListener, View.OnLongClickListener {
 
         init {
             cardView.setOnClickListener(this)
@@ -64,7 +60,7 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
             if (track != null) {
                 val bitmap = BitmapFactory.decodeFile(getTrackImageFile(cardView.context, track))
                 binding.trackImage.setImageBitmap(bitmap)
-                binding.cardTextName.text = track.getName()
+                binding.cardTextName.text = track.name()
                 binding.cardTextName.transitionName = "track_name_${track.id}"
                 binding.cardTextDistance.text = "${track.distance.toInt()} m"
                 binding.cardTextDistance.transitionName = "track_distance_${track.id}"
@@ -91,31 +87,31 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
                     }
                     adapter.notifyItemChanged(position)
                 } else {
-                    val bundle = Bundle()
-                    bundle.putLong("trackId", track.id)
-                    val extras = FragmentNavigator.Extras.Builder()
-                        .addSharedElement(
-                            binding.cardTextDistance,
-                            binding.cardTextDistance.transitionName
-                        )
-                        .addSharedElement(binding.cardTextTime, binding.cardTextTime.transitionName)
-                        .addSharedElement(
-                            binding.cardTextAvgSpeed,
-                            binding.cardTextAvgSpeed.transitionName
-                        )
-                        .addSharedElement(binding.cardTextName, binding.cardTextName.transitionName)
-                        .addSharedElement(binding.cardTagName, binding.cardTagName.transitionName)
-                        .addSharedElement(binding.trackImage, binding.trackImage.transitionName)
-                        .build()
-                    Navigation.findNavController(v).navigate(
+                    findNavController(v).navigate(
                         R.id.trackViewFragment,
-                        bundle,
+                        Bundle().apply { putLong("trackId", track.id) },
                         null,
-                        extras
+                        getExtras()
                     )
                 }
             }
         }
+
+        private fun getExtras() =
+            FragmentNavigator.Extras.Builder()
+                .addSharedElement(
+                    binding.cardTextDistance,
+                    binding.cardTextDistance.transitionName
+                )
+                .addSharedElement(binding.cardTextTime, binding.cardTextTime.transitionName)
+                .addSharedElement(
+                    binding.cardTextAvgSpeed,
+                    binding.cardTextAvgSpeed.transitionName
+                )
+                .addSharedElement(binding.cardTextName, binding.cardTextName.transitionName)
+                .addSharedElement(binding.cardTagName, binding.cardTagName.transitionName)
+                .addSharedElement(binding.trackImage, binding.trackImage.transitionName)
+                .build()
 
         override fun onLongClick(view: View): Boolean {
             adapter.checkMode = true

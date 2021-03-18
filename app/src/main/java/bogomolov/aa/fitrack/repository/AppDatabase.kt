@@ -12,7 +12,7 @@ import bogomolov.aa.fitrack.repository.entities.TrackEntity
 
 const val DB_NAME = "fitrack_db"
 
-@Database(entities = [PointEntity::class, TagEntity::class, TrackEntity::class], version = 21)
+@Database(entities = [PointEntity::class, TagEntity::class, TrackEntity::class], version = 22)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun pointDao(): PointDao

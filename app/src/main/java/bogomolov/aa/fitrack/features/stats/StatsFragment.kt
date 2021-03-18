@@ -23,6 +23,7 @@ import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import dagger.android.support.AndroidSupportInjection
 import java.text.DateFormatSymbols
+import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
@@ -51,19 +52,21 @@ class StatsFragment : Fragment() {
 
         chart = binding.chart
         chart.description = Description().apply { text = "" }
-        viewModel.tracksLiveData.observe(viewLifecycleOwner) { updateView(it) }
-
-        viewModel.selectedPeriod.observe(viewLifecycleOwner) {
-            binding.statsTextSelectedPeriod.text = it
-        }
-        viewModel.trackLiveData.observe(viewLifecycleOwner) { track ->
+        viewModel.tracksLiveData.observe(viewLifecycleOwner) { updateChart() }
+        viewModel.sumTrackLiveData.observe(viewLifecycleOwner) { track ->
             binding.statsTextDistance.text = "${track.distance.toInt()} m"
             binding.statsTextTime.text = track.getTimeString()
             binding.statsTextAvgSpeed.text = "${String.format("%.1f", track.getSpeed())}  km/h"
+            val startDateString = dateToString(viewModel.datesRange[0])
+            val endDateString = dateToString(viewModel.datesRange[0])
+            binding.statsTextSelectedPeriod.text = "$startDateString - $endDateString"
         }
-        viewModel.updateView()
         return binding.root
     }
+
+    @SuppressLint("SimpleDateFormat")
+    private fun dateToString(date: Date) =
+        SimpleDateFormat("dd.MM.yyyy HH:mm").format(date)
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.stats_filters_menu, menu)
@@ -72,86 +75,79 @@ class StatsFragment : Fragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.stats_filters)
-            FiltersBottomSheetDialogFragment(viewModel).show(
-                childFragmentManager,
-                "Filters bottom sheet"
-            )
+            FiltersBottomSheetDialogFragment(this, viewModel).show(childFragmentManager, "")
         return true
     }
 
     private fun getParamValue(track: Track?, param: Int): Double {
         if (track == null) return 0.0
-        when (param) {
+        return when (param) {
             PARAM_DISTANCE -> return track.distance / 1000.0
             PARAM_SPEED -> return track.getSpeed()
             PARAM_TIME -> return (track.endTime - track.startTime) / (60 * 1000.0)
+            else -> 0.0
         }
-        return 0.0
     }
 
-    private fun updateView(tracks: List<Track>) {
-        val datesRange = viewModel.datesRange
-        val selectedParam = viewModel.selectedParam
-        val selectedTimeStep = viewModel.selectedTimeStep
-        val selectedTimeFilter = viewModel.selectedTimeFilter
-        val sumTracks = ArrayList<Track>()
+    fun updateChart() {
+        val tracks = viewModel.tracksLiveData.value ?: return
+        val dates = getDates(viewModel.timeStep, viewModel.datesRange)
+        val sumTracks = dates.zipWithNext { date1, date2 ->
+            sumTracks(tracks.filter { it.startTime >= date1.time && it.startTime < date2.time })
+        }
+        dates.removeLast()
+        val categories = getCategories(dates, viewModel.timeFilter, viewModel.timeStep)
+        val entries = sumTracks.withIndex().map {
+            BarEntry(it.index.toFloat(), getParamValue(it.value, viewModel.param).toFloat())
+        }
+        val unit = resources.getStringArray(R.array.stats_param_units)[viewModel.param]
+        with(chart.xAxis) {
+            position = XAxis.XAxisPosition.BOTTOM
+            granularity = 1f
+            valueFormatter = IndexAxisValueFormatter(categories)
+        }
+        with(chart) {
+            data = BarData(BarDataSet(entries, unit))
+            setFitBars(true)
+            invalidate()
+        }
+    }
+
+    private fun getDates(timeStep: Int, datesRange: Array<Date>): MutableList<Date> {
         val dates = ArrayList<Date>()
         val calendar = GregorianCalendar()
         calendar.time = datesRange[0]
-        while (calendar.time.time <= datesRange[1].time) {
-            val date = calendar.time
-            dates.add(date)
-            if (selectedTimeStep == TIME_STEP_DAY) calendar.add(Calendar.DAY_OF_YEAR, 1)
-            if (selectedTimeStep == TIME_STEP_WEEK) calendar.add(Calendar.DAY_OF_YEAR, 7)
-            val toDate = calendar.time
-            val dayTracks = ArrayList<Track>()
-            for (track in tracks)
-                if (track.startTime >= date.time && track.startTime < toDate.time)
-                    dayTracks.add(track)
-            if (dayTracks.size > 0) sumTracks.add(sumTracks(dayTracks))
+        while (calendar.time <= datesRange[1]) {
+            dates.add(calendar.time)
+            if (timeStep == TIME_STEP_DAY) calendar.add(Calendar.DAY_OF_YEAR, 1)
+            if (timeStep == TIME_STEP_WEEK) calendar.add(Calendar.DAY_OF_YEAR, 7)
         }
+        dates.add(calendar.time)
+        return dates
+    }
 
-        val entries = ArrayList<BarEntry>()
+    private fun getCategories(dates: List<Date>, timeFilter: Int, timeStep: Int): List<String> {
+        val calendar = GregorianCalendar()
         val categories = ArrayList<String>()
-        for (i in sumTracks.indices) {
-            val sumTrack = sumTracks[i]
-            entries.add(BarEntry(i.toFloat(), getParamValue(sumTrack, selectedParam).toFloat()))
-            calendar.time = dates[i]
-            if (selectedTimeFilter == FILTER_TODAY) {
-                categories.add(requireContext().resources.getString(R.string.today))
-            } else if (selectedTimeFilter == FILTER_WEEK) {
-                categories.add(
-                    DateFormatSymbols(resources.configuration.locale).shortWeekdays[calendar.get(
-                        Calendar.DAY_OF_WEEK
-                    )]
-                )
-            } else {
-                if (selectedTimeStep == TIME_STEP_DAY) {
-                    if (selectedTimeFilter == FILTER_MONTH) {
-                        categories.add("" + calendar.get(Calendar.DAY_OF_MONTH))
-                    } else {
-                        categories.add("" + calendar.get(Calendar.DATE))
+        for (date in dates) {
+            calendar.time = date
+            val category = when (timeFilter) {
+                FILTER_TODAY -> requireContext().resources.getString(R.string.today)
+                FILTER_WEEK -> DateFormatSymbols(resources.configuration.locale)
+                    .shortWeekdays[calendar.get(Calendar.DAY_OF_WEEK)]
+                else -> {
+                    val field = when {
+                        timeFilter == FILTER_MONTH && timeStep == TIME_STEP_DAY -> Calendar.DAY_OF_MONTH
+                        timeFilter == FILTER_MONTH && timeStep == TIME_STEP_WEEK -> Calendar.WEEK_OF_MONTH
+                        timeFilter != FILTER_MONTH && timeStep == TIME_STEP_DAY -> Calendar.DATE
+                        timeFilter != FILTER_MONTH && timeStep == TIME_STEP_WEEK -> Calendar.WEEK_OF_YEAR
+                        else -> Calendar.DATE
                     }
-                }
-                if (selectedTimeStep == TIME_STEP_WEEK) {
-                    if (selectedTimeFilter == FILTER_MONTH) {
-                        categories.add("" + calendar.get(Calendar.WEEK_OF_MONTH))
-                    } else {
-                        categories.add("" + calendar.get(Calendar.WEEK_OF_YEAR))
-                    }
+                    calendar.get(field).toString()
                 }
             }
+            categories.add(category)
         }
-        val set =
-            BarDataSet(entries, resources.getStringArray(R.array.stats_param_units)[selectedParam])
-        val data = BarData(set)
-        val formatter = IndexAxisValueFormatter(categories)
-        val xAxis = chart.xAxis
-        xAxis.position = XAxis.XAxisPosition.BOTTOM
-        xAxis.granularity = 1f
-        xAxis.valueFormatter = formatter
-        chart.data = data
-        chart.setFitBars(true)
-        chart.invalidate()
+        return categories
     }
 }

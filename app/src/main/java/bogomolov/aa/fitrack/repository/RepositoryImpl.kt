@@ -42,7 +42,7 @@ constructor(private val db: AppDatabase) : Repository {
 
     @Transaction
     override fun deleteTag(tag: Tag) {
-        db.trackDao().updateTags(tag.name!!, null)
+        db.trackDao().updateTags(tag.name, null)
         db.tagDao().delete(modelToEntity(tag))
     }
 

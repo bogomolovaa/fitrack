@@ -4,9 +4,9 @@ import android.content.Context
 import android.os.Bundle
 import android.view.*
 import android.view.animation.AnimationUtils
-import android.widget.AdapterView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
@@ -15,14 +15,16 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.FragmentTracksListBinding
 import bogomolov.aa.fitrack.di.ViewModelFactory
-import bogomolov.aa.fitrack.domain.*
-import bogomolov.aa.fitrack.domain.model.Tag
-import bogomolov.aa.fitrack.features.tracks.tags.TagResultListener
+import bogomolov.aa.fitrack.domain.getMonthRange
+import bogomolov.aa.fitrack.domain.getTodayRange
+import bogomolov.aa.fitrack.domain.getWeekRange
+import bogomolov.aa.fitrack.domain.selectDatesRange
+import bogomolov.aa.fitrack.features.shared.onSelection
 import bogomolov.aa.fitrack.features.tracks.tags.TagSelectionDialog
 import dagger.android.support.AndroidSupportInjection
 import javax.inject.Inject
 
-class TracksListFragment : Fragment(), TagResultListener {
+class TracksListFragment : Fragment() {
     @Inject
     internal lateinit var viewModelFactory: ViewModelFactory
     private val viewModel: TracksListViewModel by viewModels { viewModelFactory }
@@ -30,6 +32,60 @@ class TracksListFragment : Fragment(), TagResultListener {
     private var actionMode: ActionMode? = null
     private lateinit var toolbar: Toolbar
     private var spinnersCanClicked = false
+
+    override fun onAttach(context: Context) {
+        AndroidSupportInjection.inject(this)
+        super.onAttach(context)
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        val binding = FragmentTracksListBinding.inflate(inflater, container, false)
+        toolbar = binding.toolbarTracksList
+        (activity as AppCompatActivity).setSupportActionBar(toolbar)
+        val navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
+        NavigationUI.setupWithNavController(toolbar, navController)
+
+        val recyclerView = binding.trackRecycler
+        recyclerView.layoutManager = LinearLayoutManager(context)
+        adapter = TracksPagedAdapter(this)
+        recyclerView.adapter = adapter
+        val layoutAnimation = AnimationUtils.loadLayoutAnimation(
+            requireContext(),
+            R.anim.track_item_layout_anim
+        )
+        viewModel.tracksLiveData.observe(viewLifecycleOwner) { tracks ->
+            adapter.submitList(tracks)
+            recyclerView.layoutAnimation = layoutAnimation
+        }
+        recyclerView.doOnPreDraw {
+            startPostponedEnterTransition()
+        }
+        postponeEnterTransition()
+
+        binding.tracksTimeSpinner.onSelection {
+            if (spinnersCanClicked)
+                when (it) {
+                    FILTER_TODAY -> viewModel.updateTracks(getTodayRange())
+                    FILTER_WEEK -> viewModel.updateTracks(getWeekRange())
+                    FILTER_MONTH -> viewModel.updateTracks(getMonthRange())
+                    FILTER_SELECT -> selectDatesRange(childFragmentManager) { dates ->
+                        viewModel.updateTracks(dates)
+                    }
+                    else -> viewModel.updateTracks(getTodayRange())
+                }
+        }
+        requireActivity().window.decorView.postDelayed({ spinnersCanClicked = true }, 500)
+
+        return binding.root
+    }
+
+    fun onLongClick() {
+        if (actionMode == null) actionMode = toolbar.startActionMode(callback)
+        else actionMode?.finish()
+    }
 
     private val callback = object : ActionMode.Callback {
 
@@ -47,8 +103,10 @@ class TracksListFragment : Fragment(), TagResultListener {
                     actionMode?.finish()
                 }
                 R.id.menu_track_tag -> {
-                    TagSelectionDialog(this@TracksListFragment)
-                        .show(childFragmentManager, "TagSelectionDialog")
+                    TagSelectionDialog { tag ->
+                        if (tag != null) viewModel.setTag(tag, adapter.selectedIds)
+                        actionMode?.finish()
+                    }.show(childFragmentManager, "")
                 }
             }
             return true
@@ -58,90 +116,6 @@ class TracksListFragment : Fragment(), TagResultListener {
             adapter.disableCheckMode()
             actionMode = null
         }
-    }
-
-    override fun onAttach(context: Context) {
-        AndroidSupportInjection.inject(this)
-        super.onAttach(context)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val binding = FragmentTracksListBinding.inflate(inflater, container, false)
-        toolbar = binding.toolbarTracksList
-        (activity as AppCompatActivity).setSupportActionBar(toolbar)
-
-        val navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
-        NavigationUI.setupWithNavController(toolbar, navController)
-
-        val recyclerView = binding.trackRecycler
-        recyclerView.layoutManager = LinearLayoutManager(context)
-
-        adapter = TracksPagedAdapter(this)
-        recyclerView.adapter = adapter
-
-        viewModel.tracksLiveData.observe(viewLifecycleOwner) { tracks ->
-            adapter.submitList(tracks)
-            val animation = AnimationUtils.loadLayoutAnimation(
-                this@TracksListFragment.context,
-                R.anim.track_item_layout_anim
-            )
-            recyclerView.layoutAnimation = animation
-        }
-
-        recyclerView.viewTreeObserver.addOnPreDrawListener(
-            object : ViewTreeObserver.OnPreDrawListener {
-                override fun onPreDraw(): Boolean {
-                    recyclerView.viewTreeObserver.removeOnPreDrawListener(this)
-                    startPostponedEnterTransition()
-                    return true
-                }
-            })
-
-        postponeEnterTransition()
-
-        val filterSpinner = binding.tracksTimeSpinner
-        filterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                adapterView: AdapterView<*>?,
-                view: View?,
-                i: Int,
-                l: Long
-            ) {
-                if (!spinnersCanClicked) return
-                when (i) {
-                    FILTER_TODAY -> viewModel.updateTracks(getTodayRange())
-                    FILTER_WEEK -> viewModel.updateTracks(getWeekRange())
-                    FILTER_MONTH -> viewModel.updateTracks(getMonthRange())
-                    FILTER_SELECT -> selectDatesRange(childFragmentManager) { dates ->
-                        viewModel.updateTracks(
-                            dates
-                        )
-                    }
-                    else -> viewModel.updateTracks(getTodayRange())
-                }
-            }
-
-            override fun onNothingSelected(adapterView: AdapterView<*>) {}
-        }
-
-        requireActivity().window.decorView.postDelayed({ spinnersCanClicked = true }, 500)
-
-        return binding.root
-    }
-
-    fun onLongClick() {
-        if (actionMode == null)
-            actionMode = toolbar.startActionMode(callback)
-        else
-            actionMode!!.finish()
-    }
-
-    override fun onTagSelectionResult(tag: Tag?) {
-        if (tag != null) viewModel.setTag(tag, adapter.selectedIds)
-        actionMode?.finish()
     }
 }
 

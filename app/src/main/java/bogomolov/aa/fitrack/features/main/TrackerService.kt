@@ -12,8 +12,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
-import android.os.*
-import android.util.Log
+import android.os.Build
+import android.os.Bundle
+import android.os.Looper
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -39,7 +40,6 @@ import kotlinx.coroutines.*
 import javax.inject.Inject
 
 private const val NOTIFICATION_CHANNEL_ID = "fitrack_channel"
-private const val NO_MOTION_TIMEOUT = 20 * 1000L
 
 class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListener, LocationListener,
     HasAndroidInjector {
@@ -66,12 +66,11 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val appName = resources.getString(R.string.app_name)
             @SuppressLint("WrongConstant") val notificationChannel = NotificationChannel(
-                NOTIFICATION_CHANNEL_ID,
-                "My Notifications",
-                NotificationManager.IMPORTANCE_LOW
+                NOTIFICATION_CHANNEL_ID, appName, NotificationManager.IMPORTANCE_LOW
             )
-            notificationChannel.description = "Fitrack"
+            notificationChannel.description = appName
             notificationChannel.enableLights(true)
             notificationChannel.lightColor = Color.RED
             notificationChannel.enableVibration(false)
@@ -95,13 +94,12 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
         startForeground(1, notificationBuilder.build())
         googleApiClient = GoogleApiClient.Builder(applicationContext).addApi(LocationServices.API)
             .addConnectionCallbacks(this).addOnConnectionFailedListener(this).build()
-
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent == null || intent.action == START_SERVICE_ACTION) {
             googleApiClient.connect()
-            setSetting(KEY_SERVICE_STARTED,true, applicationContext)
+            setSetting(KEY_SERVICE_STARTED, true, applicationContext)
         } else if (intent.action == STOP_SERVICE_ACTION) {
             stopTrackingService()
         }
@@ -117,8 +115,8 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
         if (!hasPermission(ACCESS_FINE_LOCATION) && !hasPermission(ACCESS_COARSE_LOCATION)) {
             Toast.makeText(
                 this,
-                "You need to enable permissions to display location!",
-                Toast.LENGTH_SHORT
+                resources.getString(R.string.mandatory_permission_string),
+                Toast.LENGTH_LONG
             ).show()
             return
         }
@@ -158,7 +156,11 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
                     val location = locationResult.lastLocation
                     prevLocation = location
                     if (location.accuracy < MAX_LOCATION_ACCURACY) {
-                        val point = Point(location.time, location.latitude, location.longitude)
+                        val point = Point(
+                            time = location.time,
+                            lat = location.latitude,
+                            lng = location.longitude
+                        )
                         coroutineScope.launch(Dispatchers.IO) {
                             useCases.onNewPoint(point)
                         }
@@ -182,7 +184,7 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
             useCases.onStopTracking()
         }
         startActivityRecognition(applicationContext)
-        setSetting(KEY_SERVICE_STARTED,false, applicationContext)
+        setSetting(KEY_SERVICE_STARTED, false, applicationContext)
     }
 
     private fun stopLocationUpdates() {
@@ -193,10 +195,7 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
         }
     }
 
-
-    override fun onBind(intent: Intent): IBinder? {
-        return null
-    }
+    override fun onBind(intent: Intent) = null
 }
 
 const val START_SERVICE_ACTION = "start"

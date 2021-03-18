@@ -8,8 +8,10 @@ import bogomolov.aa.fitrack.features.tracks.list.TracksListViewModel
 import bogomolov.aa.fitrack.features.tracks.tags.TagSelectionViewModel
 import bogomolov.aa.fitrack.features.tracks.track.TrackViewModel
 import dagger.Binds
+import dagger.MapKey
 import dagger.Module
 import dagger.multibindings.IntoMap
+import kotlin.reflect.KClass
 
 @Module
 abstract class ViewModelsModule {
@@ -41,3 +43,7 @@ abstract class ViewModelsModule {
     @Binds
     abstract fun bindViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory
 }
+
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
+@MapKey
+annotation class ViewModelKey(val value: KClass<out ViewModel>)

@@ -15,7 +15,7 @@
             android:textSize="18sp" />
 
         <Spinner
-            android:id="@+id/stats_spinner_param"
+            android:id="@+id/spinner_param"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:entries="@array/stats_filter_type" />
@@ -31,7 +31,7 @@
             android:textSize="18sp" />
 
         <Spinner
-            android:id="@+id/stats_spinner_time_step"
+            android:id="@+id/spinner_time_step"
             android:layout_width="wrap_content"
             android:layout_height="40dp" />
     </TableRow>
@@ -46,7 +46,7 @@
             android:textSize="18sp" />
 
         <bogomolov.aa.fitrack.features.shared.ReselectableSpinner
-            android:id="@+id/stats_spinner_period"
+            android:id="@+id/spinner_period"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:entries="@array/track_time_filter" />
@@ -62,7 +62,7 @@
             android:textSize="18sp" />
 
         <Spinner
-            android:id="@+id/stats_spinner_tag"
+            android:id="@+id/spinner_tag"
             android:layout_width="wrap_content"
             android:layout_height="40dp" />
     </TableRow>

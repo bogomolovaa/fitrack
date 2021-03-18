@@ -2,7 +2,6 @@ package bogomolov.aa.fitrack.features.main
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
@@ -14,6 +13,7 @@ import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.FragmentMainBinding
 import bogomolov.aa.fitrack.di.ViewModelFactory
 import bogomolov.aa.fitrack.domain.model.Point
+import bogomolov.aa.fitrack.domain.model.Track
 import bogomolov.aa.fitrack.features.settings.KEY_SERVICE_STARTED
 import bogomolov.aa.fitrack.features.settings.getSetting
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -23,6 +23,8 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import dagger.android.support.AndroidSupportInjection
 import javax.inject.Inject
+import kotlin.math.cos
+import kotlin.math.sin
 
 class MainFragment : Fragment(), OnMapReadyCallback {
     @Inject
@@ -98,44 +100,42 @@ class MainFragment : Fragment(), OnMapReadyCallback {
         val point = state.lastPoint
         val track = state.currentTrack
         val smoothedPoints = state.smoothedPoints
-        val googleMap = this.googleMap
-        if (googleMap != null) {
-            if (point != null) {
-                val latLng = LatLng(point.lat, point.lng)
-                if (currentPositionMarker == null) {
-                    currentPositionMarker = googleMap.addMarker(
-                        MarkerOptions().position(latLng).flat(true)
-                            .anchor(0.5f, 0.5f)
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.direction_arrow))
-                    )
-                } else {
-                    Log.i("test", "updateView position ${latLng.latitude} ${latLng.longitude}")
-                    currentPositionMarker!!.position = latLng
-                }
+        if (this.googleMap == null) return
+        if (point != null) drawCurrentPosition(point, track)
+        drawTrack(track, smoothedPoints)
+    }
 
-                if (!zoomed) {
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18f))
-                    zoomed = true
-                } else if (track != null && track.isOpened()) {
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
-                }
-            }
+    private fun drawCurrentPosition(point: Point, track: Track?) {
+        val latLng = LatLng(point.lat, point.lng)
+        if (currentPositionMarker == null) {
+            currentPositionMarker = googleMap?.addMarker(
+                MarkerOptions().position(latLng).flat(true).anchor(0.5f, 0.5f)
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.direction_arrow))
+            )
+        }
+        currentPositionMarker?.position = latLng
+        if (!zoomed) {
+            googleMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18f))
+            zoomed = true
+        }
+        if (zoomed && track?.isOpened() == true)
+            googleMap?.moveCamera(CameraUpdateFactory.newLatLng(latLng))
+    }
 
-            if (track != null && track.isOpened() && smoothedPoints != null) {
-                currentPositionMarker!!.rotation = if (smoothedPoints.size > 1)
-                    angleFromCoordinate(
-                        smoothedPoints[smoothedPoints.size - 2],
-                        smoothedPoints[smoothedPoints.size - 1]
-                    ) else 0f
-                if (trackSmoothedPolyline == null) trackSmoothedPolyline =
-                    googleMap.addPolyline(PolylineOptions().color(-0x10000).clickable(false))
-                trackSmoothedPolyline!!.points = toPolylineCoordinates(smoothedPoints)
-            } else {
-                if (trackSmoothedPolyline != null) {
-                    trackSmoothedPolyline!!.remove()
-                    trackSmoothedPolyline = null
-                }
-            }
+    private fun drawTrack(track: Track?, smoothedPoints: List<Point>?) {
+        if (track != null && track.isOpened() && smoothedPoints != null) {
+            currentPositionMarker?.rotation = if (smoothedPoints.size > 1)
+                angleFromCoordinate(
+                    smoothedPoints[smoothedPoints.size - 2],
+                    smoothedPoints[smoothedPoints.size - 1]
+                )
+            else 0f
+            if (trackSmoothedPolyline == null) trackSmoothedPolyline =
+                googleMap?.addPolyline(PolylineOptions().color(-0x10000).clickable(false))
+            trackSmoothedPolyline?.points = toPolylineCoordinates(smoothedPoints)
+        } else {
+            trackSmoothedPolyline?.remove()
+            trackSmoothedPolyline = null
         }
     }
 
@@ -162,8 +162,8 @@ private fun angleFromCoordinate(point1: Point, point2: Point): Float {
     val l1 = Math.toRadians(point1.lng)
     val l2 = Math.toRadians(point2.lng)
 
-    val y = Math.sin(l2 - l1) * Math.cos(f2)
-    val x = Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(l2 - l1)
+    val y = sin(l2 - l1) * cos(f2)
+    val x = cos(f1) * sin(f2) - sin(f1) * cos(f2) * cos(l2 - l1)
 
     val brng = Math.toDegrees(Math.atan2(y, x))
     return (brng - 90).toFloat()

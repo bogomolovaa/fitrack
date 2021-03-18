@@ -1,6 +1,5 @@
 package bogomolov.aa.fitrack.features.settings
 
-
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -19,7 +18,6 @@ import bogomolov.aa.fitrack.features.main.START_SERVICE_ACTION
 import bogomolov.aa.fitrack.features.main.STOP_SERVICE_ACTION
 import bogomolov.aa.fitrack.features.main.trackerService
 
-
 class SettingsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListener {
 
     override fun onCreateView(
@@ -28,7 +26,6 @@ class SettingsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeL
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
-
         val toolbar = view.findViewById<Toolbar>(R.id.toolbar_settings)
         (activity as AppCompatActivity).setSupportActionBar(toolbar)
 
@@ -36,10 +33,7 @@ class SettingsFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeL
         NavigationUI.setupWithNavController(toolbar, navController)
 
         val settingsFragment = SettingsFragmentView()
-        childFragmentManager
-            .beginTransaction()
-            .replace(R.id.settings, settingsFragment)
-            .commit()
+        childFragmentManager.beginTransaction().replace(R.id.settings, settingsFragment).commit()
 
         return view
     }
@@ -76,8 +70,7 @@ const val KEY_SERVICE_STARTED = "started"
 const val KEY_AUTOSTART = "autostart_requested"
 
 fun setSetting(key: String, value: Boolean, context: Context) {
-    val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-    prefs.edit().putBoolean(key, value).apply()
+    PreferenceManager.getDefaultSharedPreferences(context).edit().putBoolean(key, value).apply()
 }
 
 fun getSetting(key: String, context: Context) =

@@ -2,19 +2,16 @@ package bogomolov.aa.fitrack.repository
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.util.Log
 import android.view.View
 import bogomolov.aa.fitrack.domain.MapSaver
 import bogomolov.aa.fitrack.domain.model.Point
 import bogomolov.aa.fitrack.domain.model.Track
 import bogomolov.aa.fitrack.features.main.toPolylineCoordinates
-import bogomolov.aa.fitrack.features.tracks.track.TrackViewFragment
+import bogomolov.aa.fitrack.features.tracks.track.updateMap
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.MapView
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -22,16 +19,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MapSaverImpl @Inject constructor(
-    private val context: Context
-) : MapSaver {
+class MapSaverImpl @Inject constructor(private val context: Context) : MapSaver {
 
     override suspend fun save(track: Track, points: List<Point>, width: Int, height: Int) {
         withContext(Dispatchers.Main) {
-            val options = GoogleMapOptions()
-                .compassEnabled(false)
-                .mapToolbarEnabled(false)
-                .liteMode(true)
+            val options =
+                GoogleMapOptions().compassEnabled(false).mapToolbarEnabled(false).liteMode(true)
             val mapView = MapView(context, options)
             mapView.onCreate(null)
             mapView.getMapAsync { googleMap ->
@@ -40,7 +33,7 @@ class MapSaverImpl @Inject constructor(
                     View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
                 )
                 mapView.layout(0, 0, width, height)
-                TrackViewFragment.updateMap(googleMap, points)
+                updateMap(googleMap, points)
                 googleMap.moveCamera(CameraUpdateFactory.zoomTo(18f))
                 for (latLng in toPolylineCoordinates(points)) {
                     var isVisible = googleMap.projection.visibleRegion.latLngBounds.contains(latLng)
@@ -64,7 +57,6 @@ class MapSaverImpl @Inject constructor(
             }
         }
     }
-
 
     private fun saveImage(bitmap: Bitmap, fileName: String) {
         try {
