@@ -2,6 +2,7 @@ package bogomolov.aa.fitrack.domain
 
 import android.util.Log
 import bogomolov.aa.fitrack.domain.model.*
+import bogomolov.aa.fitrack.repository.MapSaver
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -9,16 +10,20 @@ const val MIN_TRACK_DISTANCE = 150f
 const val STAY_DIAMETER = 50.0
 const val STAY_TIMEOUT = 3 * 60 * 1000L
 
+private const val TAG = "UseCases"
+
 @Singleton
 class UseCases @Inject constructor(
     private val repository: Repository,
     private val mapSaver: MapSaver
 ) {
 
+    fun isTrackOpened() = repository.getLastTrack()?.isOpened() == true
+
     suspend fun onNewPoint(newPoint: Point) {
         repository.addPoint(newPoint)
         val lastTrack = repository.getLastTrack()
-        Log.i("test", "onNewPoint $newPoint lastTrack $lastTrack")
+        Log.i(TAG, "onNewPoint $newPoint lastTrack $lastTrack")
         if (lastTrack?.isOpened() == true) {
             tryFinish(lastTrack)
         } else {
@@ -44,19 +49,18 @@ class UseCases @Inject constructor(
         return false
     }
 
-    private fun tryStart(lastTrack: Track?): Boolean {
+    private fun tryStart(lastTrack: Track?) {
         val points = repository.getPointsAfterLastTrack(lastTrack)
         getStartMotionPoint(points, STAY_DIAMETER, STAY_TIMEOUT)?.let { point ->
             startTrack(point)
-            return true
+            return
         }
-        return false
     }
 
     private fun getStopMotionPoint(points: List<Point>, diameter: Double, timeout: Long): Point? {
         if (points.size < 2) return null
         var sumDistance = 0.0
-        for (i in (points.size - 2) downTo  0) {
+        for (i in (points.size - 2) downTo 0) {
             sumDistance += distance(points[i + 1], points[i])
             if (points.last().time - points[i].time > timeout
                 && distance(points.last(), points[i]) <= diameter
@@ -76,6 +80,7 @@ class UseCases @Inject constructor(
 
     fun startTrack(lastPoint: Point, startTime: Long? = null) {
         val track = Track(startPointId = lastPoint.id, startTime = startTime ?: lastPoint.time)
+        Log.i(TAG, "startTrack $track")
         repository.addTrack(track)
     }
 
@@ -84,6 +89,7 @@ class UseCases @Inject constructor(
         openedTrack: Track,
         time: Long = System.currentTimeMillis()
     ) {
+        Log.i(TAG, "finishTrack")
         val points = points1 ?: repository.getTrackPoints(openedTrack, RAW)
         if (points.isEmpty()) return
         val smoothed = smooth(points)
@@ -96,10 +102,6 @@ class UseCases @Inject constructor(
         openedTrack.distance = sumDistance(smoothedPoints)
         repository.save(openedTrack)
         repository.deleteInnerRawPoints(openedTrack)
-        if (openedTrack.distance < MIN_TRACK_DISTANCE) {
-            repository.deleteTracks(openedTrack.id)
-        } else {
-            mapSaver.save(openedTrack, smoothedPoints, 600, 400)
-        }
+        if (openedTrack.distance < MIN_TRACK_DISTANCE) repository.deleteTracks(openedTrack.id)
     }
 }

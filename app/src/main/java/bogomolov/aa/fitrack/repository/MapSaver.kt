@@ -3,56 +3,70 @@ package bogomolov.aa.fitrack.repository
 import android.content.Context
 import android.graphics.Bitmap
 import android.view.View
-import bogomolov.aa.fitrack.domain.MapSaver
+import android.widget.ImageView
+import bogomolov.aa.fitrack.repository.MapSaver
+import bogomolov.aa.fitrack.domain.Repository
 import bogomolov.aa.fitrack.domain.model.Point
+import bogomolov.aa.fitrack.domain.model.SMOOTHED
 import bogomolov.aa.fitrack.domain.model.Track
 import bogomolov.aa.fitrack.features.main.toPolylineCoordinates
 import bogomolov.aa.fitrack.features.tracks.track.updateMap
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.MapView
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
+
+private const val WIDTH = 600
+private const val HEIGHT = 400
 
 @Singleton
-class MapSaverImpl @Inject constructor(private val context: Context) : MapSaver {
+class MapSaver @Inject constructor(
+    private val context: Context,
+    private val repository: Repository
+) {
 
-    override suspend fun save(track: Track, points: List<Point>, width: Int, height: Int) {
-        withContext(Dispatchers.Main) {
-            val options =
-                GoogleMapOptions().compassEnabled(false).mapToolbarEnabled(false).liteMode(true)
-            val mapView = MapView(context, options)
-            mapView.onCreate(null)
-            mapView.getMapAsync { googleMap ->
-                mapView.measure(
-                    View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
-                )
-                mapView.layout(0, 0, width, height)
-                updateMap(googleMap, points)
-                googleMap.moveCamera(CameraUpdateFactory.zoomTo(18f))
-                for (latLng in toPolylineCoordinates(points)) {
-                    var isVisible = googleMap.projection.visibleRegion.latLngBounds.contains(latLng)
-                    while (!isVisible) {
-                        googleMap.moveCamera(CameraUpdateFactory.zoomOut())
-                        isVisible = googleMap.projection.visibleRegion.latLngBounds.contains(latLng)
+    fun save(track: Track, imageView: ImageView, coroutineScope: CoroutineScope) {
+        val options =
+            GoogleMapOptions().compassEnabled(false).mapToolbarEnabled(false).liteMode(true)
+        val mapView = MapView(context, options)
+        mapView.onCreate(null)
+        mapView.getMapAsync { googleMap ->
+            mapView.measure(
+                View.MeasureSpec.makeMeasureSpec(WIDTH, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(HEIGHT, View.MeasureSpec.EXACTLY)
+            )
+            mapView.layout(0, 0, WIDTH, HEIGHT)
+            coroutineScope.launch(Dispatchers.IO) {
+                val points = repository.getTrackPoints(track, SMOOTHED)
+                withContext(Dispatchers.Main) {
+                    updateMap(googleMap, points)
+                    googleMap.moveCamera(CameraUpdateFactory.zoomTo(18f))
+                    for (latLng in toPolylineCoordinates(points)) {
+                        var visible =
+                            googleMap.projection.visibleRegion.latLngBounds.contains(latLng)
+                        while (!visible) {
+                            googleMap.moveCamera(CameraUpdateFactory.zoomOut())
+                            visible =
+                                googleMap.projection.visibleRegion.latLngBounds.contains(latLng)
+                        }
                     }
-                }
-                googleMap.setOnMapLoadedCallback {
-                    mapView.isDrawingCacheEnabled = true
-                    mapView.measure(
-                        View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-                        View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
-                    )
-                    mapView.layout(0, 0, width, height)
-                    mapView.buildDrawingCache(true)
-                    val bitmap = Bitmap.createBitmap(mapView.drawingCache)
-                    mapView.isDrawingCacheEnabled = false
-                    saveImage(bitmap, getTrackImageFile(context, track))
+                    googleMap.setOnMapLoadedCallback {
+                        mapView.isDrawingCacheEnabled = true
+                        mapView.layout(0, 0, WIDTH, HEIGHT)
+                        mapView.buildDrawingCache(true)
+                        val bitmap = Bitmap.createBitmap(mapView.drawingCache)
+                        mapView.isDrawingCacheEnabled = false
+                        imageView.setImageBitmap(bitmap)
+                        coroutineScope.launch(Dispatchers.IO) {
+                            saveImage(bitmap, getTrackImageFile(context, track))
+                        }
+                    }
                 }
             }
         }

@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.cardview.widget.CardView
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation.findNavController
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.paging.PagedListAdapter
@@ -14,13 +16,18 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.TrackCardViewBinding
+import bogomolov.aa.fitrack.repository.MapSaver
 import bogomolov.aa.fitrack.domain.model.Track
 import bogomolov.aa.fitrack.repository.getTrackImageFile
 import com.google.android.material.card.MaterialCardView
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.*
 
-class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
-    PagedListAdapter<Track, TracksPagedAdapter.TrackViewHolder>(DIFF_CALLBACK) {
+class TracksPagedAdapter(
+    private val tracksListFragment: TracksListFragment,
+    private val mapSaver: MapSaver
+) : PagedListAdapter<Track, TracksPagedAdapter.TrackViewHolder>(DIFF_CALLBACK) {
     val selectedIds: MutableSet<Long> = HashSet()
     private var checkMode = false
 
@@ -44,6 +51,10 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
         holder.bind(track)
     }
 
+    private fun saveMap(track: Track, imageView: ImageView) {
+        mapSaver.save(track, imageView, tracksListFragment.lifecycleScope)
+    }
+
     class TrackViewHolder(
         val cardView: CardView,
         private val binding: TrackCardViewBinding,
@@ -59,7 +70,12 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
         fun bind(track: Track?) {
             if (track != null) {
                 val bitmap = BitmapFactory.decodeFile(getTrackImageFile(cardView.context, track))
-                binding.trackImage.setImageBitmap(bitmap)
+                if (bitmap != null) {
+                    binding.trackImage.setImageBitmap(bitmap)
+                } else {
+                    binding.trackImage.setImageDrawable(null)
+                    adapter.saveMap(track, binding.trackImage)
+                }
                 binding.cardTextName.text = track.name()
                 binding.cardTextName.transitionName = "track_name_${track.id}"
                 binding.cardTextDistance.text = "${track.distance.toInt()} m"
@@ -71,6 +87,7 @@ class TracksPagedAdapter(private val tracksListFragment: TracksListFragment) :
                 binding.cardTagName.text = track.tag
                 binding.cardTagName.transitionName = "track_tag_${track.id}"
                 binding.trackImage.transitionName = "track_image_${track.id}"
+
             }
         }
 

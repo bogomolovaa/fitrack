@@ -22,7 +22,6 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.preference.PreferenceManager
 import bogomolov.aa.fitrack.R
-import bogomolov.aa.fitrack.domain.Repository
 import bogomolov.aa.fitrack.domain.UseCases
 import bogomolov.aa.fitrack.domain.model.Point
 import bogomolov.aa.fitrack.features.settings.KEY_SERVICE_STARTED
@@ -50,9 +49,6 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
 
     @Inject
     lateinit var useCases: UseCases
-
-    @Inject
-    lateinit var repository: Repository
 
     @Inject
     lateinit var androidInjector: DispatchingAndroidInjector<Any>
@@ -102,6 +98,8 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
             setSetting(KEY_SERVICE_STARTED, true, applicationContext)
         } else if (intent.action == STOP_SERVICE_ACTION) {
             stopTrackingService()
+        } else if (intent.action == SHOULD_STOP_SERVICE_ACTION) {
+            if (!useCases.isTrackOpened()) stopTrackingService()
         }
         return START_STICKY
     }
@@ -126,9 +124,10 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
     private fun hasPermission(permission: String) =
         ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
-    private fun areNotEqual(location1: Location?, location2: Location): Boolean {
-        if (location1 == null) return true
-        return location1.longitude != location2.longitude || location1.latitude != location2.latitude
+    private fun areNotEqual(prevLocation: Location?, newLocation: Location): Boolean {
+        if (prevLocation == null) return true
+        if (prevLocation.time >= newLocation.time) return false
+        return prevLocation.longitude != newLocation.longitude || prevLocation.latitude != newLocation.latitude
     }
 
     private fun startWidgetUpdating() {
@@ -200,6 +199,7 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
 
 const val START_SERVICE_ACTION = "start"
 const val STOP_SERVICE_ACTION = "stop"
+const val SHOULD_STOP_SERVICE_ACTION = "should_stop"
 private const val MAX_LOCATION_ACCURACY = 50.0
 private const val UPDATE_INTERVAL = 1000L
 private const val FASTEST_INTERVAL = 1000L

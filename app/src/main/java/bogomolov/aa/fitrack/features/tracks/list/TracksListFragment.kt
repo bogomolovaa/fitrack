@@ -2,6 +2,7 @@ package bogomolov.aa.fitrack.features.tracks.list
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AppCompatActivity
@@ -21,6 +22,7 @@ import bogomolov.aa.fitrack.domain.getWeekRange
 import bogomolov.aa.fitrack.domain.selectDatesRange
 import bogomolov.aa.fitrack.features.shared.onSelection
 import bogomolov.aa.fitrack.features.tracks.tags.TagSelectionDialog
+import bogomolov.aa.fitrack.repository.MapSaver
 import dagger.android.support.AndroidSupportInjection
 import javax.inject.Inject
 
@@ -28,6 +30,9 @@ class TracksListFragment : Fragment() {
     @Inject
     internal lateinit var viewModelFactory: ViewModelFactory
     private val viewModel: TracksListViewModel by viewModels { viewModelFactory }
+
+    @Inject
+    internal lateinit var mapSaver: MapSaver
     private lateinit var adapter: TracksPagedAdapter
     private var actionMode: ActionMode? = null
     private lateinit var toolbar: Toolbar
@@ -50,7 +55,7 @@ class TracksListFragment : Fragment() {
 
         val recyclerView = binding.trackRecycler
         recyclerView.layoutManager = LinearLayoutManager(context)
-        adapter = TracksPagedAdapter(this)
+        adapter = TracksPagedAdapter(this, mapSaver)
         recyclerView.adapter = adapter
         val layoutAnimation = AnimationUtils.loadLayoutAnimation(
             requireContext(),
@@ -99,12 +104,12 @@ class TracksListFragment : Fragment() {
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             when (item.itemId) {
                 R.id.menu_track_delete -> {
-                    viewModel.deleteTracks(adapter.selectedIds)
+                    viewModel.deleteTracks(HashSet(adapter.selectedIds))
                     actionMode?.finish()
                 }
                 R.id.menu_track_tag -> {
                     TagSelectionDialog { tag ->
-                        if (tag != null) viewModel.setTag(tag, adapter.selectedIds)
+                        if (tag != null) viewModel.setTag(tag, HashSet(adapter.selectedIds))
                         actionMode?.finish()
                     }.show(childFragmentManager, "")
                 }

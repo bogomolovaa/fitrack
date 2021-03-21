@@ -35,7 +35,6 @@ constructor(
     val stateLiveData = MutableLiveData(MainState())
     private var tailSmoothedPoints: MutableList<Point>? = null
     private var windowStartId: Int = 0
-    private lateinit var rawPoints: MutableList<Point>
     private var updateJob: Job? = null
 
     private fun updateState(change: MainState.() -> MainState) {
@@ -63,6 +62,7 @@ constructor(
     }
 
     fun startUpdating() {
+        updateJob?.cancel()
         updateJob = viewModelScope.launch(Dispatchers.IO) {
             while (true) {
                 val newState = MainState()
@@ -70,7 +70,7 @@ constructor(
                 newState.currentTrack = track
                 val point = repository.getLastRawPoint()
                 newState.lastPoint = point
-                rawPoints = ArrayList()
+                val rawPoints = ArrayList<Point>()
                 val smoothedPoints = ArrayList<Point>()
                 if (track != null && track.isOpened()) {
                     rawPoints.addAll(repository.getTrackPoints(track, RAW))
@@ -132,8 +132,9 @@ constructor(
     }
 
     private fun getWindowPoints(points: List<Point>, windowSize: Int): List<Point> =
-        if (points.size > windowSize) points.subList(points.size - windowSize, points.size)
-        else points
+        if (points.size > windowSize && windowSize > 0) {
+            points.subList(points.size - windowSize, points.size)
+        } else points
 
     private fun getPreWindowPoints(points: List<Point>, windowSize: Int): List<Point> =
         if (points.size > windowSize) points.subList(0, points.size - windowSize) else ArrayList()
