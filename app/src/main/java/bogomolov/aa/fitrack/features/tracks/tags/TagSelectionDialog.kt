@@ -65,10 +65,10 @@ class TagSelectionDialog(private val onTagSelection: (Tag?)->Unit) : DialogFragm
 
         listView.setOnItemClickListener { _, _, position, _ ->
             if (actionMode == null) {
-                selectedTag = listView.getItemAtPosition(position) as Tag
+                selectedTag = viewModel.tagsLiveData.value?.get(position)
                 dismiss()
             } else {
-                selectedToDeleteTag = viewModel.tagsLiveData.value!![position]
+                selectedToDeleteTag = viewModel.tagsLiveData.value?.get(position)
             }
         }
 
