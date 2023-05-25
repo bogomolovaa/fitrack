@@ -16,12 +16,10 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.TrackCardViewBinding
-import bogomolov.aa.fitrack.repository.MapSaver
 import bogomolov.aa.fitrack.domain.model.Track
+import bogomolov.aa.fitrack.repository.MapSaver
 import bogomolov.aa.fitrack.repository.getTrackImageFile
 import com.google.android.material.card.MaterialCardView
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.util.*
 
 class TracksPagedAdapter(

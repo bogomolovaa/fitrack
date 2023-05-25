@@ -1,6 +1,5 @@
 package bogomolov.aa.fitrack.features.tracks.tags
 
-import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.*
@@ -8,28 +7,18 @@ import android.widget.ArrayAdapter
 import android.widget.ListView
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.viewModels
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.FragmentTagSelectionBinding
-import bogomolov.aa.fitrack.di.ViewModelFactory
 import bogomolov.aa.fitrack.domain.model.Tag
-import dagger.android.support.AndroidSupportInjection
-import javax.inject.Inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class TagSelectionDialog(private val onTagSelection: (Tag?)->Unit) : DialogFragment() {
-    @Inject
-    internal lateinit var viewModelFactory: ViewModelFactory
-    private val viewModel: TagSelectionViewModel by viewModels { viewModelFactory }
+    private val viewModel: TagSelectionViewModel by viewModel()
     private var actionMode: ActionMode? = null
     private lateinit var toolbar: Toolbar
     private lateinit var listView: ListView
     private var selectedTag: Tag? = null
     private var selectedToDeleteTag: Tag? = null
-
-    override fun onAttach(context: Context) {
-        AndroidSupportInjection.inject(this)
-        super.onAttach(context)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

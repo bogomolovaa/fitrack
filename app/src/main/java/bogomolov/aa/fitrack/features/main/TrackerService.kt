@@ -32,31 +32,26 @@ import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener
 import com.google.android.gms.location.*
-import dagger.android.AndroidInjection
-import dagger.android.DispatchingAndroidInjector
-import dagger.android.HasAndroidInjector
 import kotlinx.coroutines.*
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
+import org.koin.android.scope.AndroidScopeComponent
+import org.koin.android.scope.serviceScope
+import org.koin.core.scope.Scope
 
 private const val NOTIFICATION_CHANNEL_ID = "fitrack_channel"
 
 class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListener, LocationListener,
-    HasAndroidInjector {
+    AndroidScopeComponent {
     private lateinit var googleApiClient: GoogleApiClient
     private var prevLocation: Location? = null
     private lateinit var locationCallback: LocationCallback
     private val coroutineScope = CoroutineScope(Dispatchers.IO + Job())
 
-    @Inject
-    lateinit var useCases: UseCases
+    val useCases: UseCases by inject()
 
-    @Inject
-    lateinit var androidInjector: DispatchingAndroidInjector<Any>
-
-    override fun androidInjector() = androidInjector
+    override val scope: Scope by serviceScope()
 
     override fun onCreate() {
-        AndroidInjection.inject(this)
         super.onCreate()
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -124,7 +119,8 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
     private fun hasPermission(permission: String) =
         ActivityCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
-    private fun areNotEqual(prevLocation: Location?, newLocation: Location): Boolean {
+    private fun areNotEqual(prevLocation: Location?, newLocation: Location?): Boolean {
+        if(newLocation==null) return false
         if (prevLocation == null) return true
         if (prevLocation.time >= newLocation.time) return false
         return prevLocation.longitude != newLocation.longitude || prevLocation.latitude != newLocation.latitude
@@ -154,14 +150,16 @@ class TrackerService : Service(), ConnectionCallbacks, OnConnectionFailedListene
                 if (areNotEqual(prevLocation, locationResult.lastLocation)) {
                     val location = locationResult.lastLocation
                     prevLocation = location
-                    if (location.accuracy < MAX_LOCATION_ACCURACY) {
-                        val point = Point(
-                            time = location.time,
-                            lat = location.latitude,
-                            lng = location.longitude
-                        )
-                        coroutineScope.launch(Dispatchers.IO) {
-                            useCases.onNewPoint(point)
+                    location?.let {
+                        if (location.accuracy < MAX_LOCATION_ACCURACY) {
+                            val point = Point(
+                                time = location.time,
+                                lat = location.latitude,
+                                lng = location.longitude
+                            )
+                            coroutineScope.launch(Dispatchers.IO) {
+                                useCases.onNewPoint(point)
+                            }
                         }
                     }
                 }

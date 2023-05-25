@@ -18,7 +18,6 @@ data class Track(
 ) {
 
     fun getTimeString(): String {
-        if (startPointId == 0L) return "0:00"
         val time = if (isOpened()) System.currentTimeMillis() else endTime
         var deltaTime = time - startTime;
         val hours = deltaTime / (3600 * 1000)

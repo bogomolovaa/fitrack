@@ -8,17 +8,16 @@ import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import bogomolov.aa.fitrack.R
+import bogomolov.aa.fitrack.TrackerApplication
 import bogomolov.aa.fitrack.domain.Repository
 import bogomolov.aa.fitrack.domain.getTodayRange
 import bogomolov.aa.fitrack.domain.model.RAW
 import bogomolov.aa.fitrack.domain.model.smooth
 import bogomolov.aa.fitrack.domain.model.sumDistance
 import bogomolov.aa.fitrack.domain.model.sumTracks
-import dagger.android.AndroidInjection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 fun updateWidget(context: Context) {
     val intent = Intent(context, WidgetProvider::class.java)
@@ -29,12 +28,11 @@ fun updateWidget(context: Context) {
     context.sendBroadcast(intent)
 }
 
-class WidgetProvider : AppWidgetProvider() {
-    @Inject
-    lateinit var repository: Repository
+class WidgetProvider : AppWidgetProvider()  {
+    private lateinit var repository: Repository
 
     override fun onReceive(context: Context, intent: Intent) {
-        AndroidInjection.inject(this, context)
+        repository = (context as TrackerApplication).koin.get()
         super.onReceive(context, intent)
     }
 

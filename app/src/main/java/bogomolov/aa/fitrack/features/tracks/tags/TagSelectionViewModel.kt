@@ -7,10 +7,8 @@ import bogomolov.aa.fitrack.domain.Repository
 import bogomolov.aa.fitrack.domain.model.Tag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-class TagSelectionViewModel @Inject
-constructor(private val repository: Repository) : ViewModel() {
+class TagSelectionViewModel (private val repository: Repository) : ViewModel() {
     var tagsLiveData = MutableLiveData<List<Tag>>()
     private var tags = ArrayList<Tag>()
 

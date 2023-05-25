@@ -1,17 +1,14 @@
 package bogomolov.aa.fitrack.features.stats
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
 import androidx.navigation.ui.NavigationUI
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.FragmentStatsBinding
-import bogomolov.aa.fitrack.di.ViewModelFactory
 import bogomolov.aa.fitrack.domain.model.Track
 import bogomolov.aa.fitrack.domain.model.sumTracks
 import com.github.mikephil.charting.charts.BarChart
@@ -21,23 +18,15 @@ import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
-import dagger.android.support.AndroidSupportInjection
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.DateFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.inject.Inject
 
 class StatsFragment : Fragment() {
-    @Inject
-    internal lateinit var viewModelFactory: ViewModelFactory
-    private val viewModel: StatsViewModel by viewModels { viewModelFactory }
+    private val viewModel: StatsViewModel by viewModel()
     private lateinit var chart: BarChart
     private lateinit var binding: FragmentStatsBinding
-
-    override fun onAttach(context: Context) {
-        AndroidSupportInjection.inject(this)
-        super.onAttach(context)
-    }
 
     @SuppressLint("SetTextI18n")
     override fun onCreateView(
@@ -58,7 +47,7 @@ class StatsFragment : Fragment() {
             binding.statsTextTime.text = track.getTimeString()
             binding.statsTextAvgSpeed.text = "${String.format("%.1f", track.getSpeed())}  km/h"
             val startDateString = dateToString(viewModel.datesRange[0])
-            val endDateString = dateToString(viewModel.datesRange[0])
+            val endDateString = dateToString(viewModel.datesRange[1])
             binding.statsTextSelectedPeriod.text = "$startDateString - $endDateString"
         }
         return binding.root
@@ -66,7 +55,7 @@ class StatsFragment : Fragment() {
 
     @SuppressLint("SimpleDateFormat")
     private fun dateToString(date: Date) =
-        SimpleDateFormat("dd.MM.yyyy HH:mm").format(date)
+        SimpleDateFormat("dd.MM.yyyy").format(date)
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.stats_filters_menu, menu)

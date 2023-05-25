@@ -1,21 +1,17 @@
 package bogomolov.aa.fitrack.features.tracks.list
 
-import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
 import androidx.navigation.ui.NavigationUI
 import androidx.recyclerview.widget.LinearLayoutManager
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.FragmentTracksListBinding
-import bogomolov.aa.fitrack.di.ViewModelFactory
 import bogomolov.aa.fitrack.domain.getMonthRange
 import bogomolov.aa.fitrack.domain.getTodayRange
 import bogomolov.aa.fitrack.domain.getWeekRange
@@ -23,25 +19,22 @@ import bogomolov.aa.fitrack.domain.selectDatesRange
 import bogomolov.aa.fitrack.features.shared.onSelection
 import bogomolov.aa.fitrack.features.tracks.tags.TagSelectionDialog
 import bogomolov.aa.fitrack.repository.MapSaver
-import dagger.android.support.AndroidSupportInjection
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
+import org.koin.android.scope.AndroidScopeComponent
+import org.koin.androidx.scope.fragmentScope
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.scope.Scope
 
-class TracksListFragment : Fragment() {
-    @Inject
-    internal lateinit var viewModelFactory: ViewModelFactory
-    private val viewModel: TracksListViewModel by viewModels { viewModelFactory }
+class TracksListFragment : Fragment(), AndroidScopeComponent {
+    private val viewModel: TracksListViewModel by viewModel()
 
-    @Inject
-    internal lateinit var mapSaver: MapSaver
+    private val mapSaver: MapSaver by inject()
     private lateinit var adapter: TracksPagedAdapter
     private var actionMode: ActionMode? = null
     private lateinit var toolbar: Toolbar
     private var spinnersCanClicked = false
 
-    override fun onAttach(context: Context) {
-        AndroidSupportInjection.inject(this)
-        super.onAttach(context)
-    }
+    override val scope: Scope by fragmentScope()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

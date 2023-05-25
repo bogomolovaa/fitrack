@@ -2,9 +2,6 @@ package bogomolov.aa.fitrack.domain
 
 import android.util.Log
 import bogomolov.aa.fitrack.domain.model.*
-import bogomolov.aa.fitrack.repository.MapSaver
-import javax.inject.Inject
-import javax.inject.Singleton
 
 const val MIN_TRACK_DISTANCE = 150f
 const val STAY_DIAMETER = 50.0
@@ -12,11 +9,7 @@ const val STAY_TIMEOUT = 3 * 60 * 1000L
 
 private const val TAG = "UseCases"
 
-@Singleton
-class UseCases @Inject constructor(
-    private val repository: Repository,
-    private val mapSaver: MapSaver
-) {
+class UseCases(private val repository: Repository) {
 
     fun isTrackOpened() = repository.getLastTrack()?.isOpened() == true
 

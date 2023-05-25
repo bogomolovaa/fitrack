@@ -11,10 +11,8 @@ import bogomolov.aa.fitrack.domain.model.Tag
 import bogomolov.aa.fitrack.domain.model.Track
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-class TrackViewModel @Inject
-constructor(private val repository: Repository) : ViewModel() {
+class TrackViewModel (private val repository: Repository) : ViewModel() {
     var trackLiveData = MutableLiveData<Track>()
     var trackPoints = MutableLiveData<List<Point>>()
 

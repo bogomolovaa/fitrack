@@ -11,11 +11,8 @@ import bogomolov.aa.fitrack.domain.model.sumTracks
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*
-import javax.inject.Inject
-import kotlin.collections.ArrayList
 
-class StatsViewModel @Inject
-constructor(private val repository: Repository) : ViewModel() {
+class StatsViewModel(private val repository: Repository) : ViewModel() {
     val sumTrackLiveData = MutableLiveData<Track>()
     val tracksLiveData = MutableLiveData<List<Track>>()
     val tagEntries = MutableLiveData<Array<String>>()

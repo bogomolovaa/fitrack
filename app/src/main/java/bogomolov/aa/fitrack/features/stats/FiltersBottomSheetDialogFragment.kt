@@ -1,6 +1,5 @@
 package bogomolov.aa.fitrack.features.stats
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,18 +13,12 @@ import bogomolov.aa.fitrack.domain.getWeekRange
 import bogomolov.aa.fitrack.domain.selectDatesRange
 import bogomolov.aa.fitrack.features.shared.onSelection
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import dagger.android.support.AndroidSupportInjection
 
 class FiltersBottomSheetDialogFragment(
     private val statsFragment: StatsFragment,
     private val viewModel: StatsViewModel
 ) : BottomSheetDialogFragment() {
     private var spinnersCanClicked: Boolean = false
-
-    override fun onAttach(context: Context) {
-        AndroidSupportInjection.inject(this)
-        super.onAttach(context)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

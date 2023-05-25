@@ -11,10 +11,8 @@ import bogomolov.aa.fitrack.domain.model.Tag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*
-import javax.inject.Inject
 
-class TracksListViewModel @Inject
-constructor(private val repository: Repository) : ViewModel() {
+class TracksListViewModel (private val repository: Repository) : ViewModel() {
     private val datesLiveData = MutableLiveData(getTodayRange())
     var tracksLiveData = Transformations.switchMap(datesLiveData) { dates ->
         LivePagedListBuilder(repository.getFinishedTracksDataSource(dates), 10).build()

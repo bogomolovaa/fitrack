@@ -8,12 +8,8 @@ import bogomolov.aa.fitrack.domain.model.RAW
 import bogomolov.aa.fitrack.domain.model.Tag
 import bogomolov.aa.fitrack.domain.model.Track
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class RepositoryImpl @Inject
-constructor(private val db: AppDatabase) : Repository {
+class RepositoryImpl (private val db: AppDatabase) : Repository {
 
     override fun getTags(): List<Tag> = entityToModel(db.tagDao().tags, Tag::class.java)
 

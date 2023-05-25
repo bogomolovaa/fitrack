@@ -1,18 +1,15 @@
 package bogomolov.aa.fitrack.features.tracks.track
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
 import androidx.navigation.ui.NavigationUI
 import androidx.transition.TransitionInflater
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.FragmentTrackViewBinding
-import bogomolov.aa.fitrack.di.ViewModelFactory
 import bogomolov.aa.fitrack.domain.model.Point
 import bogomolov.aa.fitrack.features.main.toPolylineCoordinates
 import bogomolov.aa.fitrack.features.tracks.tags.TagSelectionDialog
@@ -23,20 +20,11 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
-import dagger.android.support.AndroidSupportInjection
-import javax.inject.Inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class TrackViewFragment : Fragment(), OnMapReadyCallback {
-    @Inject
-    internal lateinit var viewModelFactory: ViewModelFactory
-    private val viewModel: TrackViewModel by viewModels { viewModelFactory }
+    private val viewModel: TrackViewModel by viewModel()
     private var googleMap: GoogleMap? = null
-
-
-    override fun onAttach(context: Context) {
-        AndroidSupportInjection.inject(this)
-        super.onAttach(context)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

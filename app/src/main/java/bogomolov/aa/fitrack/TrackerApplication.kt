@@ -1,19 +1,22 @@
 package bogomolov.aa.fitrack
 
 import android.app.Application
-import bogomolov.aa.fitrack.di.DaggerAppComponent
-import dagger.android.DispatchingAndroidInjector
-import dagger.android.HasAndroidInjector
-import javax.inject.Inject
+import bogomolov.aa.fitrack.di.buildModules
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.Koin
+import org.koin.core.context.startKoin
 
-class TrackerApplication : Application(), HasAndroidInjector {
-    @Inject
-    internal lateinit var androidInjector: DispatchingAndroidInjector<Any>
+class TrackerApplication : Application() {
+
+    lateinit var koin: Koin
 
     override fun onCreate() {
         super.onCreate()
-        DaggerAppComponent.builder().application(this).build().inject(this)
+        koin = startKoin {
+            androidLogger()
+            androidContext(this@TrackerApplication)
+            modules(buildModules())
+        }.koin
     }
-
-    override fun androidInjector() = androidInjector
 }

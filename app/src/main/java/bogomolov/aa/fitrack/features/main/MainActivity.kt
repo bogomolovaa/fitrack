@@ -22,26 +22,19 @@ import bogomolov.aa.fitrack.features.settings.getSetting
 import bogomolov.aa.fitrack.features.settings.setSetting
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import dagger.android.AndroidInjection
-import dagger.android.AndroidInjector
-import dagger.android.DispatchingAndroidInjector
-import dagger.android.HasAndroidInjector
-import java.util.*
+import org.koin.android.scope.AndroidScopeComponent
+import org.koin.androidx.scope.activityScope
+import org.koin.core.scope.Scope
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 
-class MainActivity : AppCompatActivity(), HasAndroidInjector {
+class MainActivity : AppCompatActivity(), AndroidScopeComponent {
     private lateinit var permissionsToRequest: List<String>
     private val permissionsRejected: MutableList<String> = ArrayList()
     private val permissions: MutableList<String> = ArrayList()
 
-    @Inject
-    internal lateinit var androidInjector: DispatchingAndroidInjector<Any>
-
-    override fun androidInjector(): AndroidInjector<Any> = androidInjector
+    override val scope: Scope by activityScope()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
 
         val binding = ActivityMainBinding.inflate(layoutInflater)

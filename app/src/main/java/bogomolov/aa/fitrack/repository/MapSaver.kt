@@ -4,9 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.view.View
 import android.widget.ImageView
-import bogomolov.aa.fitrack.repository.MapSaver
 import bogomolov.aa.fitrack.domain.Repository
-import bogomolov.aa.fitrack.domain.model.Point
 import bogomolov.aa.fitrack.domain.model.SMOOTHED
 import bogomolov.aa.fitrack.domain.model.Track
 import bogomolov.aa.fitrack.features.main.toPolylineCoordinates
@@ -14,19 +12,17 @@ import bogomolov.aa.fitrack.features.tracks.track.updateMap
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.MapView
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import javax.inject.Inject
-import javax.inject.Singleton
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 private const val WIDTH = 600
 private const val HEIGHT = 400
 
-@Singleton
-class MapSaver @Inject constructor(
+class MapSaver (
     private val context: Context,
     private val repository: Repository
 ) {

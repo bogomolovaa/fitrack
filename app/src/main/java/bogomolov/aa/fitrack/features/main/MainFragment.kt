@@ -1,17 +1,14 @@
 package bogomolov.aa.fitrack.features.main
 
-import android.content.Context
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
 import bogomolov.aa.fitrack.R
 import bogomolov.aa.fitrack.databinding.FragmentMainBinding
-import bogomolov.aa.fitrack.di.ViewModelFactory
 import bogomolov.aa.fitrack.domain.model.Point
 import bogomolov.aa.fitrack.domain.model.Track
 import bogomolov.aa.fitrack.features.settings.KEY_SERVICE_STARTED
@@ -21,26 +18,18 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import dagger.android.support.AndroidSupportInjection
-import javax.inject.Inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import kotlin.math.cos
 import kotlin.math.sin
 
 class MainFragment : Fragment(), OnMapReadyCallback {
-    @Inject
-    internal lateinit var viewModelFactory: ViewModelFactory
-    private val viewModel: MainViewModel by viewModels { viewModelFactory }
+    private val viewModel: MainViewModel by viewModel()
     private var googleMap: GoogleMap? = null
     private var trackSmoothedPolyline: Polyline? = null
     private var currentPositionMarker: Marker? = null
     private var zoomed: Boolean = false
     private var canStart: Boolean = false
     private lateinit var binding: FragmentMainBinding
-
-    override fun onAttach(context: Context) {
-        AndroidSupportInjection.inject(this)
-        super.onAttach(context)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

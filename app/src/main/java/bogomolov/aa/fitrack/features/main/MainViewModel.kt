@@ -10,8 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.*
-import javax.inject.Inject
 
 private const val WINDOW_MAX_SIZE = 50
 private const val UPDATE_INTERVAL = 1000L
@@ -26,8 +24,7 @@ data class MainState(
     var lastPoint: Point? = null,
 )
 
-class MainViewModel @Inject
-constructor(
+class MainViewModel (
     private val repository: Repository,
     private val useCases: UseCases
 ) : ViewModel() {
